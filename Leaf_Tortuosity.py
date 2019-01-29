@@ -52,7 +52,7 @@ import cv2
 import random
 import os
 
-os.chdir('/home/gtrancourt/Dropbox/_github/3DLeafTortuosity/')
+os.chdir('/home/gtrancourt/Dropbox/_github/microCT-leaf-traits/')
 from Leaf_Tortuosity_Functions import DisplayRndSlices, Threshold, Erosion3DimJ, getLargestAirspace
 
 
