@@ -12,8 +12,8 @@ This repository combines the most up-to-date code for the segmentation and leaf 
 
 
 ## Requirements
-- __RAM:__ Processing a 5 Gb 8-bit multi-sliced tiff file can peak up to 60 GB of RAM and use up to 30-40 Gb of swap memory (memory written on disk) on Linux (and takes about 3-5 hours to complete). Processing a 250 Mb 8-bit file is of course a lot faster (30-90 minutes) but still takes about 10 Gb of RAM. The programm is memory savvy and this needs to be addressed in future versions in order to tweak the program.
 - __python 2__: If you are new to python, a nice and convenient way to install python is through [anaconda](https://www.anaconda.com/download/). The code hre use python 2.7, so be sure to install this version. The anaconda navigator makes it easy to install packages, which can also be installed through command line in your terminal by typing `conda install name_of_package`. Further, the anaconda navigator allows you to open specific applications to write and run python code. Spyder is a good choice for scientific computation.
+- __RAM:__ Processing a 5 Gb 8-bit multi-sliced tiff file can peak up to 60 GB of RAM and use up to 30-40 Gb of swap memory (memory written on disk) on Linux (and takes about 3-5 hours to complete). Processing a 250 Mb 8-bit file is of course a lot faster (30-90 minutes) but still takes about 10 Gb of RAM. The programm is memory savvy and this needs to be addressed in future versions in order to tweak the program.
 
 
 ## Procedure
@@ -29,7 +29,7 @@ There are two ways to copy the code to your computer.
 ### Preparation of leaf microCT images for semi-automatic segmentation
 A more detailed explanation with images will come.
 
-Briefly, I draw over a few slices, the number of which should be determined for each stack based on quality of the image, venation pattern and quantity, etc. After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](https://github.com/gtrancourt/imagej_macros/tree/master/macros). I've created a few over time depending on which tissues I wanted to segment, all named `Batch slice labelled...`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labelled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks).
+Briefly, I draw over a few slices, the number of which should be determined for each stack based on quality of the image, venation pattern and quantity, etc. After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Batch%20slice%20labelled%20with%20epidermis%20over%20multiple%20RoiSets.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Batch slice labelled...`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labelled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks).
 
 ### Leaf segmentation: `Leaf_Segmentation.py`
 The program is currently setup to run non-interactively from the command line. I chose this in order to run multiple segmentations overnight. Another advantage is that it clears the memory efficiently when the program ends. I do need to give a better name!
@@ -64,7 +64,11 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 
 
 ### Post-processing and leaf traits analysis
-A jupyter notebook rendering of the post-processing and leaf trait analysis code, with some resulting images in the notebook, is available. This code will most probably have to be fine-tuned to each experiment.
+Post-processing and leaf traits analysis detailled procedure to come.
+
+A jupyter notebook rendering of the post-processing and leaf trait analysis code, with some resulting images in the notebook, is available. This isn't the most up-to-date code, but will give you a good idea of what's happening. The leaf traits code is fairly well commented.
+
+Please note that this code will most probably have to be fine-tuned to each experiment.
 
 
 ## Changes made to the previous version
@@ -97,18 +101,16 @@ __Earles JM, Theroux-Rancourt G, Roddy AB, Gilbert ME, McElrone AJ, Brodersen CR
 __Théroux‐Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElrone AJ, Brodersen CR (2017)__ [The bias of a two‐dimensional view: comparing two‐dimensional and three‐dimensional mesophyll surface area estimates using noninvasive imaging.](https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.14687) New Phytol, 215: 1609-1622.
 
 
-Contributors
-------------
+## Contributors
 
 Active
 -   [Guillaume Théroux-Rancourt](https://github.com/gtrancourt)
 
-Previous version of the code
+Previous version of leaf segmentation code
 -   [Mason Earles](https://github.com/masonearles)
 -   [Matt Jenkins](https://github.com/mattjenkins3)
 
-Comments and contributions
---------------------------
+## Comments and contributions
 
 I welcome comments, criticisms, and especially contributions! GitHub
 issues are the preferred way to report bugs, ask questions, or request
@@ -116,8 +118,7 @@ new features. You can submit issues here:
 
 <https://github.com/gtrancourt/microCT-leaf-traits/issues>
 
-Meta
-----
+## Meta
 
 -   Please [report any issues or
     bugs](https://github.com/gtrancourt/microCT-leaf-traits/issues).
