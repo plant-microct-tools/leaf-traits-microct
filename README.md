@@ -2,13 +2,19 @@
 
 X-ray microcomputed tomography (microCT) is rapidly becoming a popular technique for measuring the 3D geometry of plant organs, such as roots, stems, leaves, flowers, and fruits. Due to the large size of these datasets (> 20 Gb per 3D image), along with the often irregular and complex geometries of many plant organs, image segmentation represents a substantial bottleneck in the scientific pipeline. Here, we are developing a Python module that utilizes machine learning to dramatically improve the efficiency of microCT image segmentation with minimal user input. By segmentation we mean the indentification of specific tissues within the leaves as single values within an image file.
 
-We also provide further tools to process the segmented images, to extract leaf anatomical traits commonly measured, such as in Théroux-Rancourt et al. (2017), or to compute airspace tortuosity and related airspace diffusion traits from Earles et al. (2018).
+We also provide further tools to process the segmented images, to extract leaf anatomical traits commonly measured, such as in [Théroux-Rancourt et al. (2017)](#references), or to compute airspace tortuosity and related airspace diffusion traits from [Earles et al. (2018)](#references).
 
 <!-- ![alt text][logo]
 
 [logo]: https://github.com/mattjenkins3/3DLeafCT/blob/add_changes/imgs_readme/leaf1.png "translucent epidermis with veins" -->
 
 This repository combines the most up-to-date code for the segmentation and leaf traits analysis. The leaf segmentation project has been initiated by [Mason Earles](https://github.com/masonearles/3DLeafCT) and expanded by [Matt Jenkins](https://github.com/mattjenkins3/3DLeafCT). The current version has been edited by [Guillaume Théroux-Rancourt](). All leaf traits analysis were contributed by Guillaume Théroux-Rancourt.
+
+
+### Go directly to the procedure for specific tools
+- [(Semi-)Automated leaf segmentation](#leaf-segmentation-leaf_segmentationpy)
+- [Leaf traits analysis (and segmentation post-processing)](#post-processing-and-leaf-traits-analysis)
+- [Leaf tortuosity and airspace diffusive traits analysis](#leaf-tortuosity-and-airspace-diffusive-traits-analysis)
 
 
 ## Requirements
@@ -69,6 +75,10 @@ Post-processing and leaf traits analysis detailled procedure to come.
 A jupyter notebook rendering of the post-processing and leaf trait analysis code, with some resulting images in the notebook, is available. This isn't the most up-to-date code, but will give you a good idea of what's happening. The leaf traits code is fairly well commented.
 
 Please note that this code will most probably have to be fine-tuned to each experiment.
+
+
+### Leaf tortuosity and airspace diffusive traits analysis
+A python version of the method used by [Earles et al. (2018)](#references) is under active development. The code is working properly, but still lacks proper analysis of the tortuosity factor, saving capabilities.
 
 
 ## Changes made to the previous version

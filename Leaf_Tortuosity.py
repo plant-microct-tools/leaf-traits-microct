@@ -25,6 +25,9 @@
 #
 #Most recent updates:
 #
+#__2019-01-30
+#-Stomate region of influence measure
+#
 #__2018-04-27__
 #- Added stomata lbelling method in the preamble.
 #- Splitted cells here and there to separate some bits.
@@ -37,25 +40,30 @@
 
 # In[1]:
 
-
-import skimage.io as io
-from skimage import img_as_int, img_as_ubyte, img_as_float, feature, measure, color, morphology, filters
-from skimage.util import invert
-from skimage.measure import label
-from skimage.transform import resize
 import numpy as np
-from scipy import ndimage, stats
-from scipy.ndimage.morphology import distance_transform_edt
-import skfmm
-import time
-import cv2
-import random
 import os
+from scipy import stats
+from scipy.ndimage.morphology import distance_transform_edt
+from scipy.spatial import Voronoi, voronoi_plot_2d, KDTree
+import skfmm
+import skimage.io as io
+from skimage import img_as_int, img_as_ubyte, img_as_float
+from skimage.util import invert
+from skimage.measure import label, regionprops
+from skimage.transform import resize
+import time
+#import cv2
+#import random
+
 
 os.chdir('/home/gtrancourt/Dropbox/_github/microCT-leaf-traits/')
 from Leaf_Tortuosity_Functions import DisplayRndSlices, Threshold, Erosion3DimJ, getLargestAirspace
 
 
+
+# Function to resize in all 3 dimensions
+# Loops over each slice: Faster and more memory efficient 
+# than working on the whole array at once.
 def StackResize(stack, rescale_factor):
     stack_rs = np.empty(np.array(stack.shape)/np.array([1,rescale_factor,rescale_factor]))
     for idx in np.arange(stack_rs.shape[0]):
@@ -150,7 +158,7 @@ airspace_outline_smaller = Erosion3DimJ(largest_airspace)
 airspace_edge = invert(Threshold(largest_airspace - airspace_outline_smaller, 0))
 DisplayRndSlices(airspace_edge, 2)
 # io.imsave(filepath + '_airspace_edge.tif', img_as_ubyte(airspace_edge))
-
+del airspace_outline_smaller
 
 # In[8]:
 
@@ -183,6 +191,8 @@ t1 = time.time() - t0
 print('L_euc processing time: '+str(np.round(t1))+' s')
 DisplayRndSlices(L_euc, 2)
 
+L_euc_average = np.mean(L_euc, axis=0)
+io.imshow(L_euc_average)
 
 # ## Get the geodesic distance map
 #
@@ -212,6 +222,7 @@ print('L_geo processing time: '+str(np.round(t1))+' s')
 DisplayRndSlices(L_geo, 2)
 
 
+
 # ## Compute the tortuosity factor
 
 # In[13]:
@@ -220,8 +231,49 @@ DisplayRndSlices(L_geo, 2)
 Tortuosity_Factor = np.square(L_geo / L_euc)
 DisplayRndSlices(Tortuosity_Factor, 2)
 
+Tortuosity_factor_average = np.mean(Tortuosity_Factor, axis=0)
+io.imshow(Tortuosity_factor_average)
+
 # You can save it to you folder by un-commenting the line below.
 #io.imsave(filepath + 'Python_tortuosity.tif', np.asarray(Tortuosity_Factor, dtype="float32"))
+
+#%%
+
+# To analyse tortuosity in full stomatal regions (i.e. regions influenced by a
+# single stomata and not touching the edges, meaning they are complete), we
+# need first to find full regions. To do this, we need to do some spatial 
+# analysis such as a Voronoi diagram. The best seems to be a KDTree 
+# (nearest neighbour), like explained here: https://docs.scipy.org/doc/scipy-0.18.1/reference/tutorial/spatial.html#voronoi-diagrams
+# The KDTree function allows to query  filter to find the regions around the stomata. Then, within those regions,
+# compute summary statistics for tortuosity and lateral diffusivity.
+
+# Make the stomata appear on a 2D surface, i.e. stomata positions
+stomata_pos_paradermal = np.sum(stomata_stack, axis=1)
+io.imshow(stomata_pos_paradermal)
+unique_stoma = label(stomata_stack, connectivity=1)
+props_of_unique_stoma = regionprops(unique_stoma)
+stoma_centroid = np.zeros([len(props_of_unique_stoma),3])
+stomata_regions = np.zeros(stomata_stack.shape, dtype = 'uint8')
+for regions in np.arange(len(props_of_unique_stoma)):
+    stoma_centroid[regions] = props_of_unique_stoma[regions].centroid
+    L_euc_stom = np.ma.masked_array(distance_transform_edt(invert(unique_stoma==props_of_unique_stoma[regions].label)), mask)
+    stomata_regions[L_euc_stom == L_euc] = props_of_unique_stoma[regions].label
+    del L_euc_stom
+
+regions_all = np.unique(stomata_regions)
+
+regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0,:,:]),
+                                              np.unique(stomata_regions[-1,:,:]),
+                                              np.unique(stomata_regions[:,0,:]),
+                                              np.unique(stomata_regions[:,-1,:]),
+                                              np.unique(stomata_regions[:,:,0]),
+                                              np.unique(stomata_regions[:,:,-1])]))
+
+regions_full_in_center = regions_all[regions_at_border.take(np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
+ 
+full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
+for i in np.arange(len(regions_full_in_center)):
+    full_stomata_regions_mask[stomata_regions == regions_full_in_center[i]] = True
 
 
 # In[14]:
@@ -230,7 +282,9 @@ DisplayRndSlices(Tortuosity_Factor, 2)
 airspace_edge_bool = invert(~airspace_edge.astype(bool))
 
 # Select only the values at the edge of the airspace
-Tortuosity_at_mesophyll_surface = Tortuosity_Factor[airspace_edge_bool]
+Tortuosity_at_mesophyll_surface = Tortuosity_Factor[full_stomata_regions_mask & airspace_edge_bool]
+#Tortuosity_at_mesophyll_surface = Tortuosity_Factor[airspace_edge_bool]
+Tortuosity_at_mesophyll_surface = Tortuosity_at_mesophyll_surface.filled([-1])
 
 # Remove values below 1, if any, as tortuosity must be >= 1
 Tortuosity_at_mesophyll_surface = Tortuosity_at_mesophyll_surface[Tortuosity_at_mesophyll_surface > 1]
@@ -243,6 +297,7 @@ print(np.var(Tortuosity_at_mesophyll_surface))
 print(np.shape(Tortuosity_at_mesophyll_surface))
 print(np.min(Tortuosity_at_mesophyll_surface))
 print(np.max(Tortuosity_at_mesophyll_surface))
+
 
 
 # In[15]:
@@ -299,51 +354,98 @@ t1 = time.time() - t0
 print('L_epi processing time: '+str(np.round(t1, 1))+' s')
 DisplayRndSlices(L_epi, 2)
 
+L_epi_average = np.mean(L_epi, axis=0)
+io.imshow(L_epi_average)
 
 # In[19]:
 
+# Compute path lenthening.
+# Uncomment the end to remove data close to the epidermis where lateral diffusivity values 
+Path_lenghtening = (L_euc / L_epi) #*(L_epi>10)
+DisplayRndSlices(Path_lenghtening, 2)
 
-Lateral_diffusivity = (L_euc / L_epi)
-DisplayRndSlices(Lateral_diffusivity, 2)
-
+Path_lenghtening_average = np.mean(Path_lenghtening, axis=0)
+io.imshow(Path_lenghtening_average)
 
 # In[20]:
 
 
-Lateral_diffusivity_at_airspace_edge = Lateral_diffusivity[airspace_edge_bool]
-Lateral_diffusivity_at_airspace_edge = Lateral_diffusivity_at_airspace_edge[Lateral_diffusivity_at_airspace_edge > 1]
-print(np.median(Lateral_diffusivity_at_airspace_edge))
-print(stats.describe(Lateral_diffusivity_at_airspace_edge))
-print(np.nanmean(Lateral_diffusivity_at_airspace_edge))
-print(np.nanstd(Lateral_diffusivity_at_airspace_edge))
-print(np.nanvar(Lateral_diffusivity_at_airspace_edge))
-print(np.shape(Lateral_diffusivity_at_airspace_edge))
-print(np.nanmin(Lateral_diffusivity_at_airspace_edge))
-print(np.nanmax(Lateral_diffusivity_at_airspace_edge))
+Path_lenghtening_at_airspace_edge = Path_lenghtening[full_stomata_regions_mask & airspace_edge_bool]
+Path_lenghtening_at_airspace_edge = Path_lenghtening_at_airspace_edge[Path_lenghtening_at_airspace_edge > 1]
+print(np.median(Path_lenghtening_at_airspace_edge))
+print(stats.describe(Path_lenghtening_at_airspace_edge))
+print(np.nanmean(Path_lenghtening_at_airspace_edge))
+print(np.nanstd(Path_lenghtening_at_airspace_edge))
+print(np.nanvar(Path_lenghtening_at_airspace_edge))
+print(np.shape(Path_lenghtening_at_airspace_edge))
+print(np.nanmin(Path_lenghtening_at_airspace_edge))
+print(np.nanmax(Path_lenghtening_at_airspace_edge))
 
+Path_lengthening_profile = np.mean(Path_lenghtening*airspace_edge_bool, axis=(0,2))
 
 # In[21]:
 
 
 ## To save a stack of lateral diffusivity at the airspace edge
-Lateral_diffusivity_img = Lateral_diffusivity
-Lateral_diffusivity_img[airspace_edge_bool == 0] = 0
-io.imsave(filepath + 'Python_lateral_diffusivity-3.tif', np.asarray(Lateral_diffusivity_img, dtype="float32"))
+Path_lenghtening_img = Path_lenghtening
+Path_lenghtening_img[airspace_edge_bool == 0] = 0
+io.imsave(filepath + 'Python_Path_lenghtening-3.tif', np.asarray(Path_lenghtening_img, dtype="float32"))
 
 
 # In[22]:
 
 
 # To save a txt file will all the data points
-thefile = open(filepath + 'Lateral_diffusivity_at_airspace_edge.txt', 'w')
-for item in Lateral_diffusivity_at_airspace_edge:
+thefile = open(filepath + 'Path_lenghtening_at_airspace_edge.txt', 'w')
+for item in Path_lenghtening_at_airspace_edge:
     thefile.write("%s\n" % item)
 
 
 #%%
 
-# To analyse tortuosity in full stomatal regions (i.e. regions influenced by a
-# single stomata and not touching the edges, meaning they are complete), we
-# need first to find full regions. To do this, we need to apply a Voronoi
-# filter to find the regions around the stomata. Then, within those regions,
-# compute summary statistics for tortuosity and lateral diffusivity.
+
+
+
+
+#
+#                                   
+#stoma_centroid_rounded = np.round(stoma_centroid)
+#
+#tree = KDTree(stoma_centroid_rounded)
+#
+#zz, xx, yy = np.meshgrid(np.arange(stomata_stack.shape[0]),
+#                            np.arange(stomata_stack.shape[1]),
+#                            np.arange(stomata_stack.shape[2]))
+#zxy = np.c_[zz.ravel(), xx.ravel(), yy.ravel()]
+#
+#zxy = np.ndindex(stomata_stack.shape)
+#
+#stomata_regions = np.empty(stomata_stack.shape, dtype='uint8')
+#for i in zxy:
+#    tmp_ind = next(zxy)
+#    stomata_regions[tmp_ind] = tree.query([tmp_ind])[1][0]
+#
+#tree.query([880,385,1182])[1]
+#
+#
+##
+### Make a Voronoi diagram
+#stomata_pos_paradermal = np.sum(stomata_stack, axis=1)
+#io.imshow(stomata_pos_paradermal)
+#unique_stoma = label(stomata_pos_paradermal, connectivity=1)
+#props_of_unique_stoma = regionprops(unique_stoma)
+#stoma_centroid = np.zeros([len(props_of_unique_stoma),2])
+#for regions in np.arange(len(props_of_unique_stoma)):
+#    stoma_centroid[regions] = props_of_unique_stoma[regions].centroid
+#
+#vor = Voronoi(stoma_centroid)
+#vor_fig = voronoi_plot_2d(vor)
+##
+##np.where(vor.point_region == 2)[0][0]
+##
+##regions, vertices = voronoi_finite_polygons_2d(vor)
+##print "--"
+##print regions
+##print "--"
+##print vertices
+##
