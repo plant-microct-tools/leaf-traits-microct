@@ -4,6 +4,9 @@ import skimage.io as io
 from skimage.measure import label
 from scipy import ndimage
 
+# Function to threshold images (i.e. binarize them to boolean)
+# Can have multiple threshold values (Th_value)
+# Will threshold irrespective of bit depth: just input the right value.
 def Threshold(input_img, Th_value):
     tmp = np.zeros(input_img.shape, dtype=np.bool)
     if isinstance(Th_value, int):
@@ -16,6 +19,7 @@ def Threshold(input_img, Th_value):
                 tmp[input_img == Th_value[i]] = 1
     return tmp
 
+# Randomly displays a specified number of slices.
 def DisplayRndSlices(input_img, nb_of_slices=2):
     for i in random.sample(range(input_img.shape[0]), nb_of_slices):
         io.imshow(input_img[i,:,:])

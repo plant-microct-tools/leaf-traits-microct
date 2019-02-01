@@ -81,11 +81,12 @@ Please note that this code will most probably have to be fine-tuned to each expe
 A python version of the method used by [Earles et al. (2018)](#references) is under active development. The code is working properly, but still lacks proper analysis of the tortuosity factor, saving capabilities.
 
 
-## Changes made to the previous version
-I've made a lot of small edits here and there that were convenient for my microCT images. I did not change the core of the machine learning function. I did however change how the files were saved, their bit depth, and other features that do affect the memory usage and the speed of computation.
+
+## Changes made to the [previous version](https://github.com/mattjenkins3/3DLeafCT)
+The core of the machine learning function hasn't changed from the previous work of Matt Jenkins and Mason Earles. Functions feeding images to be trained or segmented have been changed in depth, such as how the files were saved, their bit depth, and other features that do affect the memory usage and the speed of computation.
 
 #### Segmentation code
-- Split the function and program in two files. `MLmicroCTfunctions.py` is where all the functions are at. This file needs some tidying to remove unnecessary code. `MLmicroCT-GTR-wrapper.py` is the file used to carry out the segmentation. It is used non-interactively, on the command line (see below). I prefered a non-interactive use to simplify my usage of the program and be able to run several segmentations over night. This allows to flush the memory everytime the programm ends, which is essential with the file size used here.
+- Split the function and program in two files. `Leaf_Segmentation_Functions.py` is where all the functions are at. This file needs some tidying to remove unnecessary code. `Leaf_Segmentation.py` is the file used to carry out the segmentation. It is used non-interactively, on the command line (see below). I prefered a non-interactive use to simplify my usage of the program and be able to run several segmentations over night. This allows to flush the memory everytime the programm ends, which is essential with the file size used here.
 - Runs the segmentation on a downsized stack as my microCT scans were too large to be run in a reasonnable amount of time (i.e. < 6 hours) and with a usable amount of RAM (i.e. not capping 64 Gb of RAM and 64 Gb of swap memory). My scans are 3-5 Gb in size, so the downscale size is ~1 Gb, which works out fine. The resizing factor can be changed to `1` (no resize) by changing the `rescale_factor` value.
 - Using now the `resize` instead of `rescale` function in order to resize axes 1 and 2 (x and y in ImageJ). The `rescale` function resized axes 0 and 1 (z and x). It made more sense to me to resize x and y.
 - Changed the resize function to use a nearest neighbour interpolation (`order=0` in the function). This prevents the introducion of new values in the predicted stacks, both in the model and final full stack prediction.
@@ -102,7 +103,7 @@ I've made a lot of small edits here and there that were convenient for my microC
 This analysis was a work in progress in the previous versions of the code. I have written it from scratch based on my needs. It now computes the following and export the data as a CSV file.
 
 - Thicknesses: Leaf, Epidermis (adaxial and abaxial separately), Mesophyll (everything but the epidermis)
-- Volumes: Leaf, Mesophyll, Vein, Cell, Airspace, Epidermis (adaxial and abaxial separately)
+- Volumes: Leaf, Mesophyll (everything but the epidermis), Vein, Mesophyll cells, Airspace, Epidermis (adaxial and abaxial separately)
 - Surface area: Airspace
 
 ## References
