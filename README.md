@@ -83,13 +83,14 @@ A python version of the method used by [Earles et al. (2018)](#references) is un
 
 
 ## Changes made to the [previous version](https://github.com/mattjenkins3/3DLeafCT)
-The core of the machine learning function hasn't changed from the previous work of Matt Jenkins and Mason Earles. Functions feeding images to be trained or segmented have been changed in depth, such as how the files were saved, their bit depth, and other features that do affect the memory usage and the speed of computation.
+The core of the machine learning functions hasn't changed from the work done by Matt Jenkins and Mason Earles and as such they are the sole authors of the core functions such as `RFPredictCTStack` and `GenerateFL2`. Functions feeding images to be trained or segmented have been updated or changed in depth, such as how the files were saved, their bit depth, and other features that do affect the memory usage and the speed of computation.
 
 #### Segmentation code
-- Split the function and program in two files. `Leaf_Segmentation_Functions.py` is where all the functions are at. This file needs some tidying to remove unnecessary code. `Leaf_Segmentation.py` is the file used to carry out the segmentation. It is used non-interactively, on the command line (see below). I prefered a non-interactive use to simplify my usage of the program and be able to run several segmentations over night. This allows to flush the memory everytime the programm ends, which is essential with the file size used here.
+- Split the function and program in two files. `Leaf_Segmentation_Functions.py` is where all the functions are at. This file needs some tidying to remove unnecessary code. `Leaf_Segmentation.py` is the file used to carry out the segmentation.
+- Non-interactive, on the command line [(see above)](#leaf-segmentation-leaf_segmentationpy). I prefered a non-interactive use to simplify my usage of the program and be able to run several segmentations over night. This also allows to flush the memory everytime the programm ends, which is essential with the file size used here.
 - Runs the segmentation on a downsized stack as my microCT scans were too large to be run in a reasonnable amount of time (i.e. < 6 hours) and with a usable amount of RAM (i.e. not capping 64 Gb of RAM and 64 Gb of swap memory). My scans are 3-5 Gb in size, so the downscale size is ~1 Gb, which works out fine. The resizing factor can be changed to `1` (no resize) by changing the `rescale_factor` value.
 - Using now the `resize` instead of `rescale` function in order to resize axes 1 and 2 (x and y in ImageJ). The `rescale` function resized axes 0 and 1 (z and x). It made more sense to me to resize x and y.
-- Changed the resize function to use a nearest neighbour interpolation (`order=0` in the function). This prevents the introducion of new values in the predicted stacks, both in the model and final full stack prediction.
+- Changed the resize function to use a nearest neighbour interpolation (`order=0` in the function; the previous version probably forgot to set that). This prevents the introducion of new values in the predicted stacks, both in the model and final full stack prediction.
 - Resized the local thickness file input a second time, this time on axis 0 (z in ImageJ), i.e. the stack used to compute local thickness is now isotropic (all edges of one voxel have the same dimension), which is not the case with the resized images above. This is the binary image generated in function `Threshold_GridPhase_invert_down`. Saves some time in the end, and avoids crashing your computer, even when it has 64 Gb of RAM.
 - Added a trimming function so that the original images can be divided by a divider of choice (mainly 2 in my case). This removes one or two pixel-wide rows or columns at the outermost edge (bottom or right on the image). This allows to reuse the same image afterward and to compare the downsized full stack predictions.
 - Now automatically saves the random forest model using the `joblib` package. It's fast and a great compression ratio is achieved, so there's no use not to keep it as we can extract information on the model afterwards.
@@ -99,8 +100,8 @@ The core of the machine learning function hasn't changed from the previous work 
 - Uses the ImageJ slice indexing as an input. Avoids having to substract one to all your slice numbers. I generate my labelled stack of training and testing slices using [this ImageJ macro](https://github.com/gtrancourt/imagej_macros/blob/master/macros/Batch%20slice%20labelled%20with%20epidermis%20over%20multiple%20RoiSets.ijm).
 - I've removed the computation of the performance metric, beside mentionning the accuracy of the model. Performance metric could be computed later using the saved random forest model (in the `joblib` format).
 
-#### Leaf traits analysis code
-This analysis was a work in progress in the previous versions of the code. I have written it from scratch based on my needs. It now computes the following and export the data as a CSV file.
+#### Post-processing and leaf traits analysis code
+I am not using the post-processing that was in the previous code as it didn't improve my own scans. Rather, I select the specific tissues (e.g. veins, epidermis) find the largest structures and paste those structures on a binary image of the combined gridrec and phase contrast images. The leaf trait analysis was still under development in the previous versions of the code. I have written it from scratch based on my needs. It now computes the traits below and exports the data to a CSV file.
 
 - Thicknesses: Leaf, Epidermis (adaxial and abaxial separately), Mesophyll (everything but the epidermis)
 - Volumes: Leaf, Mesophyll (everything but the epidermis), Vein, Mesophyll cells, Airspace, Epidermis (adaxial and abaxial separately)
@@ -117,7 +118,7 @@ __Théroux‐Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElron
 Active
 -   [Guillaume Théroux-Rancourt](https://github.com/gtrancourt)
 
-Previous version of leaf segmentation code
+Previous version of leaf segmentation code. These contributors wrote the machine learning code used for segmentation, which hasn't been touched in this version.
 -   [Mason Earles](https://github.com/masonearles)
 -   [Matt Jenkins](https://github.com/mattjenkins3)
 

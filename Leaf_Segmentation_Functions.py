@@ -3,7 +3,7 @@
 """
 Created on Wed Oct 10 10:07:04 2018
 
-@author: Matt Jenkins
+@author: J. Mason Earles, Matt Jenkins, Guillaume Theroux-Rancourt
 """
 # All functions written by Matt Jenkins and Mason Earles unless otherwise specified.
 # Functions written by Guillaume Théroux-Rancourt (GTR) will be noted so in the comments
@@ -17,7 +17,7 @@ from skimage import transform, img_as_ubyte
 #from skimage.external import tifffile
 from skimage.filters import sobel, gaussian
 #from skimage.segmentation import clear_border
-from skimage.morphology import ball, remove_small_objects #, disk, cube, 
+from skimage.morphology import ball, remove_small_objects #, disk, cube,
 from skimage.util import invert
 import scipy as sp
 import scipy.ndimage as spim

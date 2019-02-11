@@ -36,9 +36,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pandas import DataFrame
 from scipy import stats
 from scipy.ndimage.morphology import distance_transform_edt, binary_erosion
-from scipy.spatial import Voronoi, voronoi_plot_2d, KDTree
+#from scipy.spatial import Voronoi, voronoi_plot_2d, KDTree
 import skfmm
 import skimage.io as io
 from skimage import img_as_int, img_as_ubyte, img_as_float
@@ -109,15 +110,9 @@ def getLargestAirspace(input_img):
     largest_airspace = (labeled_img == largest_airspace_label)
     return largest_airspace
 
-def TortuosityFunction(L_geo, L_euc):
-    tortuosity = np.empty(np.array(L_geo.shape))
-    for idx in np.arange(tortuosity.shape[0]):
-        tortuosity[idx] = np.square(L_geo[idx] / L_euc[idx])
-    return tortuosity
-# ### Image Loading and Pre-processing
 
 # In[2]:
-
+# ### Image Loading and Pre-processing
 
 # Set path to tiff stacks
 base_folder_name = '/run/media/gtrancourt/DATADRIVE1/guillaume/_WORK/Vitis/Vitis_greenhouse_shading/microCT/_ML_DONE/'
@@ -126,12 +121,25 @@ filepath = base_folder_name + sample_name + '/'
 
 rescale_factor = 2
 
+# Test data
+base_folder_name = '/home/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
+base_folder_name = '/Users/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
+sample_name = 'rods_plates-from-bonej-test-for-tortuosity.tif'
+filepath = base_folder_name 
+
+rescale_factor = 1
+
+
 # In[3]:
 
 
 # Read composite stack including slabelling of stomata
 composite_stack_large = io.imread(filepath + sample_name + 'SEGMENTED-w-stomata.tif')
 composite_stack = np.asarray(StackResize(composite_stack_large, rescale_factor), dtype='uint8')
+
+composite_stack = io.imread(filepath + sample_name)
+composite_stack = np.append(composite_stack, [np.full(composite_stack.shape[1:], 60)], axis=0)
+io.imsave(filepath + sample_name + 'w_epidermis.tif', img_as_ubyte(composite_stack))
 
 print(composite_stack_large.shape)
 print(composite_stack.shape)
@@ -274,7 +282,7 @@ io.imshow(L_geo_average)
 Tortuosity_Factor = np.square(L_geo / L_euc)
 DisplayRndSlices(Tortuosity_Factor, 2)
 
-Tortuosity_factor_average = np.median(Tortuosity_Factor, axis=0)
+Tortuosity_factor_average = np.mean(Tortuosity_Factor, axis=0)
 io.imshow(Tortuosity_factor_average)
 
 # You can save it to you folder by un-commenting the line below.
@@ -330,7 +338,7 @@ airspace_edge_bool = invert(~airspace_edge.astype(bool))
 
 # Select only the values at the edge of the airspace and within the full stomata
 # Will have to find a way to include a larger zone of stomata
-edge_and_full_stomata_mask = full_stomata_regions_mask & airspace_edge_bool
+edge_and_full_stomata_mask = airspace_edge_bool #& full_stomata_regions_mask
 
 # np.where applies a condition to find True value, select those in an array
 # (here values above or equal to 1, as tortuosity cannot be less than 1),
@@ -358,7 +366,7 @@ print(np.max(Tortuosity_values_for_stats))
 
 
 # To save
-io.imsave(filepath + 'Python_tortuosity.tif', np.asarray(Tortuosity_at_mesophyll_surface, dtype="float32"))
+io.imsave(filepath + 'Python_tortuosity.tif', np.asarray(Tortuosity_at_airspace_edge, dtype="float32"))
 
 
 # In[16]:
@@ -381,6 +389,7 @@ epidermis_ab_stack_shifted_down = np.roll(epidermis_ab_stack, 1, axis=1)
 epidermis_edge_bottom = Threshold(invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down , 0)
 DisplayRndSlices(epidermis_edge_bottom, 2)
 
+epidermis_edge_bottom = epidermis_ab_stack
 
 # Get the epidermal layer map
 #mesophyll_stack = np.asarray(Threshold(composite_stack, [mesophyll_value,vein_value,ias_value,stomata_value]), np.bool)
@@ -393,6 +402,10 @@ DisplayRndSlices(epidermis_edge_bottom, 2)
 #DisplayRndSlices(epidermis_edge_bottom, 1)
 #DisplayRndSlices(epidermis_edge_top, 1)
 #DisplayRndSlices(amphistomatous_epidermis, 1)
+
+#%%
+
+
 
 
 # In[18]:
@@ -416,7 +429,7 @@ io.imshow(L_epi_average)
 
 # Compute path lenthening.
 # Uncomment the end to remove data close to the epidermis where lateral diffusivity values 
-Path_lenghtening = (L_euc / L_epi) * (L_epi>10)
+Path_lenghtening = (L_euc / L_epi) #* (L_epi>10)
 DisplayRndSlices(Path_lenghtening, 2)
 
 Path_lenghtening_average = np.mean(Path_lenghtening, axis=0)
@@ -458,7 +471,14 @@ for item in Path_lenghtening_at_airspace_edge:
 
 #%%
 # Produce profiles of tortuosity, path lengthening
-    
+np.median(Path_lenghtening_values_for_stats) * np.median(Tortuosity_values_for_stats)
+np.median(Path_lenghtening_at_airspace_edge[1]) * np.median(Tortuosity_at_airspace_edge[1])
+
+np.ma.median(Path_lenghtening) * np.ma.median(Tortuosity_Factor)
+np.ma.mean(Path_lenghtening) * np.ma.mean(Tortuosity_Factor)
+    s
+np.ma.mean(Path_lenghtening[2]) * np.ma.mean(Tortuosity_Factor[2])
+
 Path_lenghtening_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,
                                                                  Path_lenghtening_at_airspace_edge, np.nan), axis=0)
 
@@ -492,42 +512,44 @@ plt.show()
 # Find positions within the mesophyll to extract data out of specific regions
 # within the leaf, i.e. mid leaf, 50% surface
 
+surface_sum = np.cumsum(np.sum(airspace_edge_bool, axis=(0,2)))
+surface_rel = surface_sum/np.float(surface_sum.max())
+surface_rel = surface_rel[surface_rel > 0]
+pos_at_50_surface = (surface_rel >= 0.5).argmax()
+
+Tortuosity_Path_length_profile[pos_at_50_surface]
+
+
+surface_sum_ = np.sum(airspace_edge_bool, axis=0)
+surface_rel = surface_sum/np.float(surface_sum.max())
+surface_rel = surface_rel[surface_rel > 0]
+pos_at_50_surface = (surface_rel >= 0.5).argmax()
 
 
 #%%
 # Write the data into a data frame
-data_out = {'LeafArea':leaf_area,
-            'LeafThickness':leaf_thickness.mean(),
-            'LeafThickness_SD':leaf_thickness.std(),
-            'MesophyllThickness':mesophyll_thickness.mean(),
-            'MesophyllThickness_SD':mesophyll_thickness.std(),
-            'ADEpidermisThickness':epidermis_adaxial_thickness.mean(),
-            'ADEpidermisThickness_SD':epidermis_adaxial_thickness.std(),
-            'ABEpidermisThickness':epidermis_abaxial_thickness.mean(),
-            'ABEpidermisThickness_SD':epidermis_abaxial_thickness.std(),
-            'LeafVolume':leaf_volume,
-            'MesophyllVolume':mesophyll_volume,
-            'ADEpidermisVolume':epidermis_adaxial_volume,
-            'ABEpidermisVolume':epidermis_abaxial_volume,
-            'VeinVolume':vein_volume,
-            'CellVolume':cell_volume,
-            'IASVolume':air_volume,
-            'IASSurfaceArea':true_ias_SA,
-            '_SLICEStrimmed':trim_slices,
-            '_X_VALUEStrimme':trim_column*2}
+data_out = {'Tortuosity_MEAN':np.nanmean(Tortuosity_values_for_stats),
+            'Tortuosity_MEDIAN':np.median(Tortuosity_values_for_stats),
+            'Tortuosity_SD':np.std(Tortuosity_values_for_stats),
+            'Tortuosity_VAR':np.var(Tortuosity_values_for_stats),
+            'Tortuosity_SKEW':stats.skew(Tortuosity_values_for_stats),
+            'Tortuosity_50percent_surface':Tortuosity_profile[pos_at_50_surface],
+            
+            'Path_lenghtening_MEAN':np.nanmean(Path_lenghtening_values_for_stats),
+            'Path_lenghtening_MEDIAN':np.median(Path_lenghtening_values_for_stats),
+            'Path_lenghtening_SD':np.std(Path_lenghtening_values_for_stats),
+            'Path_lenghtening_VAR':np.var(Path_lenghtening_values_for_stats),
+            'Path_lenghtening_SKEW':stats.skew(Path_lenghtening_values_for_stats),
+            'Path_lenghtening_50percent_surface':Path_length_profile[pos_at_50_surface]}
+
 results_out = DataFrame(data_out, index={sample_name})
 # Save the data to a CSV
-results_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'RESULTS.txt', sep='\t', encoding='utf-8')
+results_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt', sep='\t', encoding='utf-8')
 
-print(np.median(Tortuosity_at_mesophyll_surface))
-print(stats.describe(Tortuosity_at_mesophyll_surface))
-print(np.mean(Tortuosity_at_mesophyll_surface))
-print(np.std(Tortuosity_at_mesophyll_surface))
-print(np.var(Tortuosity_at_mesophyll_surface))
-print(np.shape(Tortuosity_at_mesophyll_surface))
-print(np.min(Tortuosity_at_mesophyll_surface))
-print(np.max(Tortuosity_at_mesophyll_surface))
-
+profiles_data = {'Tortuosity_PROFILE':Tortuosity_profile,
+                 'Path_lengthening_PROFILE':Path_length_profile}
+profiles_out = DataFrame(profiles_data, index={sample_name})
+profiles_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'GEOMETRIC-TORTUOSITY-PROFILES.txt', sep='\t', encoding='utf-8')
 
 #
 #                                   

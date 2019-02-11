@@ -3,9 +3,7 @@
 """
 Created on Fri Nov 16 10:07:35 2018
 
-@author: Guillaume Theroux-Rancourt
-@author: Matt Jenkins
-@author: J. Mason Earles
+@author: Guillaume Theroux-Rancourt, Matt Jenkins, J. Mason Earles
 """
 
 # NOTE FROM GTR, THE LAST CONTRIBUTOR TO THIS CODE.
