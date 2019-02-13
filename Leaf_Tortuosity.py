@@ -116,18 +116,18 @@ def getLargestAirspace(input_img):
 
 # Set path to tiff stacks
 base_folder_name = '/run/media/gtrancourt/DATADRIVE1/guillaume/_WORK/Vitis/Vitis_greenhouse_shading/microCT/_ML_DONE/'
-sample_name = 'S_I_2_Strip3_'
+sample_name = 'C_I_5_Strip1_'
 filepath = base_folder_name + sample_name + '/'
 
 rescale_factor = 2
 
-# Test data
-base_folder_name = '/home/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
-base_folder_name = '/Users/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
-sample_name = 'rods_plates-from-bonej-test-for-tortuosity.tif'
-filepath = base_folder_name 
-
-rescale_factor = 1
+## Test data
+#base_folder_name = '/home/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
+#base_folder_name = '/Users/gtrancourt/Dropbox/_github/microCT-leaf-traits/temporary-stuff/'
+#sample_name = 'rods_plates-from-bonej-test-for-tortuosity.tif'
+#filepath = base_folder_name 
+#
+#rescale_factor = 1
 
 
 # In[3]:
@@ -472,11 +472,11 @@ for item in Path_lenghtening_at_airspace_edge:
 #%%
 # Produce profiles of tortuosity, path lengthening
 np.median(Path_lenghtening_values_for_stats) * np.median(Tortuosity_values_for_stats)
-np.median(Path_lenghtening_at_airspace_edge[1]) * np.median(Tortuosity_at_airspace_edge[1])
+np.median(Path_lenghtening_at_airspace_edge) * np.median(Tortuosity_at_airspace_edge)
 
 np.ma.median(Path_lenghtening) * np.ma.median(Tortuosity_Factor)
-np.ma.mean(Path_lenghtening) * np.ma.mean(Tortuosity_Factor)
-    s
+np.ma.mean(Path_lenghtening[edge_and_full_stomata_mask]) * np.ma.mean(Tortuosity_Factor[edge_and_full_stomata_mask])
+
 np.ma.mean(Path_lenghtening[2]) * np.ma.mean(Tortuosity_Factor[2])
 
 Path_lenghtening_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,

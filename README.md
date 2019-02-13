@@ -33,14 +33,51 @@ There are two ways to copy the code to your computer.
 
 
 ### Preparation of leaf microCT images for semi-automatic segmentation
-A more detailed explanation with images will come.
 
-Briefly, I draw over a few slices, the number of which should be determined for each stack based on quality of the image, venation pattern and quantity, etc. After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Batch%20slice%20labelled%20with%20epidermis%20over%20multiple%20RoiSets.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Batch slice labelled...`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labelled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks).
+Before the development of the machine learning segmentation tool, we were segmenting by hand our stack (as in [Théroux-Rancourt et al. (2017)](#references)). We were drawing over a vein on one slice for example, adding that region of interest (ROI) to the ROI manager in ImageJ (using the _t_ keyboard shortcut), then moving the ROI to the new position of that vein (or drawing over), adding that ROI to the manager, and so on until we had covered that specific vein over the whole stack. We were then interpoalting the ROIs, which creates a ROI for each slice, and the filling that vein a specific color. This was done for all tissues and was quite time consuming, especially for non-parallel veins.
+
+To prepare your image for the machine, you need to prepare high quality hand segmentation of a few slices of your full stack. My experience for now has showed me that the better the hand segmentations are, the better the trained segmentation model will be.
+
+For now, I have used between 6 to 14 hand segmented slices with equal success, bu I haven't tested what is the effect of the number of slices on different leaf types. I think 6 slices would be a very acceptable the minimum, but this minimum would depend on the ventation pattern and the scan's quality for example.
+
+#### How hand segmentations are done to create testing and training labelled slices
+Start several slices away from the edges, so that you cover at least three cell layers in the palissade and at least one full cell in the spongy. Some steps in the machine learning segmentation (e.g. local thickness) do not produce good results near the beginning and the end of the stack, so it's better to avoid those. For example, on a _Vitis vinifera_ scan done at 40x, we avoided the first and last 80 slices.
+
+Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes. If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
+
+![Slice drawn over](imgs_readme/Methods_img_01_ImageJ_draw_over_slice.png)
+
+I follow then these steps, and you can see the output below. The order in which the ROIs are added is important for the later steps:
+- I use then the _magic wand_ selection tool to select the other portion of one epidermis, then hit _t_ to add it to the ROI manager. I repeat it for the other epidermis.
+- I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
+- I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
+
+![Slice with ROIs](imgs_readme/Methods_img_02_ImageJ_draw_over_slice_w_ROIs.png)
+
+Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
+
+Once you're done with a slice and have saved the ROI set, clear the ROI manager and repeat the above on another slice.
+
+After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Batch%20slice%20labelled%20with%20epidermis%20over%20multiple%20RoiSets.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Batch slice labelled...`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labelled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentionned above, so if you want more, contact me or try it yourself.
+
+I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images. This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentionned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
+
+![Binary slice](imgs_readme/Methods_img_00c_binary.png)
+
+![Segmented slice](imgs_readme/Methods_img_03_segmented_image.png)
+
+Now, a new file name `labelled-stack.tif` is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
+
+Before moving on to the next step, make sure that your __files are named in a regular way__. For example, in `Carundinacea2004_0447_GRID-8bit.tif`, the sample name (`Carundinacea2004_0447_`) and file type (`GRID-8bit`, the _gridrec_ file for that sample) are present. This constant file naming is necessary for the leaf segmentation program to run smoothly. Also, the folder should have the same name as the sample (i.e. `Carundinacea2004_0447_` in this example).
+
+Finally, a note about __bit depth__. Preferably, use 8-bit images for the machine learning segmentation. Files are smaller in size and it will take up less RAM. However, the program can have 16 or 32-bit images as input, as long as the right threshold value is used as an input (see next section).
 
 ### Leaf segmentation: `Leaf_Segmentation.py`
-The program is currently setup to run non-interactively from the command line. I chose this in order to run multiple segmentations overnight. Another advantage is that it clears the memory efficiently when the program ends. I do need to give a better name!
+The program is currently setup to run non-interactively from the command line. I chose this in order to run multiple segmentations overnight. Another advantage is that it clears the memory efficiently when the program ends.
 
-Under a Unix or Linux system, the program is called like this:
+The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
+
+From the terminal window, the program is called like this:
 
 ```
 python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py filename_ PHASE GRID 'list,of,slices,in,imagej,1,2,3,4' rescale_factor threshold_rescale_factor '/path/to/your/image/directory/'
@@ -62,11 +99,16 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 
 `'list,of,slices,in,imagej,1,2,3,4'`: This is the list of slices in ImageJ notation, i.e. with 1 being the first element. Needs to be between `''` and separated by commas.
 
-`rescale_factor`: This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
+`rescale_factor`: Default is 1 (no rescaling). Depending on the amount of RAM available, you might need to adjust this value. For stacks of smaller size, ~250 Mb, no rescaling should be necessary. Files larger than 1 Gb should be rescaled by 2. This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
 
-`threshold_rescale_factor`: This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forst segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
+`threshold_rescale_factor`: Default is 1 (no rescaling). This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forst segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
 
 `'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+
+Before running your first automated segmentation, you should look at lines 73 to 75 of `Leaf_Segmentation.py` to change the naming convention you use for _gridrec_ and _phase contrast_ stacks. I use `GRID-8bit.tif` for my _gridrec_ stacks (and I specify that they are 8 bit images), but you could use another name (e.g. `GR`). If the naming isn't right, an error message will be printed.
+
+The program will be independent once you launch the command. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment your whole stack.
 
 
 ### Post-processing and leaf traits analysis
