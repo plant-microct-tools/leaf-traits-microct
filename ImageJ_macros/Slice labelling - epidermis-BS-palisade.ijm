@@ -7,14 +7,16 @@
 // should be arranged in the RoiManager in the order below:
 // - 1st and 2nd elements: Epidermis
 // - 3rd element: Everything between the two epidermis
-// - 4th until the end: Veins/Vasculature/Other features
+// - 4th element: Palisade tissue
+// - 5th: One bundle sheath
+// - 6th: The vein within the bundle sheath
+// - Repeat 5 and 6 for other BS and vein pairs.
 //
 // Files should be arranged sequentially in you folder, but this is less
 // if you specify the right sequence in the 3DLeafCT programm.
 //
 // Author: Guillaume Théroux-Rancourt (guillaume.theroux-rancourt@boku.ac.at)
-// Created on 16.02.2018
-// Last modification on 18.10.2018
+// Created on 25.02.2019
 //
 // TO DO:
 // - Have all the ROIs in the same RoiSet and detect the slice value
@@ -53,33 +55,34 @@ for (i=0; i<RoiSets.length; i++) {
 	//Count the number of ROIs. Will skip the first 2 below
 	nROIs = roiManager("count");
 
-
+	//Clear the background
 	run("Colors...", "foreground=green background=yellow selection=yellow");
 	roiManager("Select", 2); //Select the 3rd ROI = Mesophyll
 	run("Clear Outside", "slice");
 
+	//Fill in the two epidermis
 	roiManager("Select", 0); //Select the 1st ROI = Epidermis
 	run("Fill", "slice");
 	roiManager("Select", 1); //Select the 2nd ROI = Epidermis
 	run("Fill", "slice");
 
-	// Select all the veins and fill them.
-	if (nROIs >= 4) {
+	//Change the color of the palisage
+	roiManager("Select", 3);
+	setMinAndMax(-40, 300);
+	run("Apply LUT");
+
+	//Find the number of remaining ROIs
+	Remaining = nROIs - 4;
+	Rem_double = Remaining / 2;
+
+	//Fill the bundle sheath and the veins
+	for (j=0; j<Rem_double; j++) {
 		run("Colors...", "foreground=orange background=yellow selection=yellow");
-		roiManager("Select", 3);
+		roiManager("Select", (j*2)+4);
 		run("Fill", "slice");
 		run("Colors...", "foreground=gray background=yellow selection=yellow");
-		roiManager("Select", 4);
+		roiManager("Select", (j*2)+5);
 		run("Fill", "slice");
-
-		if (nROIs >= 6) {
-			run("Colors...", "foreground=orange background=yellow selection=yellow");
-			roiManager("Select", 5);
-			run("Fill", "slice");
-			run("Colors...", "foreground=gray background=yellow selection=yellow");
-			roiManager("Select", 6);
-			run("Fill", "slice");
-		}
 	}
 
 	// Copy each labelled slice to a new file
