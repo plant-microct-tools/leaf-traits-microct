@@ -45,7 +45,7 @@ Start several slices away from the edges, so that you cover at least three cell 
 
 Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes, and you can make mistakes that won't matter in the end (see pictures below). If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
 
-<p style="text-align:center">
+<p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_01_ImageJ_draw_over_slice.png" alt="Slice drawn over" width="600">
 </p>
 
@@ -54,7 +54,7 @@ I follow then these steps, and you can see the output below. The order in which 
 - I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
 - I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
 
-<p style="text-align:center">
+<p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png" alt="Slice with ROIs" width="600">
 </p>
 
@@ -66,13 +66,13 @@ After having created a ROI set for each draw-over slice (i.e. test/training slic
 
 I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below. 
 
-<p style="text-align:center">
+<p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg" alt="Thresholding example">
 </p>
 
 This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
 
-<p style="text-align:center">
+<p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png" alt="Binary slice" width="600">
 	<img src="imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png" alt="Segmented slice" width="600">
 </p>
