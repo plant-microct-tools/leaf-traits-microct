@@ -43,16 +43,16 @@ For now, I have used between 6 to 14 hand segmented slices with equal success, b
 #### How hand segmentation is done to create testing and training labeled slices
 Start several slices away from the edges, so that you cover at least three cell layers in the palisade and at least one full cell in the spongy. Some steps in the machine learning segmentation (e.g. local thickness) do not produce good results near the beginning and the end of the stack, so it's better to avoid those. For example, on a _Vitis vinifera_ scan done at 40x, we avoided the first and last 80 slices.
 
-Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes. If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
+Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes, and you can make mistakes that won't matter in the end (see pictures below). If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
 
-![Slice drawn over](imgs_readme/C_I_12_Strip1_01_ImageJ_draw_over_slice.png)
+![Slice drawn over](imgs_readme/C_I_12_Strip1_01_ImageJ_draw_over_slice.png =600x)
 
 I follow then these steps, and you can see the output below. The order in which the ROIs are added is important for the later steps:
 - I use then the _magic wand_ selection tool to select the other portion of one epidermis, then hit _t_ to add it to the ROI manager. I repeat it for the other epidermis.
 - I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
 - I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
 
-![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png)
+![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png =600x)
 
 Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
 
@@ -60,11 +60,15 @@ Once you're done with a slice and have saved the ROI set, clear the ROI manager 
 
 After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Slice%20labelling%20-%20epidermis%20and%20BS.ijm.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Slice labelling`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact me or try it yourself.
 
-I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images. This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
+I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below. 
 
-![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png)
+![Thresholding](imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg)
 
-![Segmented slice](imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png)
+This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
+
+![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png =600x)
+
+![Segmented slice](imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png =600x)
 
 Now, a new file name `labelled-stack.tif` (_Note: this typo will be corrected_) is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
 
@@ -95,7 +99,7 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 
 `filename_`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. By base file name, I mean the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
 
-`PHASE` and `GRID`: These are the threshold values for the phase contract image (also called paganin reconstruction). These values are the ones taken from the threshold menu (see image below), and imply in the program that all values between 0 and the value entered will be converted to white and the other values to black. In the picture below, the region in red will be the one that will be thresholded. As explained in [Théroux-Rancourt et al. (2017)](#references) and shown in the picture below, both gridrec and phase contrast thresholded images are combined together to make a binary image encompassing fine details around the cells and the bulk of the airspace. Hence only one value is needed per reconstruction type in the command line.
+`PHASE` and `GRID`: These are the threshold values for the phase contract image (also called paganin reconstruction). These values are the ones taken from the threshold menu (see picture comparing gridrec and phase thresholding above), and imply in the program that all values between 0 and the value entered will be converted to white and the other values to black. In the picture below, the region in red will be the one that will be thresholded. As explained in [Théroux-Rancourt et al. (2017)](#references) and shown in a picture above, both gridrec and phase contrast thresholded images are combined together to make a binary image encompassing fine details around the cells and the bulk of the airspace. Hence only one value is needed per reconstruction type in the command line.
 
 `'list,of,slices,in,imagej,1,2,3,4'`: This is the list of slices in ImageJ notation, i.e. with 1 being the first element. Needs to be between `''` and separated by commas.
 
