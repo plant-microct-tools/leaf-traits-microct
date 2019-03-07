@@ -52,10 +52,8 @@ I follow then these steps, and you can see the output below. The order in which 
 - I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
 - I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
 
-<img src="imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png" alt="Slice with ROIs" width="600">
+<img src="imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png" alt="Slice with ROIs" width="600" align="center">
 
-<!-- ![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png =600x)
- -->
 Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
 
 Once you're done with a slice and have saved the ROI set, clear the ROI manager and repeat the above on another slice.
@@ -64,18 +62,15 @@ After having created a ROI set for each draw-over slice (i.e. test/training slic
 
 I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below. 
 
-![Thresholding](imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg)
+<img src="imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg" alt="Thresholding example" align="center">
 
 This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
 
-<img src="imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png" alt="Binary slice" width="600">
+<img src="imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png" alt="Binary slice" width="600" align="center">
 
-<img src="imgs_readme/imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png" alt="Segmented slice" width="600">
+<img src="imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png" alt="Segmented slice" width="600" align="center">
 
-<!-- ![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png =600x)
 
-![Segmented slice](imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png =600x)
- -->
 
 Now, a new file name `labelled-stack.tif` (_Note: this typo will be corrected_) is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
 
