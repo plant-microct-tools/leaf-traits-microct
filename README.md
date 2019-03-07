@@ -8,7 +8,7 @@ We also provide further tools to process the segmented images, to extract leaf a
 
 [logo]: https://github.com/mattjenkins3/3DLeafCT/blob/add_changes/imgs_readme/leaf1.png "translucent epidermis with veins" -->
 
-This repository combines the most up-to-date code for the segmentation and leaf traits analysis. The leaf segmentation project has been initiated by [Mason Earles](https://github.com/masonearles/3DLeafCT) and expanded by [Matt Jenkins](https://github.com/mattjenkins3/3DLeafCT). The current version has been edited by [Guillaume Théroux-Rancourt](https://github.com/gtrancourt). All leaf traits analysis were contributed by Guillaume Théroux-Rancourt.
+This repository combines the most up-to-date code for the segmentation and leaf traits analysis. The leaf segmentation project has been initiated by [Mason Earles](https://github.com/masonearles/3DLeafCT) and expanded by [Matt Jenkins](https://github.com/mattjenkins3/3DLeafCT). The current version has been edited by [Guillaume Théroux-Rancourt](https://github.com/gtrancourt) with [these changes from the previous version](#changes-made-to-the-previous-version). All leaf traits analysis were contributed by Guillaume Théroux-Rancourt.
 
 
 ### Go directly to the procedure for specific tools
@@ -45,26 +45,26 @@ Start several slices away from the edges, so that you cover at least three cell 
 
 Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes. If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
 
-![Slice drawn over](imgs_readme/Methods_img_01_ImageJ_draw_over_slice.png)
+![Slice drawn over](imgs_readme/C_I_12_Strip1_01_ImageJ_draw_over_slice.png)
 
 I follow then these steps, and you can see the output below. The order in which the ROIs are added is important for the later steps:
 - I use then the _magic wand_ selection tool to select the other portion of one epidermis, then hit _t_ to add it to the ROI manager. I repeat it for the other epidermis.
 - I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
 - I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
 
-![Slice with ROIs](imgs_readme/Methods_img_02_ImageJ_draw_over_slice_w_ROIs.png)
+![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png)
 
 Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
 
 Once you're done with a slice and have saved the ROI set, clear the ROI manager and repeat the above on another slice.
 
-After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Batch%20slice%20labelled%20with%20epidermis%20over%20multiple%20RoiSets.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Batch slice labeled...`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact me or try it yourself.
+After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Slice%20labelling%20-%20epidermis%20and%20BS.ijm.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Slice labelling`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact me or try it yourself.
 
 I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images. This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
 
-![Binary slice](imgs_readme/Methods_img_00c_binary.png)
+![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png)
 
-![Segmented slice](imgs_readme/Methods_img_03_segmented_image.png)
+![Segmented slice](imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png)
 
 Now, a new file name `labelled-stack.tif` (_Note: this typo will be corrected_) is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
 
@@ -80,7 +80,7 @@ The program is run from the command line interface (`terminal` under macOS, `cmd
 From the terminal window, the program is called like this:
 
 ```
-python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py filename_ PHASE GRID 'list,of,slices,in,imagej,1,2,3,4' rescale_factor threshold_rescale_factor '/path/to/your/image/directory/'
+python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py filename_ PHASE GRID 'list,of,slices,in,imagej,1,2,3,4' rescale_factor threshold_rescale_factor '/path/to/your/image/directory/' nb_of_estimators
 ```
 
 Real example:
@@ -95,7 +95,7 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 
 `filename_`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. By base file name, I mean the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
 
-`PHASE` and `GRID`: These are the threshold values for the phase contract image (also called paganin reconstruction). Only one value needed.
+`PHASE` and `GRID`: These are the threshold values for the phase contract image (also called paganin reconstruction). These values are the ones taken from the threshold menu (see image below), and imply in the program that all values between 0 and the value entered will be converted to white and the other values to black. In the picture below, the region in red will be the one that will be thresholded. As explained in [Théroux-Rancourt et al. (2017)](#references) and shown in the picture below, both gridrec and phase contrast thresholded images are combined together to make a binary image encompassing fine details around the cells and the bulk of the airspace. Hence only one value is needed per reconstruction type in the command line.
 
 `'list,of,slices,in,imagej,1,2,3,4'`: This is the list of slices in ImageJ notation, i.e. with 1 being the first element. Needs to be between `''` and separated by commas.
 
@@ -104,6 +104,9 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 `threshold_rescale_factor`: Default is 1 (no rescaling). This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
 
 `'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+#### Optional input
+`nb_of_estimators`: Default is 50 when no value provided at the end of the command. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
 
 
 Before running your first automated segmentation, you should look at lines 73 to 75 of `Leaf_Segmentation.py` to change the naming convention you use for _gridrec_ and _phase contrast_ stacks. I use `GRID-8bit.tif` for my _gridrec_ stacks (and I specify that they are 8 bit images), but you could use another name (e.g. `GR`). If the naming isn't right, an error message will be printed.
@@ -180,3 +183,12 @@ new features. You can submit issues here:
 <!-- -   Please note that this project is released with a [Contributor Code
     of Conduct](CONDUCT.md). By participating in this project you agree
     to abide by its terms. -->
+
+
+## Change log
+#### 2019-03-07
+- Removed 'verbosity' of the random forest classifying steps. Makes for fewer on-screen outputs and a nicer progress bar when doing the full stack segmentation.
+- Added the printing on the slice number used in training and testing.
+- Added the number of estimators as an optional input at the end of the command line call of `Leaf_Segmentation.py`.
+- Some auto-formatted coding tweaks in `Leaf_Segmentation.py`.
+- Changed the images in `README.md` to a _Vitis vinifera_ 40x scan.

@@ -14,9 +14,9 @@ import cv2
 import numpy as np
 import skimage.io as io
 from skimage import transform, img_as_ubyte
-#from skimage.external import tifffile
+# from skimage.external import tifffile
 from skimage.filters import sobel, gaussian
-#from skimage.segmentation import clear_border
+# from skimage.segmentation import clear_border
 from skimage.morphology import ball, remove_small_objects #, disk, cube,
 from skimage.util import invert
 import scipy as sp
@@ -44,14 +44,15 @@ warnings.filterwarnings("ignore")
 
 # Filter parameters; Label encoder setup
 disk_size=5
-gauss_sd_list = [2,4,8,16,32,64] #six different filters with different sd for each, big sd = more blurred
+gauss_sd_list = [2, 4, 8, 16, 32, 64]  #six different filters with different sd for each, big sd = more blurred
 gauss_length = 2*len(gauss_sd_list)
-hess_range = [4,64]
+hess_range = [4, 64]
 hess_step = 4
 num_feature_layers = 37 # grid and phase recon; plus gaussian blurs; plus hessian filters
 
 # Import label encoder
 labenc = LabelEncoder()
+
 
 def smooth_epidermis(img,epidermis,background,spongy,palisade,ias,vein):
     # FIX: clean this up, perhaps break into multiple functions
@@ -367,7 +368,7 @@ def winVar(img, wlen):
                        for x in (img, img*img))
     return wsqrmean - wmean*wmean
 
-def RFPredictCTStack(rf_transverse,gridimg_in, phaseimg_in, localthick_cellvein_in, section):
+def RFPredictCTStack(rf_transverse, gridimg_in, phaseimg_in, localthick_cellvein_in, section):
     # Use random forest model to predict entire CT stack on a slice-by-slice basis
     global dist_edge_FL
     dist_edge_FL = []
@@ -383,7 +384,7 @@ def RFPredictCTStack(rf_transverse,gridimg_in, phaseimg_in, localthick_cellvein_
     RFPredictCTStack_out = np.empty(gridimg_in.shape, dtype=np.float64)
     # Define empty numpy array for feature layers (FL)
     FL = np.empty((gridimg_in.shape[1],gridimg_in.shape[2],num_feature_layers), dtype=np.float64)
-    for j in tqdm(range(0,gridimg_in.shape[0])):
+    for j in tqdm(range(0,gridimg_in.shape[0]), ncols=80):
         # Populate FL array with feature layers using custom filters, etc.
         FL[:,:,0] = gridimg_in[j,:,:]
         FL[:,:,1] = phaseimg_in[j,:,:]
@@ -531,6 +532,7 @@ def displayImages_displayDims(gr_s,pr_s,ls,lt_s,gp_train,gp_test,label_train,lab
     #     io.imshow(lt_s[i,:,:])
     #     io.show()
     #check shapes of stacks to ensure they match
+    print("***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***")
     print('Gridrec stack shape = ' + str(gr_s.shape))
     print('Phaserec stack shape = ' + str(pr_s.shape))
     print('Label stack shape = ' + str(ls.shape))
@@ -613,7 +615,7 @@ def GenerateFL2(gridimg_in,phaseimg_in,localthick_cellvein_in,sub_slices,section
     # Define empty numpy array for feature layers (FL)
     FL = np.empty((len(sub_slices),img_dim1,img_dim2,num_feature_layers), dtype=np.float64)
     # Populate FL array with feature layers using custom filters, etc.
-    for i in tqdm(range(0,len(sub_slices))):
+    for i in tqdm(range(0,len(sub_slices)), ncols=80):
         FL[i,:,:,0] = gridimg_in_rot_sub[i,:,:]
         FL[i,:,:,1] = phaseimg_in_rot_sub[i,:,:]
         FL[i,:,:,2] = gaussian(FL[i,:,:,0],8)
@@ -717,7 +719,7 @@ def save_trainmodel(rf_t,folder_name):#,FL_train,FL_test,Label_train,Label_test,
 #    io.imsave(folder_name+'/Label_train.tif',img_as_ubyte(Label_train))
 #    io.imsave(folder_name+'/Label_test.tif',img_as_ubyte(Label_test))
 
-def train_model(gr_s,pr_s,ls,lt_s,gp_train,gp_test,label_train,label_test):
+def train_model(gr_s,pr_s,ls,lt_s,gp_train,gp_test,label_train,label_test,nb_estimators):
     print("***GENERATING FEATURE LAYERS***")
     #generate training and testing feature layer array
     FL_train_transverse = GenerateFL2(gr_s, pr_s, lt_s, gp_train, "transverse")
@@ -728,7 +730,7 @@ def train_model(gr_s,pr_s,ls,lt_s,gp_train,gp_test,label_train,label_test):
     Label_test = LoadLabelData(ls, label_test, "transverse")
     print("***TRAINING MODEL***\n(this step may take a few minutes...)")
     # Define Random Forest classifier parameters and fit model
-    rf_trans = RandomForestClassifier(n_estimators=50, verbose=True, oob_score=True, n_jobs=-1, warm_start=False) #, class_weight="balanced")
+    rf_trans = RandomForestClassifier(n_estimators=nb_estimators, verbose=0, oob_score=True, n_jobs=-1, warm_start=False) #, class_weight="balanced")
     rf_trans = rf_trans.fit(FL_train_transverse, Label_train)
     return rf_trans#,FL_train_transverse,FL_test_transverse, Label_train, Label_test
 
@@ -768,7 +770,7 @@ def local_thickness(im):
     sizes = sp.unique(sp.around(dt, decimals=0))
     # Below absolutely needs float64 to work!
     im_new = sp.zeros_like(im)
-    for r in tqdm(sizes):
+    for r in tqdm(sizes, ncols=80):
         im_temp = dt >= r
         im_temp = spim.distance_transform_edt(~im_temp) <= r
         im_new[im_temp] = r
@@ -976,6 +978,7 @@ def displayPixelvalues(stack):
 # In python notation, this ends up as [z, x/2, y/2]
 def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor, keep_in_memory=True, labelled_stack=False):
     if os.path.isfile(filepath + stack_name + "_" + str(rescale_factor) +"x-smaller.tif"):
+        print("***LOADING " + str(rescale_factor) + "x RESIZED " + stack_name + "***")
         stack_rs = io.imread(filepath + stack_name + "_" + str(rescale_factor) +"x-smaller.tif")
         return stack_rs
     else:

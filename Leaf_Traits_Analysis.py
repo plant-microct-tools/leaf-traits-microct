@@ -43,8 +43,8 @@ px_edge = 0.1625 #µm
 vx_volume = px_edge**3
 
 #Define de values of the different tissues
-epid_value = 69
-bg_value = 177
+epid_value = 51 #69
+bg_value = 204 #177
 spongy_value = 0
 palisade_value = 0
 if spongy_value == palisade_value:
@@ -52,16 +52,17 @@ if spongy_value == palisade_value:
 else:
     mesophyll_value = [spongy_value, palisade_value]
 ias_value = 255
-vein_value = 147
+vein_value = 102 # 147
+bs_value = 153
 
 #%%
 
 #Load segmented image
-base_folder_name = '/run/media/gtrancourt/DATADRIVE1/guillaume/_WORK/Vitis/Vitis_greenhouse_shading/microCT/_ML_DONE/'
-sample_name = 'S_I_2_Strip3_'
+base_folder_name = '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+sample_name = 'C_I_12_Strip2_'
 folder_name = 'MLresults/'
 binary_filename = sample_name + 'BINARY-8bit.tif'
-raw_ML_prediction_name = 'fullstack_prediction.tif'
+raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
 filepath = base_folder_name + sample_name + '/'
 

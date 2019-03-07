@@ -3,7 +3,7 @@
 """
 Created on Mon Nov  5 20:03:05 2018
 
-@author: gtrancourt
+@author: Guillaume Théroux-Rancourt
 """
 
 #%%
@@ -14,14 +14,17 @@ from skimage import transform, img_as_bool, img_as_int, img_as_ubyte, img_as_flo
 import skimage.io as io
 from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
 import zipfile
+import gc
 #import cv2
 
 def Trim_Individual_Stack(large_stack, small_stack):
-    print("***trimming stack***")
+
     dims = np.array(binary_stack.shape, dtype='float') / np.array(raw_pred_stack.shape, dtype='float')
     if np.all(dims <= 2):
+        print("***no trimming necessary***")
         return large_stack
     else:
+        print("***trimming stack***")
         if dims[1] > 2:
             if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
                 large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
@@ -39,17 +42,17 @@ def Trim_Individual_Stack(large_stack, small_stack):
 
 #%%
 #Pixel dimmension
-px_edge = 0.636 #µm
+px_edge = 0.1625 #µm
 vx_volume = px_edge**3
 
 #%%
 
 #Load segmented image
-base_folder_name = '/run/media/gtrancourt/GTR_Touro/Grasses_uCT/'
-sample_name = 'Pguttata96_1176_'
-folder_name = 'MLresults_second/'
-binary_filename = sample_name + 'BINARY.tif' # sample_name + '_BINARY-8bit-CROPPED.tif'
-raw_ML_prediction_name = 'fullstack_prediction.tif'
+base_folder_name = '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+sample_name = 'C_I_12_Strip3_'
+folder_name = 'MLresults/'
+binary_filename = sample_name + 'BINARY-8bit.tif' # sample_name + '_BINARY-8bit-CROPPED.tif'
+raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
 filepath = base_folder_name + sample_name + '/'
 
@@ -181,6 +184,8 @@ large_veins_ids = veins_label[veins_area > 100000]
 
 largest_veins = np.in1d(unique_vein_volumes, large_veins_ids).reshape(raw_pred_stack.shape)
 
+del unique_vein_volumes
+
 # Get the values again
 vein_volume = np.sum(largest_veins) * (px_edge * (px_edge*2)**2)
 
@@ -224,6 +229,8 @@ large_bs_ids = bs_label[bs_area > 100000]
 
 largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
 
+del unique_bs_volumes
+
 # Get the values again
 bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
 
@@ -232,6 +239,11 @@ bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
 #          img_as_ubyte(largest_bs))
 io.imshow(largest_bs[100])
 
+#%%
+
+# FREE UP SOME MEMORY
+del props_of_unique_bs, props_of_unique_epidermis, props_of_unique_veins
+gc.collect()
 
 #%%
 ###################
@@ -264,7 +276,7 @@ io.imshow(largest_bs[100])
 #binary_zip = zipfile.ZipFile(base_folder_name + sample_name + '/' + binary_filename + '.zip', 'r')
 #binary_zip.extractall(base_folder_name + sample_name + '/')
 #binary_raw = binary_zip.open(sample_name + '/' + binary_filename)
-binary_stack = img_as_bool(io.imread(filepath + '/' + binary_filename))
+binary_stack = img_as_bool(io.imread(filepath + binary_filename))
 
 binary_stack = binary_stack[trim_slices:-trim_slices,:,:]
 binary_stack = binary_stack[:,:,(trim_column*2):(-trim_column*2)]
@@ -284,7 +296,7 @@ binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
 # TO MANUALLY DELETE SOME SLICES
 #binary_stack = np.delete(binary_stack, 910, axis=1)
-binary_stack = np.delete(binary_stack, 818, axis=0)
+#binary_stack = np.delete(binary_stack, 818, axis=0)
 
 #binary_stack = np.delete(binary_stack, np.arange(0, 160*2), axis=2)
 
@@ -324,6 +336,7 @@ for idx in np.arange(large_segmented_stack.shape[0]):
     large_segmented_stack[idx][temp_epid != 0] = temp_epid[temp_epid != 0]
 
 io.imshow(large_segmented_stack[100])
+print("")
 print('### Validate the values in the stack ###')
 print(np.unique(large_segmented_stack[100]))
 
@@ -331,7 +344,7 @@ print(np.unique(large_segmented_stack[100]))
 # 2 Gb. It's like it doesn't recognize something if you don't turn this option
 # on for large files and then ImageJ or FIJI fail to load the large stack 
 # (happens on my linux machine installed with openSUSE Tumbleweed).
-if large_segmented_stack.nbytes >= 2e10:
+if large_segmented_stack.nbytes >= 2e9:
     imgj_bool = True
 else:
     imgj_bool = False
@@ -346,10 +359,10 @@ io.imsave(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif', l
 
 # Load the large segmented stack to re-run the calculations if needed
 
-#large_segmented_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
-#
-#io.imshow(large_segmented_stack[100])
-#print(np.unique(large_segmented_stack[100]))
+large_segmented_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
+
+io.imshow(large_segmented_stack[100])
+print(np.unique(large_segmented_stack[100]))
 
 #large_segmented_stack = np.delete(large_segmented_stack, np.arange(0,500), axis=0)
 
@@ -406,13 +419,13 @@ print(np.median(epidermis_abaxial_thickness),epidermis_abaxial_thickness.mean(),
 leaf_area = large_segmented_stack.shape[0] * large_segmented_stack.shape[2] * (px_edge**2)
 
 #Caluculate Surface Area (adapted from Matt Jenkins' code)
-# This can take quite a lot of RAM
+# This can take quite a lot of RAM!!!
 # This gives very similar results to BoneJ. BoneJ uses the Lorensen algorithm,
 # which is available as use_classic=True in te marching_cubes_lewiner() function.
 # However, the help page for this function warns that the Lorensen algorithm
 # might result in topologically incorrect results, and as such the Lewiner
 # algorithm is better (and faster too). So it is probably a better approach.
-ias_vert_faces = marching_cubes_lewiner(large_segmented_stack == ias_value_new, 0, allow_degenerate=False)#, spacing=(px_edge,px_edge,px_edge))
+ias_vert_faces = marching_cubes_lewiner(large_segmented_stack == ias_value, 0, allow_degenerate=False)#, spacing=(px_edge,px_edge,px_edge))
 ias_SA = mesh_surface_area(ias_vert_faces[0],ias_vert_faces[1])
 true_ias_SA = ias_SA * (px_edge**2)
 print('IAS surface area: '+str(true_ias_SA)+' µm**2')
@@ -439,36 +452,37 @@ print('Ames/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bs_volume)))
 
 # This is done in the code below.
 
-# Label all of the ias regions
-unique_ias_volumes = label(large_segmented_stack == ias_value_new, connectivity=1)
-props_of_unique_ias = regionprops(unique_ias_volumes)
-
-# Find the size and properties of the epidermis regions
-ias_area = np.zeros(len(props_of_unique_ias))
-ias_label = np.zeros(len(props_of_unique_ias))
-ias_centroid = np.zeros([len(props_of_unique_ias),3])
-ias_SA = np.zeros([len(props_of_unique_ias),3])
-for regions in np.arange(len(props_of_unique_ias)):
-    ias_area[regions] = props_of_unique_ias[regions].area
-    ias_label[regions] = props_of_unique_ias[regions].label
-    ias_centroid[regions] = props_of_unique_ias[regions].centroid
-
-# Find the two largest ias
-ordered_ias = np.argsort(ias_area)
-print('Check for the largest values and adjust use the necessary value to compute the largest connected IAS.')
-print(ias_area[ordered_ias[-4:]])
-print(ias_label[ordered_ias[-4:]])
-
-largests_ias = ias_label[ordered_ias[-4:]]
-ias_SA = np.zeros(len(largests_ias))
-for i in np.arange(len(ias_SA)):
-    ias_vert_faces = marching_cubes_lewiner(unique_ias_volumes == largests_ias[i], 0, spacing=(px_edge,px_edge,px_edge))
-    ias_SA[i] = mesh_surface_area(ias_vert_faces[0],ias_vert_faces[1])
-
-# Adjust depending on if you have IAS that are large but not connected such as
-#  when bundle sheath extensions are present.
-largest_connected_ias_SA = sum(ias_SA[-1:])
-largest_connected_ias_volume = sum(ias_area[ordered_ias[-1:]]) * vx_volume
+## Label all of the ias regions
+#unique_ias_volumes = label(large_segmented_stack == ias_value, connectivity=1)
+#props_of_unique_ias = regionprops(unique_ias_volumes)
+#
+## Find the size and properties of the epidermis regions
+#ias_area = np.zeros(len(props_of_unique_ias))
+#ias_label = np.zeros(len(props_of_unique_ias))
+#ias_centroid = np.zeros([len(props_of_unique_ias),3])
+#ias_SA = np.zeros([len(props_of_unique_ias),3])
+#for regions in np.arange(len(props_of_unique_ias)):
+#    ias_area[regions] = props_of_unique_ias[regions].area
+#    ias_label[regions] = props_of_unique_ias[regions].label
+#    ias_centroid[regions] = props_of_unique_ias[regions].centroid
+#
+## Find the two largest ias
+#ordered_ias = np.argsort(ias_area)
+#print('Check for the largest values and adjust use the necessary value to compute the largest connected IAS.')
+#print(ias_area[ordered_ias[-4:]])
+#print(ias_label[ordered_ias[-4:]])
+#
+#largests_ias = ias_label[ordered_ias[-4:]]
+#ias_SA = np.zeros(len(largests_ias))
+#for i in np.arange(len(ias_SA)):
+#    ias_vert_faces = marching_cubes_lewiner(unique_ias_volumes == largests_ias[i], 0, spacing=(px_edge,px_edge,px_edge))
+#    ias_SA[i] = mesh_surface_area(ias_vert_faces[0],ias_vert_faces[1])
+#    print(ias_SA[i])
+#
+## Adjust depending on if you have IAS that are large but not connected such as
+##  when bundle sheath extensions are present.
+#largest_connected_ias_SA = sum(ias_SA[-1:])
+#largest_connected_ias_volume = sum(ias_area[ordered_ias[-1:]]) * vx_volume
 
 #%%
 
@@ -491,9 +505,9 @@ data_out = {'LeafArea':leaf_area,
             'VeinBSVolume':vein_volume+bs_volume,
             'CellVolume':cell_volume,
             'IASVolume':air_volume,
-            'IASSurfaceArea':true_ias_SA,
-            'IASLargestConnectedVolume':largest_connected_ias_volume,
-            'IASLargestConnectedSA':largest_connected_ias_SA
+            'IASSurfaceArea':true_ias_SA #,
+#            'IASLargestConnectedVolume':largest_connected_ias_volume,
+#            'IASLargestConnectedSA':largest_connected_ias_SA
             }
 results_out = DataFrame(data_out, index={sample_name})
 # Save the data to a CSV
