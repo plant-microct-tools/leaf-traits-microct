@@ -52,8 +52,10 @@ I follow then these steps, and you can see the output below. The order in which 
 - I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
 - I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
 
-![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png =600x)
+<img src="imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png" alt="Slice with ROIs" width="600">
 
+<!-- ![Slice with ROIs](imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png =600x)
+ -->
 Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
 
 Once you're done with a slice and have saved the ROI set, clear the ROI manager and repeat the above on another slice.
@@ -66,9 +68,14 @@ I first open the binary stack. By binary stack, I mean the stack created by comb
 
 This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
 
-![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png =600x)
+<img src="imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png" alt="Binary slice" width="600">
+
+<img src="imgs_readme/imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png" alt="Segmented slice" width="600">
+
+<!-- ![Binary slice](imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png =600x)
 
 ![Segmented slice](imgs_readme/C_I_12_Strip1_00d_labelled-slice0440.png =600x)
+ -->
 
 Now, a new file name `labelled-stack.tif` (_Note: this typo will be corrected_) is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
 
@@ -109,8 +116,8 @@ python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinac
 
 `'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
 
-#### Optional input
-`nb_of_estimators`: Default is 50 when no value provided at the end of the command. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
+__Optional input__: `nb_of_estimators`: Default is 50 when no value provided at the end of the command. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
+
 
 
 Before running your first automated segmentation, you should look at lines 73 to 75 of `Leaf_Segmentation.py` to change the naming convention you use for _gridrec_ and _phase contrast_ stacks. I use `GRID-8bit.tif` for my _gridrec_ stacks (and I specify that they are 8 bit images), but you could use another name (e.g. `GR`). If the naming isn't right, an error message will be printed.
