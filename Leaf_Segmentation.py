@@ -43,7 +43,7 @@ raw_slices = sys.argv[4]
 rescale_factor = int(sys.argv[5])
 threshold_rescale_factor = int(sys.argv[6])
 base_folder_name = sys.argv[7]
-nb_estimators = 50 if len(sys.argv) == 7 else int(sys.argv[8])
+nb_estimators = 50 if len(sys.argv) == 8 else int(sys.argv[8])
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
