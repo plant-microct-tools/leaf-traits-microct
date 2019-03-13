@@ -64,7 +64,7 @@ Once you're done with a slice and have saved the ROI set, clear the ROI manager 
 
 After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Slice%20labelling%20-%20epidermis%20and%20BS.ijm.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Slice labelling`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact me or try it yourself.
 
-I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below. 
+I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below.
 
 <p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg" alt="Thresholding example">
@@ -135,8 +135,64 @@ A jupyter notebook rendering of the post-processing and leaf trait analysis code
 Please note that this code will most probably have to be fine-tuned to each experiment.
 
 
-### Leaf tortuosity and airspace diffusive traits analysis
-A python version of the method used by [Earles et al. (2018)](#references) is under active development. The code is working properly, but still lacks proper analysis of the tortuosity factor, saving capabilities.
+### Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity.py`
+A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable enough and has been used to analysis more than 30 segmented scans. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it.
+
+_The code is currently stable in an automated command line function. An interactive version, probably as notebook, will be produced from this code._
+
+#####What is being produced by the function:
+
+Stacks as tiff files
+
+- 3D stacks of the Tortuosity factor and Path length at the edge of the airspace (32-bit)
+- 2D means in cross and longitudinal sections of the above (32-bit)
+- 3D stack of the unique stoma airspace regions, i.e. the regions of the airspace colored according to the closest stoma. This is computed by computing the geodesic distance starting for each stoma and comparing with the global geodesic distance. A unique region is then defined as L<sub>geo</sub><sup>i</sup> = L<sub>geo_leaf</sub>, where _i_ is the number of the stoma.
+
+Results as text files
+
+- 1D profile between epidermis for the Tortuosity factor, Path length, Surface area, and Porosity. Includes also the background space outside of the epidermises.
+- Surface area and pore volume of each unique stoma region that are fully bordered by othert stoma regions, i.e. that are not touching the border. Hence, these are the fully regions and avoid the chances a stoma might be just outside the stack and bias the region of influence of a stoma. Data in the unit associated with the pixel size used as input.
+- Mean, median, standard deviation, variance, skewness, and value at 50% surface for Tortuosity factor and Path length. By 50% surface, I mean the position within the leaf profile where there is as much mesophyll cell surface area above and below.
+
+***
+
+
+
+To use the code, type the line below in your terminal window:
+
+```
+python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py sample_folder/full_filename rescale_factor pixel_size nb_cores '/path/to/your/image/directory/'
+```
+
+Real example:
+
+```
+python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif 2 0.1625 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'
+```
+
+`python`: This just calls python 2.
+
+`/path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py`: This should be the complete path to where the tortuosity program is. If you have cloned the repository from github, replace `/path/to/this/repo/` for the path to the repository (same as for the leaf segmentation code).
+
+`sample_folder/full_filename`: This is the name of the folder in which the segmented stack is, followed by the full segmented stack's name. This will be joined to the path to your image directory. Having both the folder and the full name of the stack here allows to automatically apply the tortuosity function to files found in a base directory (see below for a usage example).
+
+`rescale_factor`: Depending on the amount of RAM available, you might need to adjust this value. I use 2 for large stacks (> 2 Gb). Contrary to the `rescale_factor` in the `Leaf_Segmentation.py`, here the stack is resized in all three dimensions. See `Leaf_Segmentation.py` for other comments on resizing.
+
+`pixel_size`: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
+
+`nb_cores`: Optional. If not provided, will use all cores available for some more intensive computation.
+
+`'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+
+
+If you want to loop over your image directory, you can do so easily in a UNIX environment using the `find` command. Do do so, open your terminal and change directory up to your image folder (the '/path/to/your/image/directory/'). Then, you can loop over all the segmented stacks in that directory like this:
+
+```
+find -iname *SEGMENTED.tif -exec python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py {} 2 0.1625 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' \;
+```
+
+Here, `find` searches for all files ending with `SEGMENTED.tif` and, for each file found pipes it to the `Leaf_Tortuosity.py` function through `{}`, which correspond to a character string with the path from the current directory up to the file found. In my case, `{}` would be replaced by `./C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif` for example, where `./` represent the current directory (which is already specified in the call to the function, so this isn't used).
 
 
 
@@ -166,9 +222,9 @@ I am not using the post-processing that was in the previous code as it didn't im
 - Surface area: Airspace
 
 ## References
-__Earles JM, Theroux-Rancourt G, Roddy AB, Gilbert ME, McElrone AJ, Brodersen CR (2018)__ [Beyond Porosity: 3D Leaf Intercellular Airspace Traits That Impact Mesophyll Conductance.](http://www.plantphysiol.org/content/178/1/148) Plant Physiol 178: 148??"162.
+__Earles JM, Theroux-Rancourt G, Roddy AB, Gilbert ME, McElrone AJ, Brodersen CR (2018)__ [Beyond Porosity: 3D Leaf Intercellular Airspace Traits That Impact Mesophyll Conductance.](http://www.plantphysiol.org/content/178/1/148) Plant Physiol 178: 148-162.
 
-__Théroux???Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElrone AJ, Brodersen CR (2017)__ [The bias of a two???dimensional view: comparing two???dimensional and three???dimensional mesophyll surface area estimates using noninvasive imaging.](https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.14687) New Phytol, 215: 1609-1622.
+__Théroux-Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElrone AJ, Brodersen CR (2017)__ [The bias of a two???dimensional view: comparing two???dimensional and three???dimensional mesophyll surface area estimates using noninvasive imaging.](https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.14687) New Phytol, 215: 1609-1622.
 
 
 ## Contributors
@@ -199,7 +255,12 @@ new features. You can submit issues here:
 
 
 ## Change log
-#### 2019-03-07
+##### 2019-03-11 - Tortuosity code only
+- Tortuosity code is now fully fonctionnal and can be run from the command line.
+- Found an error in how the epidermis edge was computed, which caused problem with how the segmentation causes un-smoothed epidermis. Fixed it by drawing a larger epidermis edge (3 pixels length) and purifying the resulting stack to get only one epidermis edge, hence removing the smallish un-connected epidermis elsewhere. This caused a problem when both epidermis have the same label value.
+- Removes the values that are direct neighbours to an epidermis when computing statistics for tortuosity and path length.
+
+##### 2019-03-07
 - Removed 'verbosity' of the random forest classifying steps. Makes for fewer on-screen outputs and a nicer progress bar when doing the full stack segmentation.
 - Added the printing on the slice number used in training and testing.
 - Added the number of estimators as an optional input at the end of the command line call of `Leaf_Segmentation.py`.
