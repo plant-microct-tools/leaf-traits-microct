@@ -140,7 +140,7 @@ A python version of the method used by [Earles et al. (2018)](#references) has b
 
 _The code is currently stable in an automated command line function. An interactive version, probably as notebook, will be produced from this code._
 
-#####What is being produced by the function:
+##### What is being produced by the function:
 
 Stacks as tiff files
 
@@ -186,7 +186,7 @@ python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_
 
 
 
-If you want to loop over your image directory, you can do so easily in a UNIX environment using the `find` command. Do do so, open your terminal and change directory up to your image folder (the '/path/to/your/image/directory/'). Then, you can loop over all the segmented stacks in that directory like this:
+If you want to loop over your image directory, you can do so easily in a UNIX environment using the `find` command. Do do so, open your terminal and change directory up to your image folder (the `'/path/to/your/image/directory/'`). Then, you can loop over all the segmented stacks in that directory like this:
 
 ```
 find -iname *SEGMENTED.tif -exec python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py {} 2 0.1625 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' \;
@@ -224,7 +224,7 @@ I am not using the post-processing that was in the previous code as it didn't im
 ## References
 __Earles JM, Theroux-Rancourt G, Roddy AB, Gilbert ME, McElrone AJ, Brodersen CR (2018)__ [Beyond Porosity: 3D Leaf Intercellular Airspace Traits That Impact Mesophyll Conductance.](http://www.plantphysiol.org/content/178/1/148) Plant Physiol 178: 148-162.
 
-__Théroux-Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElrone AJ, Brodersen CR (2017)__ [The bias of a two???dimensional view: comparing two???dimensional and three???dimensional mesophyll surface area estimates using noninvasive imaging.](https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.14687) New Phytol, 215: 1609-1622.
+__Théroux-Rancourt G, Earles JM, Gilbert ME, Zwieniecki MA, Boyce CK, McElrone AJ, Brodersen CR (2017)__ [The bias of a two-dimensional view: comparing two-dimensional and three-dimensional mesophyll surface area estimates using noninvasive imaging.](https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.14687) New Phytol, 215: 1609-1622.
 
 
 ## Contributors
