@@ -19,7 +19,7 @@ Created on Fri Nov 16 10:07:35 2018
 # __Created__ on 2018-03-21
 # by Guillaume Théroux-Rancourt (guillaume.theroux-rancourt@boku.ac.at)
 #
-# __Last edited__ on 2019-03-11
+# __Last edited__ on 2019-03-13
 #  by Guillaume Théroux-Rancourt
 #
 # Image processing note:
@@ -71,7 +71,14 @@ from tqdm import tqdm
 import joblib
 import multiprocessing
 
-
+__author__ = "Guillaume Théroux-Rancourt"
+__copyright__ = "Copyright 2007, The Cogent Project"
+__credits__ = ["Guillaume Théroux-Rancourt", "J. Mason Earles"]
+__license__ = "MIT"
+__version__ = ""
+__maintainer__ = "Guillaume Théroux-Rancourt"
+__email__ = "guillaume.theroux-rancourt@boku.ac.at"
+__status__ = "beta"
 
 t_start = time.time()
 
@@ -80,9 +87,9 @@ full_script_path = sys.argv[0]
 path_to_sample = str(sys.argv[1])
 rescale_factor = int(sys.argv[2])
 px_edge = float(sys.argv[3])
-nb_cores = multiprocessing.cpu_count() if len(sys.argv) == 5 else int(sys.argv[4])
-base_path = str(sys.argv[5])
-
+seg_values = sys.argv[4]
+nb_cores = multiprocessing.cpu_count() if len(sys.argv) == 6 else int(sys.argv[5])
+base_path = str(sys.argv[6])
 
 
 # Function to resize in all 3 dimensions
@@ -186,6 +193,7 @@ filepath = base_folder_name + sample_name + '/'
 
 px_edge_rescaled = px_edge * rescale_factor
 
+
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
     print('This file has already been processed!')
@@ -210,23 +218,43 @@ composite_stack = np.asarray(StackResize(
 unique_vals = np.unique(composite_stack)
 
 
-print "  Large stack shape:", str(composite_stack_large.shape)
-print "  Small stack shape:", str(composite_stack.shape)
-print "  Unique pattern values:", str(
-    unique_vals)  # to get all the unique values
+print "  Large stack shape: ", str(composite_stack_large.shape)
+print "  Small stack shape: ", str(composite_stack.shape)
+print "  Unique pattern values :", str(unique_vals)  # to get all the unique values
 
 del composite_stack_large
 
+if seg_values == 'default':
+    mesophyll_value = 0
+    stomata_value = 85 if np.any(unique_vals == 85) else 128
+    bg_value = 177
+    vein_value = 147
+    ias_value = 255
+    epidermis_ad_value = 30 if np.any(unique_vals == 30) else 60
+    epidermis_ab_value = 60 if np.any(unique_vals == 60) else 69
+    bs_value = 102
+    vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
+                epidermis_ab_value, epidermis_ad_value, bs_value]
+    stomata_value = unique_vals[unique_vals not in vals_str] if stomata_value not in unique_vals else stomata_value
+    vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
+                epidermis_ab_value, epidermis_ad_value, bs_value]
+    print "  Defined pattern values: ", str(vals_str)
+    print "  Stomata value: ", str(stomata_value)
+else:
+    pix_values = [int(x) for x in seg_values.split(',')]
+    # define pixel values
+    mesophyll_value = pix_values[0]
+    bg_value = pix_values[1]
+    ias_value = pix_values[2]
+    stomata_value = pix_values[3]
+    epidermis_ad_value = pix_values[4]
+    epidermis_ab_value = pix_values[5]
+    vein_value = pix_values[6]
+    bs_value = pix_values[7]
+    vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
+                epidermis_ab_value, epidermis_ad_value, bs_value]
+    print "  Defined pattern values: ", str(vals_str)
 
-# define pixel values
-mesophyll_value = 0
-stomata_value = 85 if np.any(unique_vals == 85) else 128
-bg_value = 177
-vein_value = 147
-ias_value = 255
-epidermis_ad_value = 30 if np.any(unique_vals == 30) else 60
-epidermis_ab_value = 60 if np.any(unique_vals == 60) else 69
-bs_value = 102
 
 
 # Create the binary stacks needed for the analysis
@@ -253,41 +281,34 @@ if np.sum(stomata_stack) == 0:
 
 # Detect edges of airspace
 # Better to work on largest airspace as this is what is needed further down.
-print '***CREATING THE OUTLINE OF THE AIRSPACE***'
-airspace_outline_smaller = Erosion3DimJ(largest_airspace)
-airspace_edge = invert(Threshold(largest_airspace-airspace_outline_smaller, 0))
-# io.imsave(filepath + '_airspace_edge.tif', img_as_ubyte(airspace_edge))
-del airspace_outline_smaller
+if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
+    print '***LOADING THE OUTLINE OF THE AIRSPACE***'
+    mesophyll_edge = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_TEST.tif')
+else:
+    # This piece of code is really innefficent. I could be improved to be Faster
+    # by not searching for all outline positions but only those near the epidermis.
 
+    print '***CREATING THE OUTLINE OF THE AIRSPACE***'
+    airspace_outline_smaller = Erosion3DimJ(largest_airspace)
+    airspace_edge = invert(Threshold(largest_airspace-airspace_outline_smaller, 0))
+    # io.imsave(filepath + '_airspace_edge.tif', img_as_ubyte(airspace_edge))
+    del airspace_outline_smaller
 
-print '  Removing the airspace edge neighbour to the epidermis'
-print '  (this will take several minutes)'
-edge_neighbours = np.zeros(airspace_edge.shape, dtype='uint8')
-mesophyll_edge = np.zeros(airspace_edge.shape, dtype='bool')
-p = np.transpose(np.where(airspace_edge))
-shape = airspace_edge.shape
+    print '  Removing the airspace edge neighbour to the epidermis'
+    print '  (this will take several minutes)'
+    edge_neighbours = np.zeros(airspace_edge.shape, dtype='uint8')
+    mesophyll_edge = np.zeros(airspace_edge.shape, dtype='bool')
+    p = np.transpose(np.where(airspace_edge))
+    shape = airspace_edge.shape
 
-bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
- (p[i, ], composite_stack, epidermis_ab_value, epidermis_ad_value, shape)
- for i in tqdm(np.arange(p.shape[0])))
+    bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
+     (p[i, ], composite_stack, epidermis_ab_value, epidermis_ad_value, shape)
+     for i in tqdm(np.arange(p.shape[0])))
 
-for i in tqdm(np.arange(p.shape[0])):
-    mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
+    for i in tqdm(np.arange(p.shape[0])):
+        mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
 
-io.imsave(filepath + 'MESOPHYLL_EDGE_TEST.tif', img_as_ubyte(mesophyll_edge))
-
-
-# Get the distance maps
-mask = ~largest_airspace.astype(bool)
-
-stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
-stom_mask = invert(stomata_stack)
-
-# Check if stomata stack does include values
-# Will throw an error if at least one stomata is disconnected from the airspace
-if np.sum(stomata_stack) == 0:
-    print 'ERROR: at least one stomata is disconnected from the airspace!'
-    assert False
+    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_TEST.tif', img_as_ubyte(mesophyll_edge))
 
 
 # ## Get the Euclidian distance from all stomata
@@ -331,6 +352,7 @@ L_geo_average = np.mean(L_geo, axis=0)
 
 print '***COMPUTING TORTUOSITY FACTOR, TAU***'
 Tortuosity_Factor = np.square(L_geo / L_euc)
+Tortuosity_Factor[Tortuosity_Factor < 1] = 1
 Tortuosity_factor_average_ax0 = np.mean(Tortuosity_Factor, axis=0)
 Tortuosity_factor_average_ax2 = np.mean(Tortuosity_Factor, axis=2)
 
@@ -341,99 +363,6 @@ io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax0.tif',
           np.asarray(Tortuosity_factor_average_ax0, dtype="float32"))
 io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax2.tif',
           np.asarray(Tortuosity_factor_average_ax2, dtype="float32"))
-
-
-print '***FINDING THE UNIQUE STOMATA REGIONS***'
-print '  this'
-# Make the stomata appear on a 2D surface, i.e. stomata positions
-stomata_pos_paradermal = np.sum(stomata_stack, axis=1)
-print '  may'
-unique_stoma = label(stomata_stack, connectivity=1)
-print '  take'
-props_of_unique_stoma = regionprops(unique_stoma)
-print '  a'
-stoma_centroid = np.zeros([len(props_of_unique_stoma), 3])
-print '  while'
-stomata_regions = np.zeros(stomata_stack.shape, dtype='uint8')
-
-for regions in tqdm(np.arange(len(props_of_unique_stoma))):
-    stoma_centroid[regions] = props_of_unique_stoma[regions].centroid
-    L_euc_stom = np.ma.masked_array(distance_transform_edt(
-        invert(unique_stoma == props_of_unique_stoma[regions].label)), mask)
-    stomata_regions[L_euc_stom == L_euc] = props_of_unique_stoma[regions].label
-    del L_euc_stom
-
-regions_all = np.unique(stomata_regions)
-
-regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
-                                              np.unique(stomata_regions[-1, :, :]),
-                                              np.unique(stomata_regions[:, 0, :]),
-                                              np.unique(stomata_regions[:, -1, :]),
-                                              np.unique(stomata_regions[:, :, 0]),
-                                              np.unique(stomata_regions[:, :, -1])]))
-
-regions_full_in_center = regions_all[regions_at_border.take(
-    np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
-
-full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
-for i in np.arange(len(regions_full_in_center)):
-    full_stomata_regions_mask[stomata_regions
-                              == regions_full_in_center[i]] = True
-
-# DisplayRndSlices(full_stomata_regions_mask, 4)
-
-print '***SAVING THE UNIQUE STOMATAL REGIONS STACK***'
-io.imsave(filepath + sample_name + '-STOMATAL_REGIONS.tif',
-          img_as_ubyte(stomata_regions*int(np.floor(255/max(regions_all)))))
-
-print '  Number of pixels in full stomatal regions: ' + \
-    str(np.sum(full_stomata_regions_mask))
-print '  Total number of airspace pixels: ' + str(np.sum(airspace_stack))
-
-
-print('***EXTRACTING DATA FROM SINGLE STOMA REGIONS***')
-SA_single_region = np.empty(len(regions_full_in_center))
-Pore_volume_single_region = np.copy(SA_single_region)
-for regions in tqdm(np.arange(len(regions_full_in_center))):
-    regions_bool = stomata_regions == regions_full_in_center[regions]
-    ias_vert_faces = marching_cubes_lewiner(regions_bool)
-    ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
-    SA_single_region[regions] = ias_SA * (px_edge_rescaled**2)
-    Pore_volume_single_region[regions] = np.sum(regions_bool)
-
-stoma_export_col_fix = int(np.floor(255/max(regions_all)))
-
-single_stoma_data = {"stoma_nb": regions_full_in_center,
-                     "stoma_color_value": regions_full_in_center*stoma_export_col_fix,
-                     "SA_single_region_um2": SA_single_region,
-                     "Pore_volume_single_region_um3": Pore_volume_single_region
-                     }
-
-
-#airspace_edge_bool = invert(~airspace_edge.astype(bool))
-
-# Select only the values at the edge of the airspace and within the full stomata
-# Will have to find a way to include a larger zone of stomata
-edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
-
-# np.where applies a condition to find True value, select those in an array
-# (here values above or equal to 1, as tortuosity cannot be less than 1),
-# and fills the False values with a specified value (here 0).
-Tortuosity_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
-                                       np.where(Tortuosity_Factor >= 1,
-                                                Tortuosity_Factor, 0), 0)
-
-Tortuosity_values_for_stats = Tortuosity_at_airspace_edge[Tortuosity_at_airspace_edge >= 1]
-
-print "***TORTUOSITY VALUES AT THE AIRSPACE EDGE***"
-print np.nanmedian(Tortuosity_values_for_stats)
-print np.nanmean(Tortuosity_values_for_stats)
-print np.nanstd(Tortuosity_values_for_stats)
-print np.nanvar(Tortuosity_values_for_stats)
-print np.nanmin(Tortuosity_values_for_stats)
-print np.nanmax(Tortuosity_values_for_stats)
-print ''
-
 
 # ## Compute lateral diffusivity
 print '***MAP THE ABAXIAL EPIDERMIS***'
@@ -489,10 +418,99 @@ io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax2.tif',
           np.asarray(Path_lenghtening_average_ax2, dtype="float32"))
 
 
+print '***FINDING THE UNIQUE STOMATA REGIONS***'
+print '  this'
+# Make the stomata appear on a 2D surface, i.e. stomata positions
+stomata_pos_paradermal = np.sum(stomata_stack, axis=1)
+print '  may'
+unique_stoma = label(stomata_stack, connectivity=1)
+print '  take'
+props_of_unique_stoma = regionprops(unique_stoma)
+print '  a'
+stoma_centroid = np.zeros([len(props_of_unique_stoma), 3])
+print '  while'
+stomata_regions = np.zeros(stomata_stack.shape, dtype='uint8')
+
+for regions in tqdm(np.arange(len(props_of_unique_stoma))):
+    stoma_centroid[regions] = props_of_unique_stoma[regions].centroid
+    L_euc_stom = np.ma.masked_array(distance_transform_edt(
+        invert(unique_stoma == props_of_unique_stoma[regions].label)), mask)
+    stomata_regions[L_euc_stom == L_euc] = props_of_unique_stoma[regions].label
+    del L_euc_stom
+
+regions_all = np.unique(stomata_regions)
+
+regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
+                                              np.unique(stomata_regions[-1, :, :]),
+                                              np.unique(stomata_regions[:, 0, :]),
+                                              np.unique(stomata_regions[:, -1, :]),
+                                              np.unique(stomata_regions[:, :, 0]),
+                                              np.unique(stomata_regions[:, :, -1])]))
+
+regions_full_in_center = regions_all[regions_at_border.take(
+    np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
+
+full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
+for i in np.arange(len(regions_full_in_center)):
+    full_stomata_regions_mask[stomata_regions
+                              == regions_full_in_center[i]] = True
+
+# DisplayRndSlices(full_stomata_regions_mask, 4)
+
+print '***SAVING THE UNIQUE STOMATAL REGIONS STACK***'
+io.imsave(filepath + sample_name + '-STOMATAL_REGIONS.tif',
+          img_as_ubyte(stomata_regions*int(np.floor(255/max(regions_all)))))
+
+print '  Number of pixels in full stomatal regions: ' + \
+    str(np.sum(full_stomata_regions_mask))
+print '  Total number of airspace pixels: ' + str(np.sum(airspace_stack))
+
+if np.sum(full_stomata_regions_mask) == 0:
+    print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
+    # If there are no single stomata regions, we still compute the values at the airspace edge.
+    edge_and_full_stomata_mask = mesophyll_edge
+else:
+    print('***EXTRACTING DATA FROM SINGLE STOMA REGIONS***')
+    SA_single_region = np.empty(len(regions_full_in_center))
+    Pore_volume_single_region = np.copy(SA_single_region)
+    for regions in tqdm(np.arange(len(regions_full_in_center))):
+        regions_bool = stomata_regions == regions_full_in_center[regions]
+        ias_vert_faces = marching_cubes_lewiner(regions_bool)
+        ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
+        SA_single_region[regions] = ias_SA * (px_edge_rescaled**2)
+        Pore_volume_single_region[regions] = np.sum(regions_bool)
+
+    stoma_export_col_fix = int(np.floor(255/max(regions_all)))
+
+    single_stoma_data = {"stoma_nb": regions_full_in_center,
+                         "stoma_color_value": regions_full_in_center*stoma_export_col_fix,
+                         "SA_single_region_um2": SA_single_region,
+                         "Pore_volume_single_region_um3": Pore_volume_single_region
+                         }
+    # Select only the values at the edge of the airspace and within the full stomata
+    # Will have to find a way to include a larger zone of stomata
+    edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
+
+# np.where applies a condition to find True value, select those in an array
+# (here values above or equal to 1, as tortuosity cannot be less than 1),
+# and fills the False values with a specified value (here 0).
+Tortuosity_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
+                                       np.where(Tortuosity_Factor >= 1,
+                                                Tortuosity_Factor, 0), 0)
+Tortuosity_values_for_stats = Tortuosity_at_airspace_edge[Tortuosity_at_airspace_edge >= 1]
+
+print "***TORTUOSITY VALUES AT THE AIRSPACE EDGE***"
+print np.nanmedian(Tortuosity_values_for_stats)
+print np.nanmean(Tortuosity_values_for_stats)
+print np.nanstd(Tortuosity_values_for_stats)
+print np.nanvar(Tortuosity_values_for_stats)
+print np.nanmin(Tortuosity_values_for_stats)
+print np.nanmax(Tortuosity_values_for_stats)
+print ''
+
 Path_lenghtening_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
                                              np.where(Path_lenghtening >= 1,
                                                       Path_lenghtening, 0), 0)
-
 Path_lenghtening_values_for_stats = Path_lenghtening_at_airspace_edge[Path_lenghtening_at_airspace_edge >= 1]
 
 print '***PATH LENGTH VALUES AT AIRSPACE EDGE***'
@@ -554,9 +572,13 @@ results_out = DataFrame(data_out, index={sample_name})
 results_out.to_csv(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt',
                    sep='\t', encoding='utf-8')
 
-full_stoma_out = DataFrame(single_stoma_data)
-full_stoma_out.to_csv(base_folder_name + sample_name + '/'
-                      + sample_name + 'SINGLE-STOMA-RESULTS', sep='\t', encoding='utf-8')
+if 'single_stoma_data' in locals():
+    full_stoma_out = DataFrame(single_stoma_data)
+    full_stoma_out.to_csv(base_folder_name + sample_name + '/'
+                          + sample_name + 'SINGLE-STOMA-RESULTS', sep='\t', encoding='utf-8')
+else:
+    thefile = open(filepath + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
+
 
 # To save a txt file will all the data points
 thefile = open(filepath + sample_name + '_Path_lenghtening_profile.txt', 'w')

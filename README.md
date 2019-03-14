@@ -136,17 +136,19 @@ Please note that this code will most probably have to be fine-tuned to each expe
 
 
 ### Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity.py`
-A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable enough and has been used to analysis more than 30 segmented scans. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it.
+A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable and has been used to analysis more than 30 segmented scans in an automated command line function. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it. If you run into an error, please create an issue and copy the error message into it. An interactive version, probably as notebook, will be produced from this code.
 
-_The code is currently stable in an automated command line function. An interactive version, probably as notebook, will be produced from this code._
+Note that the code works only for hypostomatous leaves with stomata on the abaxial surface at the moment. I will implement other types of leaves as I run into them. If you have some, please contact me.
 
-##### What is being produced by the function:
+
+#### What is being produced by the function:
 
 Stacks as tiff files
 
 - 3D stacks of the Tortuosity factor and Path length at the edge of the airspace (32-bit)
 - 2D means in cross and longitudinal sections of the above (32-bit)
 - 3D stack of the unique stoma airspace regions, i.e. the regions of the airspace colored according to the closest stoma. This is computed by computing the geodesic distance starting for each stoma and comparing with the global geodesic distance. A unique region is then defined as L<sub>geo</sub><sup>i</sup> = L<sub>geo_leaf</sub>, where _i_ is the number of the stoma.
+- 3D stack of the airspace outline touching only mesophyll cell, but not touching the epidermis (i.e. the edge of the mesophyll cells).
 
 Results as text files
 
@@ -156,18 +158,20 @@ Results as text files
 
 ***
 
+#### How to use the code
 
+You need a segmented stack with the stomata labelled with a color value that is different to all of the other tissue values of the segmented stack. In ImageJ, I use _red_ (value of 85 in 8-bit), which is different from all other values. The stoma are labelled as an circle or ellipse that start at the point where the stoma opens and is connected to the airspace. I usually draw the ellipse on four slices since I reduce the size of my stacks because of their very large size and the computing power needed for them (i.e. it stalls my 64GB RAM machines too much). If one stoma is not connected to the airspace, the program will stop. But if they are well labelled, then it will work out very well.
 
 To use the code, type the line below in your terminal window:
 
 ```
-python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py sample_folder/full_filename rescale_factor pixel_size nb_cores '/path/to/your/image/directory/'
+python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py sample_folder/full_filename rescale_factor pixel_size 'tissue_values' nb_cores '/path/to/your/image/directory/'
 ```
 
 Real example:
 
 ```
-python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif 2 0.1625 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'
+python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif 2 0.1625 default 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'
 ```
 
 `python`: This just calls python 2.
@@ -180,6 +184,8 @@ python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_
 
 `pixel_size`: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
 
+`'tissue_values'`: Either `default` for the default values I use or a string of values correspond to the pixel value, found in ImageJ, for the following tissues in this exact order (default values in parentheses): mesophyll cells (0), background (177), airspace (255), stomata (85), adaxial epidermis (30), abaxial epidermis (60), veins (147), bundle sheath (102). Repeat the vein value for the bundle sheath if the latter is not segmented, and same thing for the epidermises. In the command line, this would look like: `'0,177,255,85,30,60,147,102'` (don't forget `''`).
+
 `nb_cores`: Optional. If not provided, will use all cores available for some more intensive computation.
 
 `'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
@@ -189,7 +195,7 @@ python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_
 If you want to loop over your image directory, you can do so easily in a UNIX environment using the `find` command. Do do so, open your terminal and change directory up to your image folder (the `'/path/to/your/image/directory/'`). Then, you can loop over all the segmented stacks in that directory like this:
 
 ```
-find -iname *SEGMENTED.tif -exec python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py {} 2 0.1625 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' \;
+find -iname *SEGMENTED.tif -exec python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py {} 2 0.1625 default 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' \;
 ```
 
 Here, `find` searches for all files ending with `SEGMENTED.tif` and, for each file found pipes it to the `Leaf_Tortuosity.py` function through `{}`, which correspond to a character string with the path from the current directory up to the file found. In my case, `{}` would be replaced by `./C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif` for example, where `./` represent the current directory (which is already specified in the call to the function, so this isn't used).
@@ -255,6 +261,10 @@ new features. You can submit issues here:
 
 
 ## Change log
+##### 2019-03-14
+- Tortuosity code now accepts specific color values for each tissue.
+- Save the mesophyll edge as a stack (i.e. the airspace minus the surface touching the epidermis).
+
 ##### 2019-03-11 - Tortuosity code only
 - Tortuosity code is now fully fonctionnal and can be run from the command line.
 - Found an error in how the epidermis edge was computed, which caused problem with how the segmentation causes un-smoothed epidermis. Fixed it by drawing a larger epidermis edge (3 pixels length) and purifying the resulting stack to get only one epidermis edge, hence removing the smallish un-connected epidermis elsewhere. This caused a problem when both epidermis have the same label value.
