@@ -195,8 +195,7 @@ px_edge_rescaled = px_edge * rescale_factor
 
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
-    print('This file has already been processed!')
-    assert False
+    raise ValueError('This file has already been processed!')
 
 
 # Read composite stack including slabelling of stomata
@@ -281,7 +280,7 @@ if np.sum(stomata_stack) == 0:
 # Better to work on largest airspace as this is what is needed further down.
 if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
     print '***LOADING THE OUTLINE OF THE AIRSPACE***'
-    mesophyll_edge = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_TEST.tif')
+    mesophyll_edge = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE.tif')
 else:
     # This piece of code is really innefficent. I could be improved to be Faster
     # by not searching for all outline positions but only those near the epidermis.
@@ -307,7 +306,7 @@ else:
     for i in tqdm(np.arange(p.shape[0])):
         mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
 
-    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_TEST.tif', img_as_ubyte(mesophyll_edge))
+    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
 
 
 # ## Get the Euclidian distance from all stomata
@@ -465,7 +464,7 @@ print '  Number of pixels in full stomatal regions: ' + \
     str(np.sum(full_stomata_regions_mask))
 print '  Total number of airspace pixels: ' + str(np.sum(airspace_stack))
 
-if np.sum(full_stomata_regions_mask) == 0:
+if np.sum(full_stomata_regions_mask) < 10000:
     print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
     # If there are no single stomata regions, we still compute the values at the airspace edge.
     edge_and_full_stomata_mask = mesophyll_edge
