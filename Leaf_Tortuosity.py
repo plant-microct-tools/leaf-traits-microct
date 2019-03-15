@@ -19,7 +19,7 @@ Created on Fri Nov 16 10:07:35 2018
 # __Created__ on 2018-03-21
 # by Guillaume Théroux-Rancourt (guillaume.theroux-rancourt@boku.ac.at)
 #
-# __Last edited__ on 2019-03-13
+# __Last edited__ on 2019-03-15
 #  by Guillaume Théroux-Rancourt
 #
 # Image processing note:
@@ -34,8 +34,8 @@ Created on Fri Nov 16 10:07:35 2018
 #    use an ellipsis, but any form would do. I saved that ROI into the ROI
 #    manager, and proceeded to the other stomata. When I labelled all at their
 #    right location, I filled all ROI with a specific color on the segmented
-#    stack in paradermal view [using this macro]:
-#    (https://github.com/gtrancourt/imagej_macros/blob/master/macros/fillInside-macro.txt)).
+#    stack in paradermal view, either manually or with the following macro:
+#    https://github.com/gtrancourt/imagej_macros/blob/master/macros/fillInside-macro.txt.
 #    I then replaced it to the former view (i.e. in te same direction as to get
 #    the paradermal view).
 #
@@ -45,13 +45,9 @@ Created on Fri Nov 16 10:07:35 2018
 #  probably due to the different implementations of the geodesic distance
 #  computation.
 #
-# TO DO:
-# - Remove values near epidermis for 'airspace_edge' so they are not used for
-#   computing the median value for Tortuosity and Path length
-#
-#I've got help and inspiration from:
-#- https://stackoverflow.com/questions/28187867/geodesic-distance-transform-in-python
-#- https://stackoverflow.com/questions/47540926/get-the-largest-connected-component-of-segmentation-image
+# I've got help and inspiration from:
+# - https://stackoverflow.com/questions/28187867/geodesic-distance-transform-in-python
+# - https://stackoverflow.com/questions/47540926/get-the-largest-connected-component-of-segmentation-image
 
 
 import sys
@@ -156,8 +152,10 @@ def getLargestAirspace(input_img):
     largest_airspace = (labeled_img == largest_airspace_label)
     return largest_airspace
 
+
 def get_neighbours(p, exclude_p=True, shape=None):
-# https://stackoverflow.com/questions/34905274/how-to-find-the-neighbors-of-a-cell-in-an-ndarray
+    # Taken from:
+    # https://stackoverflow.com/questions/34905274/how-to-find-the-neighbors-of-a-cell-in-an-ndarray
     ndim = len(p)
     # generate an (m, ndims) array containing all strings over the alphabet {0, 1, 2}:
     offset_idx = np.indices((3,) * ndim).reshape(ndim, -1).T
@@ -172,6 +170,7 @@ def get_neighbours(p, exclude_p=True, shape=None):
         valid = np.all((neighbours < np.array(shape)) & (neighbours >= 0), axis=1)
         neighbours = neighbours[valid]
     return neighbours
+
 
 def get_bad_neighbours(pos, img_stack, value1, value2, shape):
     neigh = get_neighbours(pos, shape=shape)
@@ -256,7 +255,6 @@ else:
     print "  Defined pattern values: ", str(vals_str)
 
 
-
 # Create the binary stacks needed for the analysis
 print ''
 print '***CREATE BINARY STACKS***'
@@ -302,8 +300,9 @@ else:
     shape = airspace_edge.shape
 
     bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
-     (p[i, ], composite_stack, epidermis_ab_value, epidermis_ad_value, shape)
-     for i in tqdm(np.arange(p.shape[0])))
+                                                      (p[i, ], composite_stack, epidermis_ab_value,
+                                                       epidermis_ad_value, shape)
+                                                      for i in tqdm(np.arange(p.shape[0])))
 
     for i in tqdm(np.arange(p.shape[0])):
         mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
@@ -376,10 +375,11 @@ if epidermis_ab_value != epidermis_ad_value:
                invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down, 0)
     epidermis_edge_bottom = epidermis_ab_stack
 else:
-    mesophyll_stack = np.asarray(Threshold(composite_stack, [mesophyll_value,vein_value,ias_value,stomata_value]), np.bool)
+    mesophyll_stack = np.asarray(
+        Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), np.bool)
     mesophyll_stack_shifted_up = np.roll(mesophyll_stack, -3, axis=1)
 #    mesophyll_stack_shifted_down = np.roll(mesophyll_stack, 3, axis=1)
-    epidermis_edge_bottom = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_up , 0)
+    epidermis_edge_bottom = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_up, 0)
 #    epidermis_edge_top = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_down , 0)
 #    amphistomatous_epidermis = Threshold(epidermis_edge_bottom + epidermis_edge_top, 1)
 
@@ -523,9 +523,9 @@ print np.nanmin(Path_lenghtening_values_for_stats)
 print np.nanmax(Path_lenghtening_values_for_stats)
 print ''
 
-
+print '***COMPUTING SUMMARY VALUES***'
 Path_lenght_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,
-                                                                 Path_lenghtening_at_airspace_edge, np.nan), axis=0)
+                                                            Path_lenghtening_at_airspace_edge, np.nan), axis=0)
 
 Tortuosity_at_airspace_edge_median = np.nanmedian(np.where(Tortuosity_at_airspace_edge != 0,
                                                            Tortuosity_at_airspace_edge, np.nan), axis=0)
@@ -551,7 +551,7 @@ pos_at_50_porosity = (porosity_rel_ >= 0.5).argmax()
 porosity_sum = np.sum(airspace_stack, axis=(0, 2))
 porosity_rel = porosity_sum/np.float(porosity_sum.max())
 
-
+print '***SAVING DATA***'
 # Write the data into a data frame
 data_out = {'Tortuosity_MEAN': np.nanmean(Tortuosity_values_for_stats),
             'Tortuosity_MEDIAN': np.nanmedian(Tortuosity_values_for_stats),

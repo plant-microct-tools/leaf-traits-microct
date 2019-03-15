@@ -140,7 +140,12 @@ A python version of the method used by [Earles et al. (2018)](#references) has b
 
 Note that the code works only for hypostomatous leaves with stomata on the abaxial surface at the moment. I will implement other types of leaves as I run into them. If you have some, please contact me.
 
+If you use this code to compute the geometric tortuosity and the path lengthening, please cite it as something like this ([full reference to the paper here](#references)):
 
+> ... using the python version (github.com/gtrancourt/microct-leaf-traits) of [Earles et al. (2018)](#references) method...
+
+
+ 
 #### What is being produced by the function:
 
 Stacks as tiff files
