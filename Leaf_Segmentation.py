@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-from Leaf_Segmentation_Functions import *
+
 """
 Created on Fri Nov 16 10:07:35 2018
 
@@ -16,6 +16,7 @@ Created on Fri Nov 16 10:07:35 2018
 # Edit lines 75-77 in order to reflect fyour file naming convention.
 
 # Import libraries
+from Leaf_Segmentation_Functions import *
 import sys
 import os
 import gc
