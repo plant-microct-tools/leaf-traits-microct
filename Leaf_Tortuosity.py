@@ -68,7 +68,7 @@ import joblib
 import multiprocessing
 
 __author__ = "Guillaume Théroux-Rancourt"
-__copyright__ = "Copyright 2007, The Cogent Project"
+__copyright__ = ""
 __credits__ = ["Guillaume Théroux-Rancourt", "J. Mason Earles"]
 __license__ = "MIT"
 __version__ = ""
@@ -477,7 +477,7 @@ else:
         ias_vert_faces = marching_cubes_lewiner(regions_bool)
         ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
         SA_single_region[regions] = ias_SA * (px_edge_rescaled**2)
-        Pore_volume_single_region[regions] = np.sum(regions_bool)
+        Pore_volume_single_region[regions] = np.sum(regions_bool) * (px_edge_rescaled**3)
 
     stoma_export_col_fix = int(np.floor(255/max(regions_all)))
 
