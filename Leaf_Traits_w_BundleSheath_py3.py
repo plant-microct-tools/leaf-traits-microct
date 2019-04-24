@@ -61,7 +61,9 @@ filepath = base_folder_name + sample_name + '/'
 #%%
 # Check if the file has already been processed -- Just in case!
 if os.path.isfile(filepath + sample_name + 'RESULTS.txt'):
+    print('')
     print('This file has already been processed!')
+    print('')
     assert False
 
 

@@ -29,6 +29,8 @@ __email__ = "guillaume.theroux-rancourt@boku.ac.at"
 __status__ = "beta"
 
 # Define functions
+
+
 def Trim_Individual_Stack(large_stack, small_stack):
 
     dims = np.array(binary_stack.shape, dtype='float') / \
@@ -79,9 +81,17 @@ filepath = base_folder_name + sample_name + '/'
 binary_filename = sample_name + 'BINARY-8bit.tif'
 # raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
+print('')
+print('#################')
+print('# STARTING WITH #')
+print('#################')
+print(' ' + sample_name)
+
 # Check if the file has already been processed -- Just in case!
 if os.path.isfile(filepath + sample_name + 'RESULTS.txt'):
+    print('')
     print('This file has already been processed!')
+    print('')
     assert False
 
 # Load the ML segmented stack
@@ -135,6 +145,16 @@ for regions in np.arange(len(props_of_unique_epidermis)):
 ordered_epidermis = np.argsort(epidermis_area)
 print('The two largest values below should be in the same order of magnitude')
 print((epidermis_area[ordered_epidermis[-4:]]))
+
+if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
+    print('#########################################')
+    print('#########################################')
+    print('ERROR: Both epidermis might be connected!')
+    print('' + sample_name)
+    print('#########################################')
+    print('#########################################')
+    assert False
+
 print("")
 print('The center of the epidermis should be more or less the same on the 1st and 3rd columns')
 print((epidermis_centroid[ordered_epidermis[-4:]]))
@@ -185,9 +205,7 @@ epidermis_adaxial_thickness = np.sum(
 ###################
 ## VEINS
 ###################
-print('')
 print('### VEINS ###')
-print('')
 # Get the veins volumes
 unique_vein_volumes = label(raw_pred_stack == vein_value, connectivity=1)
 props_of_unique_veins = regionprops(unique_vein_volumes)
@@ -228,13 +246,10 @@ vein_volume = np.sum(largest_veins) * (px_edge * (px_edge*2)**2)
 # io.imshow(largest_veins[100])
 
 
-
 ###################
 ## BUNDLE SHEATHS
 ###################
-print('')
 print('### BUNDLE SHEATHS ###')
-print('')
 # Get the veins volumes
 unique_bs_volumes = label(raw_pred_stack == bs_value, connectivity=1)
 props_of_unique_bs = regionprops(unique_bs_volumes)
@@ -275,7 +290,6 @@ bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
 # io.imshow(largest_bs[100])
 
 
-
 # FREE UP SOME MEMORY
 del props_of_unique_bs, props_of_unique_epidermis, props_of_unique_veins
 gc.collect()
@@ -303,7 +317,7 @@ gc.collect()
 ##############################
 print('')
 print('### LOADING ORIGINAL SIZED BINARY STACK ###')
-print('')
+
 # I've started compressing my files. The code below extracts the file,
 # loads it into memory, and then deletes the file (it's still in memory).
 # The commented code at the end loads the uncompressed image.
@@ -325,7 +339,6 @@ binary_stack = binary_stack[:, :, (trim_column*2):(-trim_column*2)]
 # io.imshow(binary_stack[100])
 
 
-
 #Check and trim the binary stack if necessary
 # This is to match the dimensions between all images
 # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
@@ -336,7 +349,6 @@ binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 #binary_stack = np.delete(binary_stack, 818, axis=0)
 
 #binary_stack = np.delete(binary_stack, np.arange(0, 160*2), axis=2)
-
 
 
 # This cell creates an empty array filled with the backgroud color (177), then
@@ -433,9 +445,11 @@ air_volume = np.sum(large_segmented_stack == ias_value) * vx_volume
 epidermis_abaxial_volume = np.sum(large_segmented_stack == abaxial_epidermis_value) * vx_volume
 epidermis_adaxial_volume = np.sum(large_segmented_stack == adaxial_epidermis_value) * vx_volume
 vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
+bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
 
 print(leaf_volume)
-print((cell_volume + air_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume))
+print((cell_volume + air_volume + epidermis_abaxial_volume
+       + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume))
 
 
 #Measure the thickness of the leaf, the epidermis, and the mesophyll
@@ -448,10 +462,14 @@ epidermis_abaxial_thickness = np.sum(
 epidermis_adaxial_thickness = np.sum(
     large_segmented_stack == adaxial_epidermis_value, axis=1) * px_edge
 
+print('Leaf thickness')
 print((np.median(leaf_thickness), leaf_thickness.mean(), leaf_thickness.std()))
+print('Mesophyll thickness')
 print((np.median(mesophyll_thickness), mesophyll_thickness.mean(), mesophyll_thickness.std()))
+print('Epidermis thickness (Adaxial)')
 print((np.median(epidermis_adaxial_thickness),
        epidermis_adaxial_thickness.mean(), epidermis_adaxial_thickness.std()))
+print('Epidermis thickness (Abaxial)')
 print((np.median(epidermis_abaxial_thickness),
        epidermis_abaxial_thickness.mean(), epidermis_abaxial_thickness.std()))
 
@@ -530,7 +548,6 @@ print(('Ames/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bs_volume))))
 ##  when bundle sheath extensions are present.
 #largest_connected_ias_SA = sum(ias_SA[-1:])
 #largest_connected_ias_volume = sum(ias_area[ordered_ias[-1:]]) * vx_volume
-
 
 
 # Write the data into a data frame
