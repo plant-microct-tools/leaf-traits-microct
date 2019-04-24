@@ -1,5 +1,5 @@
 
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov  5 20:03:05 2018
@@ -50,8 +50,8 @@ vx_volume = px_edge**3
 #%%
 
 #Load segmented image
-base_folder_name = '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
-sample_name = 'C_I_12_Strip3_'
+base_folder_name = '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Vineyard_shading/_ML_Done/'
+sample_name = 'Cabernet_Sauv_Shade_2b_'
 folder_name = 'MLresults/'
 binary_filename = sample_name + 'BINARY-8bit.tif' # sample_name + '_BINARY-8bit-CROPPED.tif'
 raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
@@ -71,7 +71,7 @@ raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
 print((np.unique(raw_pred_stack[100])))
 
 # Trim at the edges -- The ML does a bad job there
-# Here I remove 50 slices at the beginning and the end, 
+# Here I remove 50 slices at the beginning and the end,
 # and 40 pixels at the left and right edges
 trim_slices = 50
 trim_column = 40
@@ -81,6 +81,7 @@ raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices,:,trim_column:-trim_col
 io.imshow(raw_pred_stack[100])
 #%%
 # Define the values for each tissue
+# Validate against the values printed in the previous output
 
 epid_value = 51
 bg_value = 204
@@ -113,8 +114,10 @@ for regions in np.arange(len(props_of_unique_epidermis)):
 ordered_epidermis = np.argsort(epidermis_area)
 print('The two largest values below should be in the same order of magnitude')
 print((epidermis_area[ordered_epidermis[-4:]]))
+print("")
 print('The center of the epidermis should be more or less the same on the 1st and 3rd columns')
 print((epidermis_centroid[ordered_epidermis[-4:]]))
+print("")
 
 two_largest_epidermis = (unique_epidermis_volumes == ordered_epidermis[-1]+1) | (unique_epidermis_volumes == ordered_epidermis[-2]+1)
 
@@ -135,7 +138,7 @@ for regions in np.arange(len(props_of_unique_epidermis)):
     epidermis_label[regions] = props_of_unique_epidermis[regions].label
     epidermis_centroid[regions] = props_of_unique_epidermis[regions].centroid
 
-#io.imshow(unique_epidermis_volumes[100])
+io.imshow(unique_epidermis_volumes[100])
 
 # Transform the array to 8-bit: no need for the extra precision as there are only 3 values
 unique_epidermis_volumes = np.array(unique_epidermis_volumes, dtype='uint8')
@@ -344,13 +347,13 @@ print((np.unique(large_segmented_stack[100])))
 
 # Special tiff saving option for ImageJ compatibility when files larger than
 # 2 Gb. It's like it doesn't recognize something if you don't turn this option
-# on for large files and then ImageJ or FIJI fail to load the large stack 
+# on for large files and then ImageJ or FIJI fail to load the large stack
 # (happens on my linux machine installed with openSUSE Tumbleweed).
 if large_segmented_stack.nbytes >= 2e9:
     imgj_bool = True
 else:
     imgj_bool = False
-    
+
 # Save the image
 io.imsave(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif', large_segmented_stack, imagej=imgj_bool)
 
