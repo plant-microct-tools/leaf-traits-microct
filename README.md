@@ -86,6 +86,14 @@ Before moving on to the next step, make sure that your __files are named in a re
 Finally, a note about __bit depth__. Preferably, use 8-bit images for the machine learning segmentation. Files are smaller in size and it will take up less RAM. However, the program can have 16 or 32-bit images as input, as long as the right threshold value is used as an input (see next section).
 
 ### Leaf segmentation: `Leaf_Segmentation.py`
+
+##### A note on python versions
+This code was initially written in python2 and has now been ported successfully to python3. Both version of the code are available and are working, but as python2 will reach the end of its life in January 2020, the python3 version of the code will be the one actively maintained.
+
+Note however that if you used python2 for a file, you might need to use that version for that specific file as the `joblib` library used to store the trained model cannot open files saved in python2 at the moment. It will probably be integrated in the future but was not available when this document was last updated.
+
+***
+
 The program is currently setup to run non-interactively from the command line. I chose this in order to run multiple segmentation processes overnight. Another advantage is that it clears the memory efficiently when the program ends.
 
 The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
@@ -93,16 +101,16 @@ The program is run from the command line interface (`terminal` under macOS, `cmd
 From the terminal window, the program is called like this:
 
 ```
-python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py filename_ PHASE GRID 'list,of,slices,in,imagej,1,2,3,4' rescale_factor threshold_rescale_factor '/path/to/your/image/directory/' nb_of_estimators
+python3 /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation_py3.py filename_ PHASE GRID 'list,of,slices,in,imagej,1,2,3,4' rescale_factor threshold_rescale_factor '/path/to/your/image/directory/' nb_of_estimators
 ```
 
 Real example:
 
 ```
-python ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py Carundinacea2004_0447_ 82 123 '83,275,321,467,603,692' 1 1 '/run/media/gtrancourt/GTR_Touro/Grasses_uCT/'
+python3 ~/Dropbox/_github/3DLeafCT/ML_microCT/src/Leaf_Segmentation_py3.py Carundinacea2004_0447_ 82 123 '83,275,321,467,603,692' 1 1 '/run/media/gtrancourt/GTR_Touro/Grasses_uCT/'
 ```
 
-`python`: This just calls python 2.
+`python3`: This just calls python 3.
 
 `/path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Segmentation.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` for the path to the repository. This is also the folder in which the functions code is located (`Leaf_Segmentation_Functions.py`) and this file is called by `Leaf_Segmentation.py`. _The functions will be soon merged into the segmentation code._
 
@@ -135,7 +143,7 @@ A jupyter notebook rendering of the post-processing and leaf trait analysis code
 Please note that this code will most probably have to be fine-tuned to each experiment.
 
 
-### Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity.py`
+### Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity_py3.py`
 A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable and has been used to analysis more than 30 segmented scans in an automated command line function. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it. If you run into an error, please create an issue and copy the error message into it. An interactive version, probably as notebook, will be produced from this code.
 
 Note that the code works only for hypostomatous leaves with stomata on the abaxial surface at the moment. I will implement other types of leaves as I run into them. If you have some, please contact me.
@@ -170,7 +178,7 @@ You need a segmented stack with the stomata labelled with a color value that is 
 To use the code, type the line below in your terminal window:
 
 ```
-python /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py sample_folder/full_filename rescale_factor pixel_size 'tissue_values' nb_cores '/path/to/your/image/directory/'
+python3 /path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity_py3.py sample_folder/full_filename rescale_factor pixel_size 'tissue_values' nb_cores '/path/to/your/image/directory/'
 ```
 
 Real example:
@@ -179,7 +187,7 @@ Real example:
 python ~/Dropbox/_github/microCT-leaf-traits/Leaf_Tortuosity.py C_I_2_Strip1_/C_I_2_Strip1_SEGMENTED.tif 2 0.1625 default 6 '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'
 ```
 
-`python`: This just calls python 2.
+`python3`: This just calls python 3.
 
 `/path/to/this/repo/3DLeafCT/ML_microCT/src/Leaf_Tortuosity.py`: This should be the complete path to where the tortuosity program is. If you have cloned the repository from github, replace `/path/to/this/repo/` for the path to the repository (same as for the leaf segmentation code).
 
