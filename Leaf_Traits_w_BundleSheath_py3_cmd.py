@@ -427,8 +427,14 @@ vein_value = 147
 bs_value = 102
 
 # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
-adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
-    large_segmented_stack[100, :, 100] != bg_value).argmax()]
+# Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
+epid_vals = [30,60]
+epid_bool = [i in epid_vals for i in large_segmented_stack[200,:,200]]
+epid_indx = [i for i, x in enumerate(epid_bool) if x] 
+
+adaxial_epidermis_value = large_segmented_stack[200,epid_indx[0],200]
+# adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
+#     large_segmented_stack[100, :, 100] != bg_value).argmax()]
 
 if adaxial_epidermis_value == 30:
     abaxial_epidermis_value = 60

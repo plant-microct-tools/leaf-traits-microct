@@ -50,8 +50,8 @@ vx_volume = px_edge**3
 #%%
 
 #Load segmented image
-base_folder_name = '/run/media/gtrancourt/microCT_GTR_8tb/Vitis_Vineyard_shading/_ML_Done/'
-sample_name = 'Cabernet_Sauv_Shade_2b_'
+base_folder_name = '/run/media/gtrancourt/microCT_GTR_8tb/Poplar_Dehydration/small_Leaf4_/'
+sample_name = 'DEHYDRATION_small_Leaf4_time_1_'
 folder_name = 'MLresults/'
 binary_filename = sample_name + 'BINARY-8bit.tif' # sample_name + '_BINARY-8bit-CROPPED.tif'
 raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
@@ -388,7 +388,12 @@ vein_value = 147
 bs_value = 102
 
 # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
-adaxial_epidermis_value = large_segmented_stack[100,:,100][(large_segmented_stack[100,:,100] != bg_value).argmax()]
+epid_vals = [30,60]
+epid_bool = [i in epid_vals for i in large_segmented_stack[200,:,200]]
+epid_indx = [i for i, x in enumerate(epid_bool) if x] 
+
+adaxial_epidermis_value = large_segmented_stack[200,epid_indx[0],200]
+# adaxial_epidermis_value = large_segmented_stack[500,:,500][(large_segmented_stack[500,:,500] != bg_value).argmax()]
 
 if adaxial_epidermis_value == 30:
     abaxial_epidermis_value = 60
