@@ -33,13 +33,19 @@ __status__ = "beta"
 
 def Trim_Individual_Stack(large_stack, small_stack):
 
-    dims = np.array(binary_stack.shape, dtype='float') / \
-                    np.array(raw_pred_stack.shape, dtype='float')
+    dims = np.array(large_stack.shape, dtype='float') / \
+                    np.array(small_stack.shape, dtype='float')
+    slice_diff = large_stack.shape[0] - small_stack.shape[0]
+    if slice_diff != 0:
+        print('*** trimming slices ***')
+        large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
+ 
     if np.all(dims <= 2):
-        print("***no trimming necessary***")
+        print("*** no trimming necessary ***")
         return large_stack
     else:
-        print("***trimming stack***")
+        print("*** trimming rows and/or columns ***")
         if dims[1] > 2:
             if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
                 large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
@@ -359,6 +365,8 @@ bg_value_new = 177
 vein_value_new = 147
 ias_value_new = 255
 bs_value_new = 102
+
+print('### CREATING THE POST-PROCESSED SEGMENTED STACK ###')
 
 # Assign an array filled with the background value 177.
 large_segmented_stack = np.full(shape=binary_stack.shape, fill_value=bg_value_new, dtype='uint8')

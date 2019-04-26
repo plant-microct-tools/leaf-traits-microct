@@ -20,24 +20,33 @@ import gc
 
 def Trim_Individual_Stack(large_stack, small_stack):
 
-    dims = np.array(binary_stack.shape, dtype='float') / np.array(raw_pred_stack.shape, dtype='float')
+    dims = np.array(large_stack.shape, dtype='float') / \
+                    np.array(small_stack.shape, dtype='float')
+    slice_diff = large_stack.shape[0] - small_stack.shape[0]
+    if slice_diff != 0:
+        print('*** trimming slices ***')
+        large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
+ 
     if np.all(dims <= 2):
-        print("***no trimming necessary***")
+        print("*** no trimming necessary ***")
         return large_stack
     else:
-        print("***trimming stack***")
+        print("*** trimming rows and/or columns ***")
         if dims[1] > 2:
             if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
                 large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
             else:
                 if (large_stack.shape[1]-2)/2 == small_stack.shape[1]:
-                    large_stack = np.delete(large_stack, np.arange(large_stack.shape[1]-2, large_stack.shape[1]), axis=1)
+                    large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[1]-2, large_stack.shape[1]), axis=1)
         if dims[2] > 2:
             if (large_stack.shape[2]-1)/2 == small_stack.shape[2]:
                 large_stack = np.delete(large_stack, large_stack.shape[2]-1, axis=2)
             else:
                 if (large_stack.shape[2]-2)/2 == small_stack.shape[2]:
-                    large_stack = np.delete(large_stack, np.arange(large_stack.shape[2]-2, large_stack.shape[2]), axis=2)
+                    large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[2]-2, large_stack.shape[2]), axis=2)
         return large_stack
 
 
