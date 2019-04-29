@@ -1021,7 +1021,8 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor, keep_in_mem
                 io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
         print("***RESIZING***")
         #Iterating over each slice is faster than doing it in one call with transform.resize
-        stack_rs = np.empty(np.array(stack.shape)/np.array([1, rescale_factor, rescale_factor]))
+        resized_shape = np.array(stack.shape)/np.array([1, rescale_factor, rescale_factor])
+        stack_rs = np.empty(shape = resized_shape.astype(np.int64))
         for idx in np.arange(stack_rs.shape[0]):
             stack_rs[idx] = transform.resize(
                 stack[idx], [stack.shape[1]/rescale_factor, stack.shape[2]/rescale_factor], order=0)
