@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov  5 20:03:05 2018
@@ -6,7 +6,6 @@ Created on Mon Nov  5 20:03:05 2018
 @author: gtrancourt
 """
 
-#%%
 import numpy as np
 import os
 from pandas import DataFrame
@@ -81,7 +80,7 @@ io.imshow(raw_pred_stack[100])
 
 
 # Trim at the edges -- The ML does a bad job there
-# Here I remove 50 slices at the beginning and the end, 
+# Here I remove 50 slices at the beginning and the end,
 # and 40 pixels at the left and right edges
 trim_slices = 80
 trim_column = 40
@@ -368,7 +367,7 @@ leaf_area = large_segmented_stack.shape[0] * large_segmented_stack.shape[2] * (p
 
 #Caluculate Surface Area (adapted from Matt Jenkins' code)
 # This take quite a lot of RAM
-# This gives 1% less surface than from BoneJ's results, 
+# This gives 1% less surface than from BoneJ's results,
 # but way way faster (even if it's not that fast)!!!
 ias_vert_faces = marching_cubes_lewiner(large_segmented_stack == ias_value)
 ias_SA = mesh_surface_area(ias_vert_faces[0],ias_vert_faces[1])

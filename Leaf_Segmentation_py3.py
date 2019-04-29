@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -16,24 +16,11 @@ Created on Fri Nov 16 10:07:35 2018
 # Edit lines 75-77 in order to reflect fyour file naming convention.
 
 # Import libraries
-from Leaf_Segmentation_Functions_py3 import *
+from Leaf_Segmentation_Functions_py3 import *  # Custom ML microCT functions
 import sys
 import os
 import gc
 from sklearn.externals import joblib
-
-## Extract data from command line input
-#sample_name = 'name_'
-#Th_phase = 111
-#Th_grid = 122
-#raw_slices = '1,2,3,4'
-#rescale_factor = 2
-#threshold_rescale_factor = 2
-#base_folder_name = '/path/to/your/samples/directory/'
-#
-## Set directory of functions in order to import MLmicroCTfunctions
-#os.chdir('path/to/script/and/functions/')
-
 
 # Extract data from command line input
 full_script_path = sys.argv[0]
@@ -48,9 +35,7 @@ nb_estimators = 50 if len(sys.argv) == 8 else int(sys.argv[8])
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-os.chdir(path_to_script)
-
-# Import the custom ML microCT functions
+# os.chdir(path_to_script)
 
 # Get the slice numbers into a vector of integer
 ImgJ_slices = [int(x) for x in raw_slices.split(',')]

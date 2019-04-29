@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct 10 10:07:04 2018
@@ -17,7 +17,7 @@ from skimage import transform, img_as_ubyte
 # from skimage.external import tifffile
 from skimage.filters import sobel, gaussian
 # from skimage.segmentation import clear_border
-from skimage.morphology import ball, remove_small_objects  # , disk, cube,
+from skimage.morphology import ball, remove_small_objects, disk #, cube,
 from skimage.util import invert
 import scipy as sp
 import scipy.ndimage as spim
@@ -807,11 +807,11 @@ def local_thickness(im):
         im_temp = dt >= r
         im_temp = spim.distance_transform_edt(~im_temp) <= r
         im_new[im_temp] = r
-        #Trim outer edge of features to remove noise
+        # Trim outer edge of features to remove noise
     if im.ndim == 3:
         im_new = spim.binary_erosion(input=im, structure=ball(1))*im_new
     if im.ndim == 2:
-        im_new = spim.binary_erosion(input=im, structure=disc(1))*im_new
+        im_new = spim.binary_erosion(input=im, structure=disk(1))*im_new
     return im_new
 
 
@@ -971,7 +971,7 @@ def Load_Individual_images(fp, name, rescale_factor):
     stack = io.imread(fp + name)
     stack = Trim_Individual_Stack(stack, rescale_factor)
     if rescale_factor > 1:
-        stack = Resize_and_save_stack(stack, name, rescale_factor, fp, keep_in_memory=True)
+        stack = Load_Resize_and_Save_Stack(stack, name, rescale_factor, fp, keep_in_memory=True)
     return stack
 
 

@@ -16,7 +16,7 @@ Created on Fri Nov 16 10:07:35 2018
 # Edit lines 75-77 in order to reflect fyour file naming convention.
 
 # Import libraries
-from Leaf_Segmentation_Functions import *
+from Leaf_Segmentation_Functions import *  # Custom ML microCT functions
 import sys
 import os
 import gc
@@ -48,9 +48,7 @@ nb_estimators = 50 if len(sys.argv) == 8 else int(sys.argv[8])
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-os.chdir(path_to_script)
-
-# Import the custom ML microCT functions
+# os.chdir(path_to_script)
 
 # Get the slice numbers into a vector of integer
 ImgJ_slices = [int(x) for x in raw_slices.split(',')]

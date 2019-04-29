@@ -13,7 +13,7 @@ from pandas import DataFrame
 from skimage import transform, img_as_bool, img_as_int, img_as_ubyte, img_as_float32
 import skimage.io as io
 from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
-import zipfile
+# import zipfile
 import gc
 #import cv2
 
@@ -69,12 +69,13 @@ raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
 print(np.unique(raw_pred_stack[100]))
 
 # Trim at the edges -- The ML does a bad job there
-# Here I remove 50 slices at the beginning and the end, 
+# Here I remove 50 slices at the beginning and the end,
 # and 40 pixels at the left and right edges
 trim_slices = 50
-trim_column = 40
+trim_column_L = 40
+trim_column_R = 40
 
-raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices,:,trim_column:-trim_column]
+raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices,:,trim_column_L:-trim_column_R]
 
 io.imshow(raw_pred_stack[100])
 #%%
@@ -279,7 +280,7 @@ gc.collect()
 binary_stack = img_as_bool(io.imread(filepath + binary_filename))
 
 binary_stack = binary_stack[trim_slices:-trim_slices,:,:]
-binary_stack = binary_stack[:,:,(trim_column*2):(-trim_column*2)]
+binary_stack = binary_stack[:,:,(trim_column_L*2):(-trim_column_R*2)]
 
 #os.remove(base_folder_name + sample_name + '/' + sample_name + '/' + binary_filename)
 #os.rmdir(base_folder_name + sample_name + '/' + sample_name)
@@ -342,13 +343,13 @@ print(np.unique(large_segmented_stack[100]))
 
 # Special tiff saving option for ImageJ compatibility when files larger than
 # 2 Gb. It's like it doesn't recognize something if you don't turn this option
-# on for large files and then ImageJ or FIJI fail to load the large stack 
+# on for large files and then ImageJ or FIJI fail to load the large stack
 # (happens on my linux machine installed with openSUSE Tumbleweed).
 if large_segmented_stack.nbytes >= 2e9:
     imgj_bool = True
 else:
     imgj_bool = False
-    
+
 # Save the image
 io.imsave(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif', large_segmented_stack, imagej=imgj_bool)
 
@@ -505,10 +506,13 @@ data_out = {'LeafArea':leaf_area,
             'VeinBSVolume':vein_volume+bs_volume,
             'CellVolume':cell_volume,
             'IASVolume':air_volume,
-            'IASSurfaceArea':true_ias_SA #,
+            'IASSurfaceArea':true_ias_SA,
+            '_SLICEStrimmed':trim_slices,
+            '_X_trimmed_left':trim_column_L*2,
+            '_X_trimmed_right':trim_column_L*2}
 #            'IASLargestConnectedVolume':largest_connected_ias_volume,
 #            'IASLargestConnectedSA':largest_connected_ias_SA
-            }
+
 results_out = DataFrame(data_out, index={sample_name})
 # Save the data to a CSV
 results_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'RESULTS.txt', sep='\t', encoding='utf-8')

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -15,7 +14,7 @@ from pandas import DataFrame
 from skimage import transform, img_as_bool, img_as_int, img_as_ubyte, img_as_float32
 import skimage.io as io
 from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
-import zipfile
+# import zipfile
 import gc
 #import cv2
 
@@ -40,7 +39,6 @@ def Trim_Individual_Stack(large_stack, small_stack):
         print('*** trimming slices ***')
         large_stack = np.delete(large_stack, np.arange(
                         large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
- 
     if np.all(dims <= 2):
         print("*** no trimming necessary ***")
         return large_stack
@@ -64,10 +62,13 @@ def Trim_Individual_Stack(large_stack, small_stack):
 
 
 # Extract data from command line input
-full_script_path = sys.argv[0]
+full_script_path = str(sys.argv[0])
 path_to_sample = str(sys.argv[1])
 px_edge = float(sys.argv[2])
-base_folder_name = str(sys.argv[3])
+trim_slices = int(sys.argv[3])
+trim_column_L = int(sys.argv[4])
+trim_column_R = int(sys.argv[5])
+base_folder_name = str(sys.argv[6])
 
 # Pixel dimmension
 vx_volume = px_edge**3
@@ -75,7 +76,7 @@ vx_volume = px_edge**3
 # Load segmented image
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-os.chdir(path_to_script)
+# os.chdir(path_to_script)
 
 sample_path_split = path_to_sample.split('/')
 sample_name = sample_path_split[-3]
@@ -107,16 +108,12 @@ print((np.unique(raw_pred_stack[100])))
 # Trim at the edges -- The ML does a bad job there
 # Here I remove 50 slices at the beginning and the end,
 # and 40 pixels at the left and right edges
-trim_slices = 50
-trim_column = 40
-
-raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column:-trim_column]
+raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
 # io.imshow(raw_pred_stack[100])
 
 # Define the values for each tissue
 # Validate against the values printed in the previous output
-
 epid_value = 51
 bg_value = 204
 mesophyll_value = 0
@@ -336,7 +333,7 @@ print('### LOADING ORIGINAL SIZED BINARY STACK ###')
 binary_stack = img_as_bool(io.imread(filepath + binary_filename))
 
 binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
-binary_stack = binary_stack[:, :, (trim_column*2):(-trim_column*2)]
+binary_stack = binary_stack[:, :, (trim_column_L*2):(-trim_column_R*2)]
 
 #os.remove(base_folder_name + sample_name + '/' + sample_name + '/' + binary_filename)
 #os.rmdir(base_folder_name + sample_name + '/' + sample_name)
@@ -438,7 +435,7 @@ bs_value = 102
 # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
 epid_vals = [30,60]
 epid_bool = [i in epid_vals for i in large_segmented_stack[200,:,200]]
-epid_indx = [i for i, x in enumerate(epid_bool) if x] 
+epid_indx = [i for i, x in enumerate(epid_bool) if x]
 
 adaxial_epidermis_value = large_segmented_stack[200,epid_indx[0],200]
 # adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
@@ -583,10 +580,13 @@ data_out = {'LeafArea': leaf_area,
             'VeinBSVolume': vein_volume+bs_volume,
             'CellVolume': cell_volume,
             'IASVolume': air_volume,
-            'IASSurfaceArea': true_ias_SA  # ,
+            'IASSurfaceArea': true_ias_SA,
+            '_SLICEStrimmed':trim_slices,
+            '_X_trimmed_left':trim_column_L*2,
+            '_X_trimmed_right':trim_column_L*2}
             #            'IASLargestConnectedVolume':largest_connected_ias_volume,
             #            'IASLargestConnectedSA':largest_connected_ias_SA
-            }
+
 results_out = DataFrame(data_out, index={sample_name})
 # Save the data to a CSV
 print('### Saving results to text file ###')

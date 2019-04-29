@@ -182,7 +182,7 @@ def get_bad_neighbours(pos, img_stack, value1, value2, shape):
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-os.chdir(path_to_script)
+# os.chdir(path_to_script)
 
 sample_path_split = path_to_sample.split('/')
 sample_name = sample_path_split[-2]
