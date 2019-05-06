@@ -839,7 +839,8 @@ def localthick_load_and_resize(folder_name, sample_name, threshold_rescale_facto
     localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
     if threshold_rescale_factor > 1:
         localthick_stack = transform.resize(localthick_small, [
-                                            localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]], order=0)
+                                            localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
+                                            order=0, anti_aliasing=False)
     else:
         localthick_stack = localthick_small
     return localthick_stack
@@ -861,7 +862,7 @@ def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, fold
         io.imsave(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif', img_as_ubyte(tmp))
     else:
         tmp_invert_ds = transform.resize(
-            tmp, [tmp.shape[0]/rescale_factor, tmp.shape[1], tmp.shape[2]], order=0)
+            tmp, [tmp.shape[0]/rescale_factor, tmp.shape[1], tmp.shape[2]], order=0, anti_aliasing=False)
         print("***SAVING IMAGE STACK***")
         io.imsave(folder_name+'/'+sample_name
                   + 'GridPhase_invert_ds.tif', img_as_ubyte(tmp_invert_ds))
@@ -922,12 +923,14 @@ def openAndReadFile(filename):
 # This is to get the number of lines (i.e. pixels) to remove on each dimension
 # to get a stack that can be resized by the defined rescaling factor
 # Written by GTR
-def Trim_Individual_Stack(stack, rescale_factor):
+def Trim_Individual_Stack(stack, rescale_factor, labelled_stack=False):
     print("***trimming stack***")
     shape_array = np.array(stack.shape) - np.array([np.repeat(0, 3), np.repeat(
         1, 3), np.repeat(2, 3), np.repeat(3, 3), np.repeat(4, 3), np.repeat(5, 3)])
     dividers_mat = shape_array % rescale_factor
     to_trim = np.argmax(dividers_mat == 0, axis=0)
+    if labelled_stack:
+        to_trim[0] = 0
     for i in np.arange(len(to_trim)):
         if to_trim[i] == 0:
             pass
@@ -1006,26 +1009,28 @@ def displayPixelvalues(stack):
 # This loads the original image, trims the edges so that it can be divided by the rescale_factor,
 # then resizes each slice in the x and y axis (so keep the same number of slices).
 # In python notation, this ends up as [z, x/2, y/2]
-def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor, keep_in_memory=True, labelled_stack=False):
+def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
+                               keep_in_memory=True, labelled_stack=False):
     if os.path.isfile(filepath + stack_name + "_" + str(rescale_factor) + "x-smaller.tif"):
         print(("***LOADING " + str(rescale_factor) + "x RESIZED " + stack_name + "***"))
         stack_rs = io.imread(filepath + stack_name + "_" + str(rescale_factor) + "x-smaller.tif")
         return stack_rs
     else:
         stack = io.imread(filepath + stack_name)
-        if labelled_stack == False:
-            stack, to_trim = Trim_Individual_Stack(stack, rescale_factor)
-            print(to_trim)
-            if np.any(to_trim):
-                print(("***SAVING TRIMMED STACK " + stack_name + "***"))
-                io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
+#        if labelled_stack == False:
+        stack, to_trim = Trim_Individual_Stack(stack, rescale_factor, labelled_stack)
+        print(to_trim)
+        if np.any(to_trim):
+            print(("***SAVING TRIMMED STACK " + stack_name + "***"))
+            io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
         print("***RESIZING***")
         #Iterating over each slice is faster than doing it in one call with transform.resize
         resized_shape = np.array(stack.shape)/np.array([1, rescale_factor, rescale_factor])
         stack_rs = np.empty(shape = resized_shape.astype(np.int64))
         for idx in np.arange(stack_rs.shape[0]):
             stack_rs[idx] = transform.resize(
-                stack[idx], [stack.shape[1]/rescale_factor, stack.shape[2]/rescale_factor], order=0)
+                stack[idx], [stack.shape[1]/rescale_factor, stack.shape[2]/rescale_factor],
+                order=0, anti_aliasing=False)
         print(("***SAVING RESIZED STACK " + stack_name + "***"))
         io.imsave(filepath + stack_name + "_" + str(rescale_factor)
                   + "x-smaller.tif", img_as_ubyte(stack_rs))
