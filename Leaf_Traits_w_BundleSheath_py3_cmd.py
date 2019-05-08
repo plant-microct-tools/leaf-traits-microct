@@ -83,12 +83,18 @@ path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
 # os.chdir(path_to_script)
 
 sample_path_split = path_to_sample.split('/')
-sample_name = sample_path_split[-3]
-folder_name = sample_path_split[-2] + '/'
-raw_ML_prediction_name = sample_path_split[-1]
-filepath = base_folder_name + sample_name + '/'
 
-# folder_name = 'MLresults/'
+# If input path to sample is of length 1, i.e. only the sample name,
+# create the folder names based on default file naming.
+if len(sample_path_split) == 1:
+    sample_name = path_to_sample
+    folder_name = '/MLresults/'
+    raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
+else:
+    sample_name = sample_path_split[-3]
+    folder_name = sample_path_split[-2] + '/'
+    raw_ML_prediction_name = sample_path_split[-1]
+filepath = base_folder_name + sample_name + '/'
 binary_filename = sample_name + 'BINARY-8bit.tif'
 # raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
@@ -167,8 +173,9 @@ else:
         assert False
 
     print("")
-    print('The center of the epidermis should be more or less the same on the 1st and 3rd columns')
-    print((epidermis_centroid[ordered_epidermis[-4:]]))
+    print('The center of the epidermis should be more or less the same on the')
+    print('1st and 3rd columns for the two largest values.')
+    print((epidermis_centroid[ordered_epidermis[-2:]]))
     print("")
 
     two_largest_epidermis = (unique_epidermis_volumes
@@ -211,7 +218,8 @@ else:
         (unique_epidermis_volumes == abaxial_epidermis_value), axis=1) * (px_edge*2)
     epidermis_adaxial_thickness = np.sum(
         (unique_epidermis_volumes == adaxial_epidermis_value), axis=1) * (px_edge*2)
-
+    del props_of_unique_epidermis
+    gc.collect()
 
     ###################
     ## VEINS
@@ -250,6 +258,8 @@ else:
 
     # Get the values again
     vein_volume = np.sum(largest_veins) * (px_edge * (px_edge*2)**2)
+    del props_of_unique_veins
+    gc.collect()
 
     #Check if it's correct
     #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_veins.tif',
@@ -261,50 +271,49 @@ else:
     ## BUNDLE SHEATHS
     ###################
     print('### BUNDLE SHEATHS ###')
-    # Get the veins volumes
-    unique_bs_volumes = label(raw_pred_stack == bs_value, connectivity=1)
-    props_of_unique_bs = regionprops(unique_bs_volumes)
+    if bs_value > 0:
+        # Get the bs volumes
+        unique_bs_volumes = label(raw_pred_stack == bs_value, connectivity=1)
+        props_of_unique_bs = regionprops(unique_bs_volumes)
 
-    # io.imshow(unique_bs_volumes[100])
+        # io.imshow(unique_bs_volumes[100])
 
-    bs_area = np.zeros(len(props_of_unique_bs))
-    bs_label = np.zeros(len(props_of_unique_bs))
-    bs_centroid = np.zeros([len(props_of_unique_bs), 3])
-    for regions in np.arange(len(props_of_unique_bs)):
-        bs_area[regions] = props_of_unique_bs[regions].area
-        bs_label[regions] = props_of_unique_bs[regions].label
-        bs_centroid[regions] = props_of_unique_bs[regions].centroid
+        bs_area = np.zeros(len(props_of_unique_bs))
+        bs_label = np.zeros(len(props_of_unique_bs))
+        bs_centroid = np.zeros([len(props_of_unique_bs), 3])
+        for regions in np.arange(len(props_of_unique_bs)):
+            bs_area[regions] = props_of_unique_bs[regions].area
+            bs_label[regions] = props_of_unique_bs[regions].label
+            bs_centroid[regions] = props_of_unique_bs[regions].centroid
 
-    # Find the largest bs
-    ordered_bs = np.argsort(bs_area)
-    #bs_area[ordered_bs[-80:]]
-    #bs_area[ordered_bs[:1000]]
-    #bs_centroid[ordered_bs[-4:]]
+        # Find the largest bs
+        ordered_bs = np.argsort(bs_area)
+        #bs_area[ordered_bs[-80:]]
+        #bs_area[ordered_bs[:1000]]
+        #bs_centroid[ordered_bs[-4:]]
 
-    #print(np.sum(bs_area <= 1000))
+        #print(np.sum(bs_area <= 1000))
 
-    # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
-    # the noise left by the segmentation method and kept only the largest bs.
-    # This should be adjusted depending on the species/images/maginification.
-    large_bs_ids = bs_label[bs_area > 100000]
+        # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
+        # the noise left by the segmentation method and kept only the largest bs.
+        # This should be adjusted depending on the species/images/maginification.
+        large_bs_ids = bs_label[bs_area > 100000]
 
-    largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
+        largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
 
-    del unique_bs_volumes
+        del unique_bs_volumes
 
-    # Get the values again
-    bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
+        # Get the values again
+        bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
+        del props_of_unique_bs
+        gc.collect()
 
-    #Check if it's correct
-    #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
-    #          img_as_ubyte(largest_bs))
-    # io.imshow(largest_bs[100])
-
-
-    # FREE UP SOME MEMORY
-    del props_of_unique_bs, props_of_unique_epidermis, props_of_unique_veins
-    gc.collect()
-
+        #Check if it's correct
+        #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
+        #          img_as_ubyte(largest_bs))
+        # io.imshow(largest_bs[100])
+    else:
+        print('bundle sheath not labelled -- skipped')
 
     ###################
     ## AIRSPACE
@@ -381,9 +390,10 @@ else:
                                                   [binary_stack.shape[1], binary_stack.shape[2]],
                                                   anti_aliasing=False, order=0))
         # Creates a boolean 2D array of the bundle sheath (from the largest veins id'ed earlier)
-        temp_bs = img_as_bool(transform.resize(largest_bs[idx],
-                                               [binary_stack.shape[1], binary_stack.shape[2]],
-                                               anti_aliasing=False, order=0))
+        if bs_value > 0:
+            temp_bs = img_as_bool(transform.resize(largest_bs[idx],
+                                                   [binary_stack.shape[1], binary_stack.shape[2]],
+                                                   anti_aliasing=False, order=0))
         # Creates a 2D array with the epidermis being assinged values 30 or 60
         temp_epid = transform.resize(unique_epidermis_volumes[idx],
                                      [binary_stack.shape[1], binary_stack.shape[2]],
@@ -396,7 +406,8 @@ else:
         # binary_stack is a boolean, so you need to multiply it.
         large_segmented_stack[idx][leaf_mask] = binary_stack[idx][leaf_mask] * ias_value_new
         large_segmented_stack[idx][temp_veins] = vein_value_new
-        large_segmented_stack[idx][temp_bs] = bs_value_new
+        if bs_value > 0:
+            large_segmented_stack[idx][temp_bs] = bs_value_new
         large_segmented_stack[idx][temp_epid != 0] = temp_epid[temp_epid != 0]
 
     # io.imshow(large_segmented_stack[100])
@@ -600,7 +611,9 @@ results_out = DataFrame(data_out, index={sample_name})
 print('### Saving results to text file ###')
 results_out.to_csv(base_folder_name + sample_name + '/' + sample_name
                    + 'RESULTS.txt', sep='\t', encoding='utf-8')
-
+print('Data saved')
+for key, value in data_out.items():
+    print(str(key) + ' : ' + str(round(value, 3)))
 print('')
 print('Done with ' + sample_name)
 print('')

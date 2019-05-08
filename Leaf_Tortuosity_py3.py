@@ -85,7 +85,7 @@ rescale_factor = int(sys.argv[2])
 px_edge = float(sys.argv[3])
 seg_values = sys.argv[4]
 nb_cores = multiprocessing.cpu_count() if len(sys.argv) == 6 else int(sys.argv[5])
-base_path = str(sys.argv[6])
+base_path = str(sys.argv[5]) if len(sys.argv) == 6 else str(sys.argv[6])
 
 
 # Function to resize in all 3 dimensions
@@ -196,7 +196,10 @@ px_edge_rescaled = px_edge * rescale_factor
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
-
+# Check if file has already been processed
+if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+    print('This file has already been processed!')
+    assert False
 
 # Read composite stack including slabelling of stomata
 print('************************************************')
@@ -204,24 +207,12 @@ print('***STARTING GEOMETRIC TORTUOSITY ESTIMATES OF***')
 print('            ' + sample_name)
 print('')
 
-# Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
-    print('This file has already been processed!')
-    assert False
-
 print("***LOADING AND RESIZING STACK***")
 composite_stack_large = io.imread(filepath + filename)
-composite_stack = np.asarray(StackResize(
-    composite_stack_large, rescale_factor), dtype='uint8')
-unique_vals = np.unique(composite_stack)
+unique_vals = np.unique(composite_stack_large)
 
-
-print("  Large stack shape: ", str(composite_stack_large.shape))
-print("  Small stack shape: ", str(composite_stack.shape))
-print("  Unique pattern values :", str(unique_vals))  # to get all the unique values
-
-del composite_stack_large
-
+# Define color values
+# This if..else statement needs to be cleaned up
 if seg_values == 'default':
     mesophyll_value = 0
     stomata_value = 85 if np.any(unique_vals == 85) else 128
@@ -253,6 +244,22 @@ else:
                 epidermis_ab_value, epidermis_ad_value, bs_value]
     print("  Defined pattern values: ", str(vals_str))
 
+# Check if stomata have been labelled
+if stomata_value not in unique_vals:
+    print('************************************************')
+    raise ValueError(sample_name + ': STOMATA HAVE NOT BEEN LABELLED!')
+
+# If stomata are label, carry on with resizing the image stack
+composite_stack = np.asarray(StackResize(
+    composite_stack_large, rescale_factor), dtype='uint8')
+
+
+print("  Large stack shape: ", str(composite_stack_large.shape))
+print("  Small stack shape: ", str(composite_stack.shape))
+print("  Unique pattern values :", str(unique_vals))  # to get all the unique values
+
+# Remove the large stack to free up memory
+del composite_stack_large
 
 # Create the binary stacks needed for the analysis
 print('')
@@ -265,7 +272,6 @@ print('***FINDING THE LARGEST AIRSPACE***')
 largest_airspace = getLargestAirspace(airspace_stack)
 largest_airspace_w_stomata = getLargestAirspace(stomata_airspace_stack)
 mask = ~largest_airspace.astype(bool)
-
 stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
 stom_mask = invert(stomata_stack)
 
@@ -274,7 +280,6 @@ stom_mask = invert(stomata_stack)
 if np.sum(stomata_stack) == 0:
     print('ERROR: at least one stomata is disconnected from the airspace!')
     assert False
-
 
 # Detect edges of airspace
 # Better to work on largest airspace as this is what is needed further down.
