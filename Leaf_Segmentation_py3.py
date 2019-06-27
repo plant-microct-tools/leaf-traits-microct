@@ -25,13 +25,16 @@ from sklearn.externals import joblib
 # Extract data from command line input
 full_script_path = sys.argv[0]
 sample_name = sys.argv[1]
-Th_phase = int(sys.argv[2])
-Th_grid = int(sys.argv[3])
-raw_slices = sys.argv[4]
-rescale_factor = int(sys.argv[5])
-threshold_rescale_factor = int(sys.argv[6])
-base_folder_name = sys.argv[7]
-nb_estimators = 50 if len(sys.argv) == 8 else int(sys.argv[8])
+postfix_phase = sys.argv[2]
+Th_phase = int(sys.argv[3])
+postfix_grid = sys.argv[4]
+Th_grid = int(sys.argv[5])
+raw_slices = sys.argv[6]
+rescale_factor = int(sys.argv[7])
+threshold_rescale_factor = int(sys.argv[8])
+base_folder_name = sys.argv[9]
+nb_estimators = 50 if len(sys.argv) == 10 else int(sys.argv[10])
+
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
@@ -54,11 +57,11 @@ bs_value = 128
 folder_name = sample_name + '/'
 if os.path.exists(base_folder_name + folder_name + 'MLresults/') == False:
     os.makedirs(base_folder_name + folder_name + 'MLresults/')
-
+from sklearn.externals import joblib
 filepath = base_folder_name + folder_name
 folder_name = filepath + 'MLresults/'
-grid_name = sample_name + 'GRID-8bit.tif'
-phase_name = sample_name + 'PAGANIN-8bit.tif'
+grid_name = sample_name + postfix_grid #'GRID-8bit.tif'
+phase_name = sample_name + postfix_phase #'PAGANIN-8bit.tif'
 label_name = 'labelled-stack.tif'
 
 # Below takes the slices from imageJ notation, put them in python notation
@@ -73,7 +76,7 @@ labelled_slices = labelled_slices[labelled_slices_seq]
 # The last part will add 1 to even length labelled slices number, and 0 to even.
 # This meanes than odd length will have one training slice more, and even will have two more.
 # int(len(labelled_slices) % 2 == 0))
-train_slices = np.arange(0, stop=int(np.ceil(len(labelled_slices)/2)) + 1)
+train_slices = np.arange(0, stop=int(np.ceil(len(labelled_slices)/2)))
 test_slices = np.arange(len(train_slices), stop=len(labelled_slices))
 
 # Debugging code to check how many slices in each set
@@ -88,6 +91,8 @@ phaserec_stack = Load_Resize_and_Save_Stack(
     filepath, phase_name, rescale_factor)
 label_stack = Load_Resize_and_Save_Stack(
     filepath, label_name, rescale_factor, labelled_stack=True)
+if len(label_stack.shape) == 4:
+    label_stack = label_stack[:,:,:,0]
 
 # Load the stacks and downsize a copy of the binary to speed up the thickness processing
 if os.path.isfile(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif') == False:
@@ -146,7 +151,9 @@ else:
 print('***STARTING FULL STACK PREDICTION***')
 RFPredictCTStack_out = RFPredictCTStack(
     rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
+joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',
+                    compress='zlib')
 #RFPredictCTStack_out = RFPredictCTStack(rf_transverse,gridrec_stack[0:25,:,:],phaserec_stack[0:25,:,:],localthick_stack[0:25,:,:],"transverse")
-io.imsave(folder_name+sample_name+"fullstack_prediction.tif",
-          img_as_ubyte(RFPredictCTStack_out/RFPredictCTStack_out.max()))
+io.imsave(folder_name+sample_name+"fullstack_prediction.tif", RFPredictCTStack_out)
+         # img_as_ubyte(RFPredictCTStack_out/RFPredictCTStack_out.max()))
 print('Done!')

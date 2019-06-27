@@ -92,12 +92,14 @@ base_path = str(sys.argv[5]) if len(sys.argv) == 6 else str(sys.argv[6])
 # Loops over each slice: Faster and more memory efficient
 # than working on the whole array at once.
 def StackResize(stack, rf=rescale_factor):
-    stack_rs = np.empty(np.array(stack.shape)/np.array([1, rf, rf]))
+    resized_shape = np.array(stack.shape)/np.array([1, rf, rf])
+    stack_rs = np.empty(shape = resized_shape.astype(np.int64))
     for idx in np.arange(stack_rs.shape[0]):
         stack_rs[idx] = resize(stack[idx],
                                [stack.shape[1]/rf, stack.shape[2]/rf],
                                order=0, preserve_range=True)
-    stack_rs2 = np.empty(np.array(stack_rs.shape)/np.array([rf, 1, 1]))
+    resized_shape_2 = np.array(stack_rs.shape)/np.array([rf, 1, 1])
+    stack_rs2 = np.empty(shape = resized_shape_2.astype(np.int64))
     for idx in np.arange(stack_rs2.shape[1]):
         stack_rs2[:, idx, :] = resize(stack_rs[:, idx, :],
                                       [stack_rs.shape[0]/rf, stack_rs.shape[2]],
@@ -182,16 +184,19 @@ def get_bad_neighbours(pos, img_stack, value1, value2, shape):
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-# os.chdir(path_to_script)
-
-sample_path_split = path_to_sample.split('/')
-sample_name = sample_path_split[-2]
-filename = sample_path_split[-1]
 base_folder_name = base_path
+sample_path_split = path_to_sample.split('/')
+
+if len(sample_path_split) == 1:
+    sample_name = path_to_sample
+    filename = sample_name + 'SEGMENTED.tif'
+else:
+    sample_name = sample_path_split[-2]
+    filename = sample_path_split[-1]
+
 filepath = base_folder_name + sample_name + '/'
 
 px_edge_rescaled = px_edge * rescale_factor
-
 
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
@@ -209,7 +214,10 @@ print('')
 
 print("***LOADING AND RESIZING STACK***")
 composite_stack_large = io.imread(filepath + filename)
+
+print("***IDENTIFYING THE UNIQUE COLOR VALUES***")
 unique_vals = np.unique(composite_stack_large)
+print(unique_vals)
 
 # Define color values
 # This if..else statement needs to be cleaned up
@@ -224,9 +232,9 @@ if seg_values == 'default':
     bs_value = 102
     vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
                 epidermis_ab_value, epidermis_ad_value, bs_value]
-    stomata_value = unique_vals[unique_vals not in vals_str] if stomata_value not in unique_vals else stomata_value
-    vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
-                epidermis_ab_value, epidermis_ad_value, bs_value]
+    # stomata_value = unique_vals[unique_vals not in vals_str] if stomata_value not in unique_vals else stomata_value
+    # vals_str = [mesophyll_value, stomata_value, bg_value, vein_value, ias_value,
+    #             epidermis_ab_value, epidermis_ad_value, bs_value]
     print("  Defined pattern values: ", str(vals_str))
     print("  Stomata value: ", str(stomata_value))
 else:
@@ -289,7 +297,6 @@ if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
 else:
     # This piece of code is really innefficent. I could be improved to be Faster
     # by not searching for all outline positions but only those near the epidermis.
-
     print('***CREATING THE OUTLINE OF THE AIRSPACE***')
     airspace_outline_smaller = Erosion3DimJ(largest_airspace)
     airspace_edge = invert(Threshold(largest_airspace-airspace_outline_smaller, 0))
@@ -302,17 +309,13 @@ else:
     mesophyll_edge = np.zeros(airspace_edge.shape, dtype='bool')
     p = np.transpose(np.where(airspace_edge))
     shape = airspace_edge.shape
-
     bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
                                                       (p[i, ], composite_stack, epidermis_ab_value,
                                                        epidermis_ad_value, shape)
                                                       for i in tqdm(np.arange(p.shape[0])))
-
     for i in tqdm(np.arange(p.shape[0])):
         mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
-
     io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
-
 
 # ## Get the Euclidian distance from all stomata
 print('***COMPUTING EUCLIDIAN DISTANCE MAP***')
@@ -323,7 +326,6 @@ print('  L_euc processing time: '+str(np.round(t1))+' s')
 
 L_euc_average_ax0 = np.mean(L_euc, axis=0)
 L_euc_average_ax2 = np.mean(L_euc, axis=2)
-
 
 # ## Get the geodesic distance map
 #

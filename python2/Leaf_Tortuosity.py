@@ -182,16 +182,18 @@ def get_bad_neighbours(pos, img_stack, value1, value2, shape):
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
-# os.chdir(path_to_script)
-
-sample_path_split = path_to_sample.split('/')
-sample_name = sample_path_split[-2]
-filename = sample_path_split[-1]
 base_folder_name = base_path
+sample_path_split = path_to_sample.split('/')
+
+if len(sample_path_split) == 1:
+    sample_name = path_to_sample
+    filename = sample_name + 'SEGMENTED.tif'
+else:
+    sample_name = sample_path_split[-2]
+    filename = sample_path_split[-1]
 filepath = base_folder_name + sample_name + '/'
 
 px_edge_rescaled = px_edge * rescale_factor
-
 
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):

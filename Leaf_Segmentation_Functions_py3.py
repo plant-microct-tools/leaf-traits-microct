@@ -390,7 +390,7 @@ def RFPredictCTStack(rf_transverse, gridimg_in, phaseimg_in, localthick_cellvein
     if dist_edge_FL.shape[1] > gridimg_in.shape[1]:
         dist_edge_FL = dist_edge_FL[:, 0:gridimg_in.shape[1], :]
     # Define numpy array for storing class predictions
-    RFPredictCTStack_out = np.empty(gridimg_in.shape, dtype=np.float64)
+    RFPredictCTStack_out = np.empty(gridimg_in.shape, dtype=np.int8)
     # Define empty numpy array for feature layers (FL)
     FL = np.empty((gridimg_in.shape[1], gridimg_in.shape[2], num_feature_layers), dtype=np.float64)
     for j in tqdm(list(range(0, gridimg_in.shape[0])), ncols=80):
@@ -434,10 +434,12 @@ def RFPredictCTStack(rf_transverse, gridimg_in, phaseimg_in, localthick_cellvein
         # Collapse training data to two dimensions
         FL_reshape = FL.reshape((-1, FL.shape[2]), order="F")
         class_prediction_transverse = rf_transverse.predict(FL_reshape)
-        RFPredictCTStack_out[j, :, :] = class_prediction_transverse.reshape((
+        # Divide by max value to
+        class_prediction_transverse = class_prediction_transverse/class_prediction_transverse.max()
+        RFPredictCTStack_out[j, :, :] = img_as_ubyte(class_prediction_transverse.reshape((
             gridimg_in.shape[1],
             gridimg_in.shape[2]),
-            order="F")
+            order="F"))
     return(RFPredictCTStack_out)
 
 
@@ -926,7 +928,7 @@ def openAndReadFile(filename):
 def Trim_Individual_Stack(stack, rescale_factor, labelled_stack=False):
     print("***trimming stack***")
     shape_array = np.array(stack.shape) - np.array([np.repeat(0, 3), np.repeat(
-        1, 3), np.repeat(2, 3), np.repeat(3, 3), np.repeat(4, 3), np.repeat(5, 3)])
+        1, 3), np.repeat(2, 3)])#, np.repeat(3, 3), np.repeat(4, 3), np.repeat(5, 3)])
     dividers_mat = shape_array % rescale_factor
     to_trim = np.argmax(dividers_mat == 0, axis=0)
     if labelled_stack:
@@ -1017,22 +1019,25 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
         return stack_rs
     else:
         stack = io.imread(filepath + stack_name)
-#        if labelled_stack == False:
-        stack, to_trim = Trim_Individual_Stack(stack, rescale_factor, labelled_stack)
-        print(to_trim)
-        if np.any(to_trim):
-            print(("***SAVING TRIMMED STACK " + stack_name + "***"))
-            io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
-        print("***RESIZING***")
-        #Iterating over each slice is faster than doing it in one call with transform.resize
-        resized_shape = np.array(stack.shape)/np.array([1, rescale_factor, rescale_factor])
-        stack_rs = np.empty(shape = resized_shape.astype(np.int64))
-        for idx in np.arange(stack_rs.shape[0]):
-            stack_rs[idx] = transform.resize(
-                stack[idx], [stack.shape[1]/rescale_factor, stack.shape[2]/rescale_factor],
-                order=0, anti_aliasing=False)
-        print(("***SAVING RESIZED STACK " + stack_name + "***"))
-        io.imsave(filepath + stack_name + "_" + str(rescale_factor)
-                  + "x-smaller.tif", img_as_ubyte(stack_rs))
-        if keep_in_memory == True:
-            return img_as_ubyte(stack_rs)
+        if rescale_factor ==1:
+            if keep_in_memory == True:
+                return img_as_ubyte(stack)
+        else:
+            stack, to_trim = Trim_Individual_Stack(stack, rescale_factor, labelled_stack)
+            print(to_trim)
+            if np.any(to_trim):
+                print(("***SAVING TRIMMED STACK " + stack_name + "***"))
+                io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
+            print("***RESIZING***")
+            #Iterating over each slice is faster than doing it in one call with transform.resize
+            resized_shape = np.array(stack.shape)/np.array([1, rescale_factor, rescale_factor])
+            stack_rs = np.empty(shape = resized_shape.astype(np.int64))
+            for idx in np.arange(stack_rs.shape[0]):
+                stack_rs[idx] = transform.resize(
+                    stack[idx], [stack.shape[1]/rescale_factor, stack.shape[2]/rescale_factor],
+                    order=0, anti_aliasing=False)
+            print(("***SAVING RESIZED STACK " + stack_name + "***"))
+            io.imsave(filepath + stack_name + "_" + str(rescale_factor)
+                      + "x-smaller.tif", img_as_ubyte(stack_rs))
+            if keep_in_memory == True:
+                return img_as_ubyte(stack_rs)
