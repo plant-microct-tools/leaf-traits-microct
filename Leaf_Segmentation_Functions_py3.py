@@ -1019,7 +1019,12 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
         return stack_rs
     else:
         stack = io.imread(filepath + stack_name)
-        if rescale_factor ==1:
+        # Uses the first layer (4th dimension) if ImageJ saved the stack as a
+        # 3-layers stack. Happens with some labelled stacks.
+        if len(stack.shape) == 4:
+            stack = stack[:,:,:,0]
+        # If there is no rescaling, skip the trimming. 
+        if rescale_factor == 1:
             if keep_in_memory == True:
                 return img_as_ubyte(stack)
         else:
