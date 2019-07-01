@@ -64,12 +64,14 @@ def Trim_Individual_Stack(large_stack, small_stack):
 # Extract data from command line input
 full_script_path = str(sys.argv[0])
 path_to_sample = str(sys.argv[1])
-px_edge = float(sys.argv[2])
-trim_slices = int(sys.argv[3])
-trim_column_L = int(sys.argv[4])
-trim_column_R = int(sys.argv[5])
-color_values = sys.argv[6]
-base_folder_name = str(sys.argv[7])
+binary_postfix = sys.argv[2]
+px_edge = float(sys.argv[3])
+trim_slices = int(sys.argv[4])
+trim_column_L = int(sys.argv[5])
+trim_column_R = int(sys.argv[6])
+color_values = sys.argv[7]
+base_folder_name = str(sys.argv[8])
+
 
 # Pixel dimmension
 vx_volume = px_edge**3
@@ -95,7 +97,7 @@ else:
     folder_name = sample_path_split[-2] + '/'
     raw_ML_prediction_name = sample_path_split[-1]
 filepath = base_folder_name + sample_name + '/'
-binary_filename = sample_name + 'BINARY-8bit.tif'
+binary_filename = sample_name + binary_postfix
 # raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
 print('')
@@ -117,7 +119,18 @@ if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTE
 else:
     # Load the ML segmented stack
     raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
-    print((np.unique(raw_pred_stack[100])))
+    uniq100th = np.unique(raw_pred_stack[100])
+    print(uniq100th)
+
+    if np.any(uniq100th < 0):
+        print('###############################################################')
+        print('###############################################################')
+        print('ERROR: There might be some issue with the fullstack prediction!')
+        print('       Consider opening and saving it in ImageJ')
+        print('       ' + sample_name + 'fullstack_prediction.tif')
+        print('#########################################')
+        print('#########################################')
+        assert False
 
     # Trim at the edges -- The ML does a bad job there
     # Here I remove 50 slices at the beginning and the end,
