@@ -845,7 +845,7 @@ def localthick_load_and_resize(folder_name, sample_name, threshold_rescale_facto
                                             order=0, anti_aliasing=False)
     else:
         localthick_stack = localthick_small
-    return localthick_stack
+    return img_as_ubyte(localthick_stack)
 
 
 # GTR: Added a saving switch so to not write it to disk if needed.
@@ -1023,7 +1023,7 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
         # 3-layers stack. Happens with some labelled stacks.
         if len(stack.shape) == 4:
             stack = stack[:,:,:,0]
-        # If there is no rescaling, skip the trimming. 
+        # If there is no rescaling, skip the trimming.
         if rescale_factor == 1:
             if keep_in_memory == True:
                 return img_as_ubyte(stack)
