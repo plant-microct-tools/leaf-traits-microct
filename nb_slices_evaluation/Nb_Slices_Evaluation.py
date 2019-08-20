@@ -74,10 +74,10 @@ label_name = 'labelled-stack.tif'
 # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
 # of the same length, shuffle that sequence, and shuffle the slices in the same
 # order. This creates a bit of randomness in the training-testing slices.
-labelled_slices = np.array(ImgJ_slices) - 1
-labelled_slices_seq = np.arange(labelled_slices.shape[0])
+labelled_slices_ordered = np.array(ImgJ_slices) - 1
+labelled_slices_seq = np.arange(labelled_slices_ordered.shape[0])
 np.random.shuffle(labelled_slices_seq)
-labelled_slices = labelled_slices[labelled_slices_seq]
+labelled_slices = labelled_slices_ordered[labelled_slices_seq]
 
 # Set the training and testing slices
 train_slices = np.arange(0, stop=nb_training)
@@ -157,9 +157,13 @@ joblib.dump(rf_transverse, folder_name+'Nb_slices_eval/'+sample_name+'RF_model'+
     #%reset_selective -f FL_[a-z]
     #%reset_selective -f Label_[a-z]
 
+# Make predictions on slices within the labelled slices, not at the edges.
+# This would save time.
+pred_slices = np.arange(labelled_slices_ordered[0],labelled_slices_ordered[-1]+1)
+
 print('***STARTING FULL STACK PREDICTION***')
 RFPredictCTStack_out = RFPredictCTStack(
-    rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
+    rf_transverse, gridrec_stack[pred_slices,:,:], phaserec_stack[pred_slices,:,:], localthick_stack[pred_slices,:,:], "transverse")
 # joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',
 #                     compress='zlib')
 #RFPredictCTStack_out = RFPredictCTStack(rf_transverse,gridrec_stack[0:25,:,:],phaserec_stack[0:25,:,:],localthick_stack[0:25,:,:],"transverse")
