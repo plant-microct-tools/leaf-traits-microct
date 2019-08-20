@@ -53,3 +53,6 @@ def make_normconf_matrix(L_test,class_p,folder_name):
     df = pd.crosstab(L_test, class_p, rownames=['Actual'], colnames=['Predicted'], normalize='index')
     print(tabulate(df, headers='keys', tablefmt='pqsl'))
     df.to_csv('../results/'+folder_name+'/NormalizedConfusionMatrix.txt',header='Predicted', index='Actual', sep=' ', mode='w')
+
+# OOB predictions
+print('Our Out Of Box prediction of accuracy is: {oob}%'.format(oob=rf_transverse.oob_score_ * 100))
