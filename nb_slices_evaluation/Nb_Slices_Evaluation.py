@@ -171,7 +171,18 @@ if os.path.isfile(folder_name+'Nb_slices_eval/'+'Nb_slices_evaluation_sets.txt')
     sets = open(folder_name+'Nb_slices_eval/'+'Nb_slices_evaluation_sets.txt', 'a')
 else:
     sets = open(folder_name+'Nb_slices_eval/'+'Nb_slices_evaluation_sets.txt', 'w')
-sets.write('Nb_training: '+nb_training+';; Training '+'-'.join(train_slices)+';;Nb_testing: '+nb_testing+';; Testing '+'-'.join(test_slices)+"\n")
-sets.close
+
+if isinstance(train_slices, int):
+    str_train_slices = str(train_slices)
+else:
+    str_train_slices = '-'.join(map(str,train_slices))
+
+if isinstance(test_slices, int):
+    str_test_slices = str(test_slices)
+else:
+    str_test_slices = '-'.join(map(str,test_slices))
+
+sets.write('Nb_training: '+str(nb_training)+';; Training '+str_train_slices+';; Nb_testing: '+str(nb_testing)+';; Testing '+str_test_slices+"\n")
+sets.close()
 
 print('Done for ' + train_test_string)
