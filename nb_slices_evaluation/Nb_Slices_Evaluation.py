@@ -27,12 +27,13 @@ Th_phase = int(sys.argv[3])
 postfix_grid = sys.argv[4]
 Th_grid = int(sys.argv[5])
 nb_slices = sys.argv[6]
-raw_slices = sys.argv[7]
-rescale_factor = int(sys.argv[8])
+slice_sel = sys.argv[7]
+raw_slices = sys.argv[8]
+rescale_factor = int(sys.argv[9])
 threshold_rescale_factor = rescale_factor
-base_folder_name = sys.argv[9]
-pred_type = sys.argv[10]
-nb_estimators = 50 if len(sys.argv) == 11 else int(sys.argv[11])
+base_folder_name = sys.argv[10]
+pred_type = sys.argv[11]
+nb_estimators = 50 if len(sys.argv) == 12 else int(sys.argv[12])
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
@@ -78,17 +79,47 @@ label_name = 'labelled-stack.tif'
 # order. This creates a bit of randomness in the training-testing slices.
 labelled_slices_ordered = np.array(ImgJ_slices) - 1
 labelled_slices_seq = np.arange(labelled_slices_ordered.shape[0])
-np.random.shuffle(labelled_slices_seq)
-labelled_slices = labelled_slices_ordered[labelled_slices_seq]
+if slice_sel == 'random':
+    np.random.shuffle(labelled_slices_seq)
+    labelled_slices = labelled_slices_ordered[labelled_slices_seq]
+    # Set the training and testing slices
+    train_slices = np.arange(0, stop=nb_training)
+    test_slices = np.arange(nb_training, stop=(nb_training + nb_testing))
+    #define image subsets for training and testing
+    gridphase_train_slices_subset = labelled_slices[train_slices]
+    gridphase_test_slices_subset = labelled_slices[test_slices]
+    label_train_slices_subset = labelled_slices_seq[train_slices]
+    label_test_slices_subset = labelled_slices_seq[test_slices]
+elif len(slice_sel) <= 2:
+    train_slices = [int(slice_sel)]
+    gridphase_train_slices_subset = labelled_slices_ordered[train_slices]
+    label_train_slices_subset = labelled_slices_seq[train_slices]
+    np.random.shuffle(labelled_slices_seq)
+    test_slices = [labelled_slices_seq[0]]
+    gridphase_test_slices_subset = labelled_slices_ordered[test_slices]
+    label_test_slices_subset = test_slices
+elif len(slice_sel > 2):
+    slice_choice = [int(x) for x in slice_sel.split(',')]
+    train_slices = slice_choice[0:(nb_training+1)]
+    test_slices = slice_choice[(nb_training+1):]
+    gridphase_train_slices_subset = labelled_slices_ordered[train_slices]
+    gridphase_test_slices_subset = labelled_slices_ordered[test_slices]
+    label_train_slices_subset = labelled_slices_seq[train_slices]
+    label_test_slices_subset = labelled_slices_seq[test_slices]
 
-# Set the training and testing slices
-train_slices = np.arange(0, stop=nb_training)
-test_slices = np.arange(nb_training, stop=(nb_training+nb_testing))
-
+# #define image subsets for training and testing
+# gridphase_train_slices_subset = labelled_slices[train_slices]
+# gridphase_test_slices_subset = labelled_slices[test_slices]
+# label_train_slices_subset = labelled_slices_seq[train_slices]
+# label_test_slices_subset = labelled_slices_seq[test_slices]
 
 # Debugging code to check how many slices in each set
 # print(train_slices)
+# print(gridphase_train_slices_subset)
+# print(label_train_slices_subset)
 # print(test_slices)
+# print(gridphase_test_slices_subset)
+# print(label_test_slices_subset)
 # print(len(labelled_slices))
 
 # Load the images
@@ -117,12 +148,6 @@ else:
     localthick_up_save(folder_name, sample_name, keep_in_memory=False)
     localthick_stack = localthick_load_and_resize(
         folder_name, sample_name, threshold_rescale_factor)
-
-#define image subsets for training and testing
-gridphase_train_slices_subset = labelled_slices[train_slices]
-gridphase_test_slices_subset = labelled_slices[test_slices]
-label_train_slices_subset = labelled_slices_seq[train_slices]
-label_test_slices_subset = labelled_slices_seq[test_slices]
 
 # Creating training and testing string for file naming
 train_test_string = '_train_'+'-'.join(map(str, label_train_slices_subset))+'_test_'+'-'.join(map(str, label_test_slices_subset))

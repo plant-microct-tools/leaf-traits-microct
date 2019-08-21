@@ -1,3 +1,8 @@
-for n in {1..24}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'; done
+# for loops used to iterate over the Nb_Slices_Evaluation.py function, either to repeat the command or to specify a set of starting train slice(s).
 
-for n in {1..24}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done
+# bash for loop to repeat function a number of times with randomly
+# selected slices
+for n in {1..24}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 random  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done
+
+# bash for loop to iterate over a specific set of train slices
+for i in 0 3 5 7 10 13 16 22; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 $i  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done
