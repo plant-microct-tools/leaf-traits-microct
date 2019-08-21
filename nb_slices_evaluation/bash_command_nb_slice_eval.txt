@@ -1,2 +1,3 @@
 for n in {1..24}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/'; done
 
+for n in {1..24}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done

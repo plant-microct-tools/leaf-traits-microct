@@ -9,6 +9,10 @@ Created on 2019-08-20
 
 
 def performance_metrics(stack,gp_test_slices,label_stack,label_test_slices,folder_name,tag):
+    # e.g.
+    # tag = "\nPost-processed Full Stack Scores:\n"
+    # performance_metrics(processed,gridphase_test_slices_subset,label_stack,label_test_slices_subset,folder_name,tag)
+    
     # generate absolute confusion matrix
     conf_matrix = pd.crosstab(stack[gp_test_slices,:,:].ravel(order="F"),label_stack[label_test_slices,:,].ravel(order="F"),rownames=['Actual'], colnames=['Predicted'])
     # generate normalized confusion matrix
@@ -40,19 +44,24 @@ def print_feature_layers(rf_t,folder_name):
         file.write('Feature_layer {fl} importance: {imp}'.format(fl=fl, imp=imp)+'\n')
     file.close()
 
-def make_conf_matrix(L_test,class_p,folder_name):
+def make_conf_matrix(L_test,class_p,folder_name,norm=False):
     # Generate confusion matrix for transverse section
     # FIX: better format the output of confusion matrix to .txt file
-    df = pd.crosstab(L_test, class_p, rownames=['Actual'], colnames=['Predicted'])
+    # Use norm = 'index' for normalized-by-row confusion matrix
+    df = pd.crosstab(L_test, class_p, rownames=['Actual'], colnames=['Predicted'], normalize=norm)
     print(tabulate(df, headers='keys', tablefmt='pqsl'))
-    df.to_csv('../results/'+folder_name+'/ConfusionMatrix.txt',header='Predicted', index='Actual', sep=' ', mode='w')
+    if norm != False:
+        filename = 'ConfusionMatrix.txt'
+    else:
+        filename = 'NormalizedConfusionMatrix.txt'
+    df.to_csv('../results/'+folder_name+filename,header='Predicted', index='Actual', sep=' ', mode='w')
 
-def make_normconf_matrix(L_test,class_p,folder_name):
-    # Generate normalized confusion matrix for transverse section
-    # FIX: better format the output of confusion matrix to .txt file
-    df = pd.crosstab(L_test, class_p, rownames=['Actual'], colnames=['Predicted'], normalize='index')
-    print(tabulate(df, headers='keys', tablefmt='pqsl'))
-    df.to_csv('../results/'+folder_name+'/NormalizedConfusionMatrix.txt',header='Predicted', index='Actual', sep=' ', mode='w')
+
+if os.path.isfile(folder_name+sample_name+'RF_model.joblib'):
+    print('***LOADING TRAINED MODEL***')
+    rf_transverse = joblib.load(folder_name+sample_name+'RF_model.joblib')
+    print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
+        oob=rf_transverse.oob_score_ * 100)))
 
 # OOB predictions
 print('Our Out Of Box prediction of accuracy is: {oob}%'.format(oob=rf_transverse.oob_score_ * 100))

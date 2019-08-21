@@ -17,6 +17,7 @@ import os
 import gc
 from sklearn.externals import joblib
 from pandas import DataFrame
+import re
 
 # Extract data from command line input
 full_script_path = sys.argv[0]
@@ -30,7 +31,8 @@ raw_slices = sys.argv[7]
 rescale_factor = int(sys.argv[8])
 threshold_rescale_factor = rescale_factor
 base_folder_name = sys.argv[9]
-nb_estimators = 50 if len(sys.argv) == 10 else int(sys.argv[10])
+pred_type = sys.argv[10]
+nb_estimators = 50 if len(sys.argv) == 11 else int(sys.argv[11])
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
@@ -159,9 +161,18 @@ joblib.dump(rf_transverse, folder_name+'Nb_slices_eval/'+sample_name+'RF_model'+
 
 # Make predictions on slices within the labelled slices, not at the edges.
 # This would save time.
-pred_slices = np.arange(labelled_slices_ordered[0],labelled_slices_ordered[-1]+1)
 
-print('***STARTING FULL STACK PREDICTION***')
+if pred_type == "full":
+    pred_slices = np.arange(0, gridrec_stack.shape[0])
+elif pred_type == "min-max":
+    pred_slices = np.arange(labelled_slices_ordered[0],labelled_slices_ordered[-1]+1)
+elif bool(re.search('label', pred_type)):
+    pred_slices = labelled_slices_ordered
+else:
+    print('************************************************')
+    raise ValueError('not a valid choice for stack prediction')
+
+print('***STARTING STACK PREDICTION***')
 RFPredictCTStack_out = RFPredictCTStack(
     rf_transverse, gridrec_stack[pred_slices,:,:], phaserec_stack[pred_slices,:,:], localthick_stack[pred_slices,:,:], "transverse")
 # joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',
@@ -177,14 +188,14 @@ else:
     sets = open(folder_name+'Nb_slices_eval/'+'Nb_slices_evaluation_sets.txt', 'w')
 
 if isinstance(train_slices, int):
-    str_train_slices = str(train_slices)
+    str_train_slices = str(label_train_slices_subset)
 else:
-    str_train_slices = '-'.join(map(str,train_slices))
+    str_train_slices = '-'.join(map(str,label_train_slices_subset))
 
 if isinstance(test_slices, int):
-    str_test_slices = str(test_slices)
+    str_test_slices = str(label_test_slices_subset)
 else:
-    str_test_slices = '-'.join(map(str,test_slices))
+    str_test_slices = '-'.join(map(str,label_test_slices_subset))
 
 sets.write('Nb_training: '+str(nb_training)+';; Training '+str_train_slices+';; Nb_testing: '+str(nb_testing)+';; Testing '+str_test_slices+"\n")
 sets.close()
