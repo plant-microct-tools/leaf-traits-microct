@@ -120,34 +120,23 @@ else:
     # Load the ML segmented stack
     raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
     uniq100th = np.unique(raw_pred_stack[100])
-    print(uniq100th)
-
     if np.any(uniq100th < 0):
-        print('###############################################################')
-        print('###############################################################')
-        print('ERROR: There might be some issue with the fullstack prediction!')
-        print('       Consider opening and saving it in ImageJ')
-        print('       ' + sample_name + 'fullstack_prediction.tif')
-        print('#########################################')
-        print('#########################################')
-        assert False
+        raw_pred_stack = np.where(raw_pred_stack < 0, raw_pred_stack + 256, raw_pred_stack)
+        print(np.unique(raw_pred_stack[100]))
+    else:
+        print(uniq100th)
 
     # Trim at the edges -- The ML does a bad job there
-    # Here I remove 50 slices at the beginning and the end,
-    # and 40 pixels at the left and right edges
-    raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
-
-    # io.imshow(raw_pred_stack[100])
-
-    # Define the values for each tissue
-    # Validate against the values printed in the previous output
-    # epid_value = 51
-    # bg_value = 204
-    # mesophyll_value = 0
-    # ias_value = 255
-    # vein_value = 102
-    # bs_value = 153
-
+    if trim_slices == 0:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack
+    else:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, :]
+        else:
+            raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
     ###################
     # EPIDERMIS
