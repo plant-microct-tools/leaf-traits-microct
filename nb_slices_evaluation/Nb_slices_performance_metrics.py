@@ -8,7 +8,7 @@ Created on 2019-08-20
 """
 
 import os
-import joblib
+# import joblib
 import numpy as np
 import pandas as pd
 import skimage.io as io
@@ -36,18 +36,16 @@ def performance_metrics(stack,gp_test_slices,label_stack,label_test_slices,folde
     print(precision)
     print(recall)
     print(f1_score)
-
     data_out = {'precision': precision,
                 'recall': recall,
                 'f1_score': f1_score}
     results_out = pd.DataFrame(data_out)
     results_out.to_csv(folder_name+sample_name+'_PerformanceMetrics.txt', sep='\t', encoding='utf-8')
-
     file = open(folder_name+sample_name+'_PerformanceMetrics.txt', 'a')
     file.write("\n")
     file.write("\nTotal accuracy: "+str(total_accuracy*100)+"%\n")
     file.write("Total test pixels: "+str(total_testpixels))
-
+    file.close()
     return conf_matrix, precision, recall
 
 def print_feature_layers(rf_t,folder_name):
@@ -68,11 +66,21 @@ path = os.getcwd()
 file_w_path = os.path.realpath(filename)
 filesize = os.path.getsize(file_w_path)
 
+# LABELLED SLICES ON ORIGINAL STACK
+labelled_slices = np.array([int(x) for x in raw_slices.split(',')]) - 1
+labelled_slices_seq = np.arange(len(labelled_slices))
+
+# LOAD PREDICTED STACK
+pred_stack = io.imread(file_w_path)
+
 # STOP IF THIS IS A FULL STACK PREDICTION
 # WILL DEAL WITH THAT LATER
-if filesize > 1e8:
-    print('************************************************')
-    raise ValueError('Not a predicted stack on labelled slices only -- Skipping')
+if pred_stack.shape[0] > 24:
+    correction = 80  # ADD LOGICAL FOR WHEN IT'S ONLY IN THE MIN-MAX RANGE
+    print('### FILE IS A FULLSTACK PREDICTION ###')
+    print('### KEEPING ONLY THE LABELLED SLCS ###')
+    pred_stack = pred_stack[labelled_slices-correction, :, :]
+    print(pred_stack.shape)
 
 # DEFINE SOME NAMES
 folder_name = path + '/Results/'
@@ -92,20 +100,14 @@ labelled_stack = io.imread(path + '/' + labelled_name)
 print(np.unique(labelled_stack))
 cell_lbl, epid_lbl, bs_lbl, vein_lbl, bg_lbl, air_lbl = np.unique(labelled_stack)
 
-# LABELLED SLICES ON ORIGINAL STACK
-labelled_slices = np.array([int(x) for x in raw_slices.split(',')]) - 1
-labelled_slices_seq = np.arange(len(labelled_slices))
-
-# LOAD PREDICTED STACK
-pred_stack = io.imread(file_w_path)
+# CHECK FOR LABELLED VALUES
 print(np.unique(pred_stack))
 if np.any(np.unique(pred_stack) < 0):
     pred_stack = np.where(pred_stack < 0, pred_stack + 256, pred_stack)
 print(np.unique(pred_stack))
 
-cell_pred, epid_pred, bs_pred, vein_pred, bg_pred, air_pred = np.unique(pred_stack)
-
 # CHANGE COLOR OF PREDICTED STACK
+cell_pred, epid_pred, bs_pred, vein_pred, bg_pred, air_pred = np.unique(pred_stack)
 pred_stack = np.where(pred_stack == epid_pred, epid_lbl, pred_stack)
 pred_stack = np.where(pred_stack == bs_pred, bs_lbl, pred_stack)
 pred_stack = np.where(pred_stack == vein_pred, vein_lbl, pred_stack)
