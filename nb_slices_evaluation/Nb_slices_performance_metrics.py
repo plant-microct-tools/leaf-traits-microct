@@ -66,6 +66,12 @@ path = os.getcwd()
 file_w_path = os.path.realpath(filename)
 filesize = os.path.getsize(file_w_path)
 
+# WELCOME MESSAGE
+print('\n###########################')
+print('###    STARTING WITH    ###')
+print(filename)
+print('\n')
+
 # LABELLED SLICES ON ORIGINAL STACK
 labelled_slices = np.array([int(x) for x in raw_slices.split(',')]) - 1
 labelled_slices_seq = np.arange(len(labelled_slices))
@@ -114,8 +120,8 @@ pred_stack = np.where(pred_stack == vein_pred, vein_lbl, pred_stack)
 pred_stack = np.where(pred_stack == bg_pred, bg_lbl, pred_stack)
 
 # COMPARE LABELLED VS. PREDICTED
-indices = [x for x in labelled_slices_seq if x != train_slices]
-conf_matrix, precision, recall = performance_metrics(pred_stack,indices,labelled_stack,indices,folder_name,test_name)
+indices = [x for x in labelled_slices_seq if np.all(x != train_slices)]
+conf_matrix, precision, recall = performance_metrics(pred_stack, indices, labelled_stack, indices, folder_name, test_name)
 
 # # LOAD MODEL
 # rf_transverse = joblib.load(folder_name + model_filename)
