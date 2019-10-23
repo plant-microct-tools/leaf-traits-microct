@@ -53,10 +53,16 @@ for n in {1..25}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_eva
 for i in 0 3 5 7 10 13 16 22; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 1 $i  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done
 
 
+# TESTING FOR EFFECT OF TESTING SLICES
+
+for i in {1..10}; do for n in {1..10}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 6,$i random  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done; done
+
 
 
 # FOR 10X RESOLUTION IMAGES -- DO ONLY THE LABELLED STACK PREDICTION
 for i in {1..12}; do for n in {1..30}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 $i random  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 4 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done; done
+
+for i in {13..18}; do for n in {1..30}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 $i,6 random  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 4 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done; done
 
 
 for n in {1..30}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation.py C_I_12_Strip2_ 'PAGANIN-8bit.tif' 132 'GRID-8bit.tif' 106 2 random  '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' 4 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' labelled; done
@@ -74,3 +80,50 @@ for n in {1..30}; do python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_eva
 
 
 find *.tif -exec python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_slices_performance_metrics.py {} labelled-stack.tif_2x-smaller.tif '80,140,200,260,340,400,440,540,620,740,800,860,940,1060,1140,1240,1300,1400,1480,1540,1600,1690,1740,1840' \;
+
+
+find *.tif -exec python3 ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Nb_Slices_Evaluation_Leaf_Traits.py {} 0.325 '51,204,0,255,153,102' 0 1 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/C_I_12_Strip2_/MLresults/Nb_slices_eval/2x_smaller/' '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/C_I_12_Strip2_/MLresults/Nb_slices_eval/C_I_12_Strip2_BINARY-8bit-2x_smaller.tif' \;
+
+
+
+##################################
+## TESTING USING
+## ANOThER MODEL
+## TO PREDICT
+## OTHER STACKS
+##################
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_D_10_Strip1_ 152 115 '85,201,332,494,631,815,1002,1107,1244,1338,1470,1618,1717,1821' 2 2 '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/' '/run/media/guillaume/microCT_GTR_8tb/Vitis_Shade_Drought/_ML_DONE/C_I_12_Strip2_/MLresults/Nb_slices_eval/2x_smaller/C_I_12_Strip2_RF_model_train_6-22-3-16-18-11-7-15-13-12-5-4_test_23-1-2-8-0-19-17-14-21-9.joblib'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_5_Strip2_ 125 110 '48, 153, 244, 387, 471, 601, 772, 934, 1078, 1180, 1282, 1389, 1543, 1690, 1832' 2 2
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_D_5_Strip3_ 111 110 '106,228,329,486,646,869,953,1045,1178,1301,1600' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_5_Strip3_ 122 118 '83,180,300,430,560,696,792,926,1086,1214,1402,1590,1737,1840' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_D_10_Strip2_ 115 95 '82,196,308,418,515,623,677,747,833,910,1003,1101,1166,1207' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_D_10_Strip3_ 95 95 '85,100,132,200,283,362,417,501,520,583,620,702,800,856' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_10_Strip3_ 115 120 '85, 200, 310, 439, 612, 779, 945, 1119, 1236, 1366, 1480, 1618, 1778, 1860' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_D_2_Strip2_ 120 108 '85,164,303,451,602,786,927,1074,1214,1333,1458,1615,1767,1852' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_D_2_Strip3_ 119 105 '86,200,312,473,616,771,905,1035,1187,1321,1494,1615,1778,1840' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_D_4_Strip2_ 98 90 '83,205,322,460,628,777,960,1090,1221,1380,1493,1610,1725,1840' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_D_8_Strip3_ 111 105 '86,210,380,515,655,820,1000,1200,1350,1450,1560,1660,1760,1841' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_2_Strip2_ 102 103 '86,220,360,523,660,810,970,1115,1250,1435,1545,1675,1775,1860' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_2_Strip3_ 122 121 '85,200,360,520,680,840,980,1120,1260,1420,1560,1680,1780,1840' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_2_Strip4_ 125 109 '80,220,360,500,680,860,1000,1180,1320,1460,1580,1700,1790,1840' 2 2
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_8_Strip3_ 134 111 '85,215,370,520,680,850,1010,1170,1301,1470,1600,1700,1770,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_8_Strip3_b_ 105 98 '85,200,330,480,620,780,970,1100,1230,1380,1500,1620,1730,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_8_Strip2_ 119 79 '80,200,340,500,640,800,920,1060,1200,1340,1460,1580,1700,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_10_Strip1_ 135 95 '80,200,320,460,600,740,880,1020,1120,1240,1380,1520,1680,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_10_Strip2_ 101 98 '80,200,320,460,580,720,860,1001,1140,1300,1440,1580,1720,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_10_Strip3_ 115 97 '80,200,320,460,600,740,880,1020,1160,1300,1440,1600,1740,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_D_8_Strip4_ 122 115 '85,215,361,510,734,1084,1200,1337,1522,1700,1820' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py S_I_8_Strip3_ 134 111 '85,215,370,520,680,850,1010,1170,1301,1470,1600,1700,1770,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_12_Strip2_ 132 106 '80,260,440,620,860,1060,1300,1480,1690,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_12_Strip1_ 96 84 '80,200,320,440,560,680,820,960,1120,1260,1400,1580,1720,1840' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'
+python ~/Dropbox/_github/leaf-traits-microct/nb_slices_evaluation/Segmentation_w_other_model.py C_I_12_Strip3_ 105 116 '80,260,420,600,820,1020,1200,1380,1540,1720' 2 2 '/run/media/gtrancourt/GTR_Touro/Vitis_Shade_Drought/DONE_Klara/'

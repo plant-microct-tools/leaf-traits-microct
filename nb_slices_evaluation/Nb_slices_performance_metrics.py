@@ -122,6 +122,7 @@ pred_stack = np.where(pred_stack == bg_pred, bg_lbl, pred_stack)
 # COMPARE LABELLED VS. PREDICTED
 indices = [x for x in labelled_slices_seq if np.all(x != train_slices)]
 conf_matrix, precision, recall = performance_metrics(pred_stack, indices, labelled_stack, indices, folder_name, test_name)
+io.imsave(folder_name+test_name+"_corrected_prediction.tif", pred_stack)
 
 # # LOAD MODEL
 # rf_transverse = joblib.load(folder_name + model_filename)
