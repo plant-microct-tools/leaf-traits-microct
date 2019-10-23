@@ -16,6 +16,7 @@ import skimage.io as io
 from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
 # import zipfile
 import gc
+from Leaf_Segmentation_Functions_py3 import delete_dangling_epidermis
 #import cv2
 
 __author__ = "Guillaume Théroux-Rancourt"
@@ -122,15 +123,20 @@ else:
     uniq100th = np.unique(raw_pred_stack[100])
     print(uniq100th)
 
-    if np.any(uniq100th < 0):
-        print('###############################################################')
-        print('###############################################################')
-        print('ERROR: There might be some issue with the fullstack prediction!')
-        print('       Consider opening and saving it in ImageJ')
-        print('       ' + sample_name + 'fullstack_prediction.tif')
-        print('#########################################')
-        print('#########################################')
-        assert False
+    # CHECK FOR LABELLED VALUES
+    if np.any(np.unique(uniq100th) < 0):
+        raw_pred_stack = np.where(raw_pred_stack < 0, raw_pred_stack + 256, raw_pred_stack)
+    print(np.unique(raw_pred_stack[100]))
+
+    # if np.any(uniq100th < 0):
+    #     print('###############################################################')
+    #     print('###############################################################')
+    #     print('ERROR: There might be some issue with the fullstack prediction!')
+    #     print('       Consider opening and saving it in ImageJ')
+    #     print('       ' + sample_name + 'fullstack_prediction.tif')
+    #     print('#########################################')
+    #     print('#########################################')
+    #     assert False
 
     # Trim at the edges -- The ML does a bad job there
     # Here I remove 50 slices at the beginning and the end,
@@ -177,13 +183,38 @@ else:
     print((epidermis_area[ordered_epidermis[-4:]]))
 
     if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
-        print('#########################################')
-        print('#########################################')
         print('ERROR: Both epidermis might be connected!')
-        print('' + sample_name)
-        print('#########################################')
-        print('#########################################')
-        assert False
+        print('Trying to remove the dangling epidermis pixels')
+        no_dangling = delete_dangling_epidermis((unique_epidermis_volumes == ordered_epidermis[-1]+1), True, False)
+
+        # Label all of the epidermis regions
+        unique_epidermis_volumes = label(raw_pred_stack == epid_value, connectivity=1)
+        props_of_unique_epidermis = regionprops(unique_epidermis_volumes)
+
+        # io.imshow(unique_epidermis_volumes[100])
+
+        # Find the size and properties of the epidermis regions
+        epidermis_area = np.zeros(len(props_of_unique_epidermis))
+        epidermis_label = np.zeros(len(props_of_unique_epidermis))
+        epidermis_centroid = np.zeros([len(props_of_unique_epidermis), 3])
+        for regions in np.arange(len(props_of_unique_epidermis)):
+            epidermis_area[regions] = props_of_unique_epidermis[regions].area
+            epidermis_label[regions] = props_of_unique_epidermis[regions].label
+            epidermis_centroid[regions] = props_of_unique_epidermis[regions].centroid
+
+        # Find the two largest epidermis
+        ordered_epidermis = np.argsort(epidermis_area)
+        print('The two largest values below should be in the same order of magnitude')
+        print((epidermis_area[ordered_epidermis[-4:]]))
+
+        if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
+            print('#########################################')
+            print('#########################################')
+            print('ERROR: Both epidermis are still connected!')
+            print('' + sample_name)
+            print('#########################################')
+            print('#########################################')
+            assert False
 
     print("")
     print('The center of the epidermis should be more or less the same on the')
