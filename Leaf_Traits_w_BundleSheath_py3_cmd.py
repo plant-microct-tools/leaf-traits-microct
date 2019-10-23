@@ -66,12 +66,13 @@ full_script_path = str(sys.argv[0])
 path_to_sample = str(sys.argv[1])
 binary_postfix = sys.argv[2]
 px_edge = float(sys.argv[3])
-trim_slices = int(sys.argv[4])
-trim_column_L = int(sys.argv[5])
-trim_column_R = int(sys.argv[6])
-color_values = sys.argv[7]
-base_folder_name = str(sys.argv[8])
-
+to_resize = str(sys.argv[4])
+reuse_raw_binary = str(sys.argv[5])
+trim_slices = int(sys.argv[6])
+trim_column_L = int(sys.argv[7])
+trim_column_R = int(sys.argv[8])
+color_values = sys.argv[9]
+base_folder_name = str(sys.argv[10])
 
 # Pixel dimmension
 vx_volume = px_edge**3
@@ -252,7 +253,7 @@ else:
     # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
     # the noise left by the segmentation method and kept only the largest veins.
     # This should be adjusted depending on the species/images/maginification.
-    large_veins_ids = veins_label[veins_area > 100000]
+    large_veins_ids = veins_label[veins_area > (100000/8)]
 
     largest_veins = np.in1d(unique_vein_volumes, large_veins_ids).reshape(raw_pred_stack.shape)
 
@@ -333,45 +334,30 @@ else:
     # good background, epidermis, and vein segmentation to remove the tissues that
     # are not need for some traits.
 
-    ##############################
-    ## LOADING THE BINARY STACK ##
-    ## IN ORIGINAL SIZE         ##
-    ##############################
-    print('')
-    print('### LOADING ORIGINAL SIZED BINARY STACK ###')
+    if(reuse_raw_binary == 'True'):
+        ##############################
+        ## LOADING THE BINARY STACK ##
+        ## IN ORIGINAL SIZE         ##
+        ##############################
+        print('')
+        print('### LOADING ORIGINAL SIZED BINARY STACK ###')
+        binary_stack = img_as_bool(io.imread(filepath + binary_filename))
+        binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
+        binary_stack = binary_stack[:, :, (trim_column_L * 2):(-trim_column_R * 2)]
+        # Check and trim the binary stack if necessary
+        # This is to match the dimensions between all images
+        # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
+        binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
-    # I've started compressing my files. The code below extracts the file,
-    # loads it into memory, and then deletes the file (it's still in memory).
-    # The commented code at the end loads the uncompressed image.
+    else:
+        print('### USING PREDICTIONS INSTEAD OF ORIGINAL BINARY STACK ###')
 
-    #Load the compressed binary stack in the original dimensions
-
-    #binary_zip = zipfile.ZipFile(base_folder_name + sample_name + '/' + binary_filename + '.zip', 'r')
-    #binary_zip.extractall(base_folder_name + sample_name + '/')
-    #binary_raw = binary_zip.open(sample_name + '/' + binary_filename)
-    binary_stack = img_as_bool(io.imread(filepath + binary_filename))
-
-    binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
-    binary_stack = binary_stack[:, :, (trim_column_L*2):(-trim_column_R*2)]
-
-    #os.remove(base_folder_name + sample_name + '/' + sample_name + '/' + binary_filename)
-    #os.rmdir(base_folder_name + sample_name + '/' + sample_name)
-
-
-    # io.imshow(binary_stack[100])
-
-
-    #Check and trim the binary stack if necessary
-    # This is to match the dimensions between all images
-    # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
-    binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
-
-    # TO MANUALLY DELETE SOME SLICES
-    #binary_stack = np.delete(binary_stack, 910, axis=1)
-    #binary_stack = np.delete(binary_stack, 818, axis=0)
-
-    #binary_stack = np.delete(binary_stack, np.arange(0, 160*2), axis=2)
-
+    if(to_resize == 'False'):
+        if(reuse_raw_binary == 'True'):
+            new_shape = binary_stack.shape
+        new_shape = raw_pred_stack.shape
+    else:
+        new_shape = tuple([raw_pred_stack.shape[0], raw_pred_stack.shape[1] * int(to_resize), raw_pred_stack.shape[2] * int(to_resize)])
 
     # This cell creates an empty array filled with the backgroud color (177), then
     # adds all of the leaf to it. Looping over each slice (this is more memory
@@ -381,32 +367,44 @@ else:
     vein_value_new = 147
     ias_value_new = 255
     bs_value_new = 102
+    mesophyll_value_new = 0
 
     print('### CREATING THE POST-PROCESSED SEGMENTED STACK ###')
 
     # Assign an array filled with the background value 177.
-    large_segmented_stack = np.full(shape=binary_stack.shape, fill_value=bg_value_new, dtype='uint8')
+    large_segmented_stack = np.full(shape=new_shape, fill_value=bg_value_new, dtype='uint8')
     for idx in np.arange(large_segmented_stack.shape[0]):
         # Creates a boolean 2D array of the veins (from the largest veins id'ed earlier)
         temp_veins = img_as_bool(transform.resize(largest_veins[idx],
-                                                  [binary_stack.shape[1], binary_stack.shape[2]],
+                                                  [new_shape[1], new_shape[2]],
                                                   anti_aliasing=False, order=0))
         # Creates a boolean 2D array of the bundle sheath (from the largest veins id'ed earlier)
         if bs_value > 0:
             temp_bs = img_as_bool(transform.resize(largest_bs[idx],
-                                                   [binary_stack.shape[1], binary_stack.shape[2]],
+                                                   [new_shape[1], new_shape[2]],
                                                    anti_aliasing=False, order=0))
         # Creates a 2D array with the epidermis being assinged values 30 or 60
         temp_epid = transform.resize(unique_epidermis_volumes[idx],
-                                     [binary_stack.shape[1], binary_stack.shape[2]],
+                                     [new_shape[1], new_shape[2]],
                                      anti_aliasing=False, preserve_range=True, order=0) * 30
         # Creates a 2D mask of only the leaf to remove the backgroud from the
         # original sized binary image.
         leaf_mask = img_as_bool(transform.resize(raw_pred_stack[idx] != bg_value,
-                                                 [binary_stack.shape[1], binary_stack.shape[2]],
+                                                 [new_shape[1], new_shape[2]],
                                                  anti_aliasing=False, order=0))
         # binary_stack is a boolean, so you need to multiply it.
-        large_segmented_stack[idx][leaf_mask] = binary_stack[idx][leaf_mask] * ias_value_new
+        if(reuse_raw_binary == 'True'):
+            large_segmented_stack[idx][leaf_mask] = binary_stack[idx][leaf_mask] * ias_value_new
+        else:
+            temp_cells = img_as_bool(transform.resize(raw_pred_stack[idx] == mesophyll_value,
+                                                   [new_shape[1], new_shape[2]],
+                                                   anti_aliasing=False, order=0))
+            temp_air = img_as_bool(transform.resize(raw_pred_stack[idx] == ias_value,
+                                                   [new_shape[1], new_shape[2]],
+                                                   anti_aliasing=False, order=0))
+            large_segmented_stack[idx][leaf_mask] = temp_cells[leaf_mask] * mesophyll_value_new
+            large_segmented_stack[idx][leaf_mask] = temp_air[leaf_mask] * ias_value_new
+
         large_segmented_stack[idx][temp_veins] = vein_value_new
         if bs_value > 0:
             large_segmented_stack[idx][temp_bs] = bs_value_new
@@ -537,8 +535,7 @@ except NameError:
     bs_volume = 0
 
 print(('Sm: '+str(true_ias_SA/leaf_area)))
-print(('Ames/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bs_volume))))
-
+print(('SAmes/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bs_volume))))
 
 # NOTE ON SA CODE ABOVE
 # The same procedure as for epidermises and veins could be done, i.e. using the
