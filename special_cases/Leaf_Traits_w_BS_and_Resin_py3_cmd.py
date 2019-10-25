@@ -564,8 +564,8 @@ epidermis_adaxial_volume = np.sum(large_segmented_stack == adaxial_epidermis_val
 vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
 bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
 resin_volume = np.sum(large_segmented_stack == resin_value) * vx_volume
-mesophyll_volume = cell_volume + air_volume + vein_volume + bs_volume + resin_volume
-leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume
+mesophyll_volume = cell_volume + air_volume
+leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bs_volume + resin_volume
 
 #Measure the thickness of the leaf, the epidermis, and the mesophyll
 leaf_thickness = np.sum(np.array(large_segmented_stack
