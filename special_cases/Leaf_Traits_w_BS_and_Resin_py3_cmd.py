@@ -550,20 +550,22 @@ else:
             abaxial_epidermis_value = 30
 
 #Measure the different volumes
-leaf_volume = np.sum(large_segmented_stack != bg_value) * vx_volume
-mesophyll_volume = np.sum((large_segmented_stack != bg_value) & (large_segmented_stack
-                                                                 != adaxial_epidermis_value) & (large_segmented_stack != abaxial_epidermis_value)) * vx_volume
+
+# Somehow those two lines can give negative values in some cases
+# I expect it's because of bad labelling of the background.
+# leaf_volume = np.sum(large_segmented_stack != bg_value) * vx_volume
+# mesophyll_volume = np.sum((large_segmented_stack != bg_value) & (large_segmented_stack
+#                                                                  != adaxial_epidermis_value) & (large_segmented_stack != abaxial_epidermis_value)) * vx_volume
+
 cell_volume = np.sum(large_segmented_stack == mesophyll_value) * vx_volume
 air_volume = np.sum(large_segmented_stack == ias_value) * vx_volume
 epidermis_abaxial_volume = np.sum(large_segmented_stack == abaxial_epidermis_value) * vx_volume
 epidermis_adaxial_volume = np.sum(large_segmented_stack == adaxial_epidermis_value) * vx_volume
 vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
 bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
-
-print(leaf_volume)
-print((cell_volume + air_volume + epidermis_abaxial_volume
-       + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume))
-
+resin_volume = np.sum(large_segmented_stack == resin_value) * vx_volume
+mesophyll_volume = cell_volume + air_volume + vein_volume + bs_volume + resin_volume
+leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume
 
 #Measure the thickness of the leaf, the epidermis, and the mesophyll
 leaf_thickness = np.sum(np.array(large_segmented_stack
