@@ -77,6 +77,7 @@ labelled_slices = labelled_slices[labelled_slices_seq]
 # The last part will add 1 to even length labelled slices number, and 0 to even.
 # This meanes than odd length will have one training slice more, and even will have two more.
 # int(len(labelled_slices) % 2 == 0))
+
 train_slices = np.arange(0, stop=nb_training_slices)
 test_slices = np.arange(len(train_slices), stop=len(labelled_slices))
 
