@@ -2,7 +2,7 @@
 
 X-ray micro-computed tomography (microCT) is rapidly becoming a popular technique for measuring the 3D geometry of plant organs, such as roots, stems, leaves, flowers, and fruits. Due to the large size of these datasets (> 20 Gb per 3D image), along with the often irregular and complex geometries of many plant organs, image segmentation represents a substantial bottleneck in the scientific pipeline. Here, we are developing a Python module that utilizes machine learning to dramatically improve the efficiency of microCT image segmentation with minimal user input. By segmentation we mean the identification of specific tissues within the leaves as single values within an image file.
 
-We also provide further tools to process the segmented images, to extract leaf anatomical traits commonly measured, such as in [Théroux-Rancourt et al. (2017)](#references), or to compute airspace tortuosity and related airspace diffusion traits from [Earles et al. (2018)](#references).
+We also provide further tools to process segmented images, to extract leaf anatomical traits commonly measured, such as in [Théroux-Rancourt et al. (2017)](#references), or to compute airspace tortuosity and related airspace diffusion traits from [Earles et al. (2018)](#references).
 
 <!-- ![alt text][logo]
 
@@ -14,7 +14,7 @@ I you use this tool, and if you want to know more about the performance of this 
 
 > __Théroux-Rancourt G, Jenkins MR, Brodersen CR, McElrone AJ, Forrestel EJ, Earles JM (2019)__ [Digitally Deconstructing Leaves in 3D Using X-ray Microcomputed Tomography and Machine Learning](https://www.biorxiv.org/content/10.1101/814954v1). bioRxiv 814954; doi: [10.1101/814954](https://doi.org/10.1101/814954)
 
-## Table of content
+## Table of contents
 - [Package requirements](#requirements)
 - [Preparing for automated segmentation](#preparation-of-leaf-microCT-images-for-automated-segmentation)
 	- 	[How to draw hand labelled slices](#how-hand-segmentation-is-done-to-create-testing-and-training-labeled-slices)
@@ -24,59 +24,60 @@ I you use this tool, and if you want to know more about the performance of this 
 
 
 ## Requirements
-- __python 3__: If you are new to python, a nice and convenient way to install python is through [anaconda](https://www.anaconda.com/download/). The code here uses python 3.7, so be sure to install this version. The anaconda navigator makes it easy to install packages, which can also be installed through command line in your terminal by typing. Further, the anaconda navigator allows you to open specific applications to write and run python code. Spyder is a good choice for scientific computation.
+- __python 3__: If you are new to python, a nice and convenient way to install python is through [anaconda](https://www.anaconda.com/download/). The code here uses python 3.7, so be sure to install this version. The anaconda navigator makes it easy to install packages, which can also be installed through command line in your terminal. Further, the anaconda navigator allows you to open specific applications to write and run python code. We recommended using an integrated development environment designed for scientific computation, such as [Spyder](https://www.spyder-ide.org/) or [Atom](https://ide.atom.io/).
 
-- __required packages__: To install the required packages, we recommend using the command line interface using this line to install all dependencies. The dependencies can also be installed with the anaconda navigator as mentionned above.
+- __required packages__: To install the required packages, we recommend using the command line interface using this line to install all dependencies:
 ```conda install pandas scikit-image scikit-learn opencv tabulate tqdm```
+The dependencies can also be installed with the anaconda navigator as mentioned above.
 
-- __RAM:__ Processing a 5 Gb 8-bit multi-sliced tiff file can peak up to 60 GB of RAM and use up to 30-40 Gb of swap memory (memory written on disk) on Linux (and takes about 3-5 hours to complete). Processing a 250 Mb 8-bit file is of course a lot faster (30-90 minutes) but still takes about 10 Gb of RAM. The program is memory savvy and this needs to be addressed in future versions in order to tweak the program.
+- __RAM:__ Processing a 5 Gb 8-bit multi-sliced tiff file can peak at up to 60 GB of RAM and use up to 30-40 Gb of swap memory (memory written on disk) on Linux (and takes about 3-5 hours to complete). Processing a 250 Mb 8-bit file will be a lot faster (30-90 minutes) but will still require up to about 10 Gb of RAM. The current program is memory savvy, which will be addressed in future versions of the program.
 
 ### Download the code to your computer
 
-There are two ways to copy the code to your computer.
+There are two ways to copy the code to your computer:
 
 - [Clone the repository](https://help.github.com/articles/cloning-a-repository/): Using `git` will allow you to conveniently download the latest changes to the code. Follow the link to set up the cloning of the repository. Afterwards, when new versions come, you can pull the changes to your computer, [like here](https://help.github.com/articles/fetching-a-remote/).
 - Download the code: At the top right of the github page, you'll see a green button written _Clone or download_.
 
 ## Preparation of leaf microCT images for automated segmentation
 
-Before the development of the machine learning segmentation tool, we were segmenting by hand our stack (as in [Théroux-Rancourt et al. (2017)](#references)). We were drawing over a vein on one slice for example, adding that region of interest (ROI) to the ROI manager in ImageJ (using the _t_ keyboard shortcut), then moving the ROI to the new position of that vein (or drawing over), adding that ROI to the manager, and so on until we had covered that specific vein over the whole stack. We were then interpolating the ROIs, which creates a ROI for each slice, and the filling that vein a specific color. This was done for all tissues and was quite time consuming, especially for non-parallel veins.
+Before the development of the machine learning segmentation tool, image stacks were segmented by hand (as in [Théroux-Rancourt et al. (2017)](#references)). For example, one would draw over a vein on a single slice, add that region of interest (ROI) to the ROI manager in ImageJ (using the _t_ keyboard shortcut), then move the ROI to a new position on the same vein, then add this other region to the ROI manager, and so on until one had covered that specific vein over the whole stack. Interpolating the ROIs creates a ROI for each slice, which can be filled with a color designating vein. This was done for all tissues and was quite time consuming, especially for non-parallel veins.
 
-To prepare your image for the machine, you need to prepare high quality hand segmentation of a few slices of your full stack. My experience for now has showed me that the better the hand segmentation is, the better the trained segmentation model will be.
+To prepare an image for this software, first requires high quality hand segmentation of a few slices of your full stack. The better the hand segmentation, the better the trained segmentation model will be.
 
-For now, I have used between 6 to 14 hand segmented slices with equal success, bu I haven't tested what is the effect of the number of slices on different leaf types. I think 6 slices would be a very acceptable the minimum, but this minimum would depend on the venation pattern and the scan's quality for example.
+Generally, 6 to 14 hand segmented slices can be used, with more or less equal success, but we haven't tested the interaction between the number of slices used and different leaf types. Six slices would be a very acceptable minimum, but this minimum would depend on the venation pattern and the scan's quality.
 
 #### How hand segmentation is done to create testing and training labeled slices
 Start several slices away from the edges, so that you cover at least three cell layers in the palisade and at least one full cell in the spongy. Some steps in the machine learning segmentation (e.g. local thickness) do not produce good results near the beginning and the end of the stack, so it's better to avoid those. For example, on a _Vitis vinifera_ scan done at 40x, we avoided the first and last 80 slices.
 
-Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes, and you can make mistakes that won't matter in the end (see pictures below). If you have some tissues touching each other, use another color. I generally draw in black over the _gridrec_ stack, and draw in white tissues touching others, like the bundle sheath (white) touching the epidermis (black). This is what it looks like:
+Each tissue is drawn over in ImageJ using the _pencil_ or _paintbrush_ tool. It is easier than using the _polygon selection_ tool as you can easily pause and also undo changes, and you can make mistakes that won't matter in the end (see pictures below). If you have some tissues touching each other, use another color. For example, I generally draw in black over the _gridrec_ stack, and draw in white any tissues touching others, like the bundle sheath (white) touching the epidermis (black) in this image:
 
 <p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_01_ImageJ_draw_over_slice.png" alt="Slice drawn over" width="600">
 </p>
 
-I follow then these steps, and you can see the output below. The order in which the ROIs are added is important for the later steps:
-- I use then the _magic wand_ selection tool to select the other portion of one epidermis, then hit _t_ to add it to the ROI manager. I repeat it for the other epidermis.
-- I then draw a _polygon selection_ passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
-- I move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, and repeating that for the vein. I repeat this step for each vein/bundle sheath pair.
+Follow these steps to generate the output below. The order in which the ROIs are added is important for the later steps:
+- Use then the _magic wand_ selection tool to select both portions of one epidermis, then hit _t_ to add it to the ROI manager. I repeat this process for the other epidermis.
+- Then draw using _polygon selection_, passing through each epidermis so that it creates a polygon encompassing the whole mesophyll. This selection is added to the ROI manager and will be used to create a background for the testing/training slices.
+- Move now over each vein/bundle sheath pair, selecting the bundle sheath first with the _magic wand_, adding it to the ROI manager, repeating for the vein. Repeat this step for each vein/bundle sheath pair.
 
 <p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_02_ImageJ_draw_over_slice_w_ROIs.png" alt="Slice with ROIs" width="600">
 </p>
 
-Several ROIs are now in the ROI manager. I save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). The filename is up to up, but I recommend adding the slice number to it, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
+Several ROIs are now in the ROI manager. Save all of them by selecting them all (e.g. using _ctrl+a_ in the ROI manager) and then saving them (_More... > Save_ in the ROI manager). Any filename may be chosen, but we recommend including the slice number, which is usually the first 4 digits of a ROI in the ROI manager. It's important to keep the extension `.zip`.
 
-Once you're done with a slice and have saved the ROI set, clear the ROI manager and repeat the above on another slice.
+Once done with a slice and a set of ROIs is saved, clear the ROI manager and repeat the above on another slice.
 
-After having created a ROI set for each draw-over slice (i.e. test/training slices), I use a [custom ImageJ macro](ImageJ_macros/Slice%20labelling%20-%20epidermis%20and%20BS.ijm.ijm). I've created a few over time depending on which tissues I wanted to segment, all named `Slice labelling`. Ask me for which would suit you best and how to edit it. This macro loops over the ROI sets in a folder and creates a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact me or try it yourself.
+After having created a ROI set for each draw-over slice (i.e. test/training slices), it is possible to use a [custom ImageJ macro](ImageJ_macros/Slice%20labelling%20-%20epidermis%20and%20BS.ijm.ijm). [gtrancourt](https://github.com/gtrancourt) has created a few over time depending on which tissues he wanted to segment, all named `Slice labelling`. Ask him for which would suit you best and how to edit it. These macros loop over the ROI sets in a folder and create a labeled stack consisting of the manually segmented tissues painted over the binary image (i.e. the image combining the thresholded gridrec and phase stacks). It only labels the tissues mentioned above, so if you want more, contact [gtrancourt](https://github.com/gtrancourt) or try it yourself.
 
-I first open the binary stack. By binary stack, I mean the stack created by combining the thresholded _gridrec_ and _phase contrast_ images, as done in [Théroux-Rancourt et al. (2017)](#references) and like in the picture below.
+Generate or open the binary stack. As explained in [Théroux-Rancourt et al. (2017)](#references) and shown in a picture below, both gridrec and phase contrast thresholded images are combined together to make a binary image encompassing fine details around the cells and the bulk of the airspace. For each recondstruction type record the threshold value for later use in the command line implementation of the software.
 
 <p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_IMGJ_GRID_PHASE_Threshold_w_menu.jpg" alt="Thresholding example">
 </p>
 
-This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will fing all `.zip` file in the folder the binary stack is, open each one, clears the background outside the mesophyll, fills up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack.
+This binary stack should be in the same folder as your ROI sets if you plan on using the macro mentioned above. The macro will find all `.zip` files in the folder with the binary stack, open each one, clear the background outside the mesophyll, fill up the epidermises, the bundle sheaths, and the veins. Below, you see how the binary stack ends up in the segmented stack:
 
 <p align="center">
 	<img src="imgs_readme/C_I_12_Strip1_00c_binary-slice0440.png" alt="Binary slice" width="600">
@@ -85,22 +86,22 @@ This binary stack should be in the same folder as your ROI sets if you plan on u
 
 
 
-Now, a new file name `labelled-stack.tif` (_Note: this typo will be corrected_) is in the folder your binary image was, and this is the stack needed for training and testing the machine learning segmentation model. A window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation.
+If not using the macro above, save the labelled image stack as `labelled-stack.tif` in the folder with your binary stack. This labelled stack is the stack used for training and testing the machine learning segmentation model. If using the macro, a window has also opened with the names of all the `.zip` files. Copy that line to a text editor and keep only the slice numbers: you will need the sequence of slice numbers for the automated leaf segmentation. If not using the macro, record the slice numbers used for labelled slices.
 
-Before moving on to the next step, make sure that your __files are named in a regular way__. For example, in `Carundinacea2004_0447_GRID-8bit.tif`, the sample name (`Carundinacea2004_0447_`) and file type (`GRID-8bit`, the _gridrec_ file for that sample) are present. This constant file naming is necessary for the leaf segmentation program to run smoothly. Also, the folder should have the same name as the sample (i.e. `Carundinacea2004_0447_` in this example).
+Before moving on to the next step, make sure that your __files are named in a regular way__. For example, in `Carundinacea2004_0447_GRID-8bit.tif`, the sample name (`Carundinacea2004_0447_`) and file type (`GRID-8bit`, the _gridrec_ file for that sample) are present. A consistent file naming is necessary for the leaf segmentation program to run smoothly. Also, the folder should have the same name as the sample (i.e. `Carundinacea2004_0447_` in this example).
 
-Finally, a note about __bit depth__. Preferably, use 8-bit images for the machine learning segmentation. Files are smaller in size and it will take up less RAM. However, the program can have 16 or 32-bit images as input, as long as the right threshold value is used as an input (see next section).
+Finally, a note about __bit depth__. Preferably, use 8-bit images for the machine learning segmentation. Files are smaller in size and it will take up less RAM. However, the program can have 16 or 32-bit images as input, as long as the correct threshold value is used as an input (see next section).
 
 ## Leaf segmentation: `Leaf_Segmentation.py`
 
 ##### A note on python versions
-This code was initially written in python2 and has now been ported successfully to python3. Both version of the code are available, but as python2 will reach the end of its life in January 2020, the python3 version has been the one maintened and actively developped over the last few months.
+This code was initially written in python2 and has now been ported successfully to python3. Both version of the code are available, but as python2 will reach the end of its life in January 2020, the python3 version has been the one maintened and actively developed over the last few months.
 
 Note however that if you used one python version to train the model, you will need to use that specific version as the `joblib` library used to store the trained model cannot open files saved in in another version at this time.
 
 ***
 
-The program is currently setup to run non-interactively from the command line. I chose this in order to run multiple segmentation processes overnight. Another advantage is that it clears the memory efficiently when the program ends.
+The program is currently setup to run non-interactively from the command line, which allows runing multiple segmentation processes overnight, for example. Another advantage is that it clears the memory efficiently when the program ends.
 
 The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
 
@@ -122,13 +123,13 @@ python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py Carundinacea2004_0
 
 `python`: This just calls python 3.
 
-`/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` for the path to the repository. This is also the folder in which the functions code is located (`Leaf_Segmentation_Functions.py`) and this file is called by `Leaf_Segmentation.py`. _The functions will be soon merged into the segmentation code._
+`/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the repository. This is also the folder in which the functions code is located (`Leaf_Segmentation_Functions.py`). _The functions will be soon merged into the segmentation code._
 
-`filename_`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. By base file name, I mean the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
+`filename_`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. The base file name is the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
 
 `PHASE_suffix` and `GRID_suffix`: These are the suffix put after `filename_` as explained above.
 
-`PHASE_thr` and `GRID_thr`: These are the threshold values for the phase contract image (also called paganin reconstruction). These values are the ones taken from the threshold menu (see picture comparing gridrec and phase thresholding above), and imply in the program that all values between 0 and the value entered will be converted to white and the other values to black. In the picture below, the region in red will be the one that will be thresholded. As explained in [Théroux-Rancourt et al. (2017)](#references) and shown in a picture above, both gridrec and phase contrast thresholded images are combined together to make a binary image encompassing fine details around the cells and the bulk of the airspace. Hence only one value is needed per reconstruction type in the command line.
+`PHASE_thr` and `GRID_thr`: These are the threshold values for the phase contrast image (also called paganin reconstruction). 
 
 `'list,of,slices,in,imagej,1,2,3,4'`: This is the list of slices in ImageJ notation, i.e. with 1 being the first element. Needs to be between `''` and separated by commas.
 
