@@ -565,7 +565,7 @@ vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
 bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
 resin_volume = np.sum(large_segmented_stack == resin_value) * vx_volume
 mesophyll_volume = cell_volume + air_volume
-leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bs_volume + resin_volume
+leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume + resin_volume
 
 #Measure the thickness of the leaf, the epidermis, and the mesophyll
 leaf_thickness = np.sum(np.array(large_segmented_stack
@@ -620,7 +620,7 @@ except NameError:
     bs_volume = 0
 
 print(('Sm: '+str(true_ias_SA/leaf_area)))
-print(('Ames/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bs_volume))))
+print(('SAmes/Vmes: '+str(true_ias_SA/mesophyll_volume)))
 
 
 # NOTE ON SA CODE ABOVE
