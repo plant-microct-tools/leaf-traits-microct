@@ -626,6 +626,7 @@ data_out = {'LeafArea': leaf_area,
             'CellVolume': cell_volume,
             'IASVolume': air_volume,
             'IASSurfaceArea': true_ias_SA,
+            'PixelSize': px_edge,
             '_SLICEStrimmed':trim_slices,
             '_X_trimmed_left':trim_column_L*2,
             '_X_trimmed_right':trim_column_L*2}
