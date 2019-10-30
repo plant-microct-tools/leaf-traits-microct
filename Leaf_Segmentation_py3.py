@@ -137,8 +137,9 @@ else:
     print(("    Test slices (" + str(len(test_slices))
           + " slices):" + str(gridphase_test_slices_subset)))
 
-    rf_transverse = train_model(gridrec_stack, phaserec_stack, label_stack, localthick_stack, gridphase_train_slices_subset,
-                                gridphase_test_slices_subset, label_train_slices_subset, label_test_slices_subset, nb_estimators)
+    rf_transverse = train_model(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
+                                gridphase_train_slices_subset, gridphase_test_slices_subset,
+                                label_train_slices_subset, label_test_slices_subset, nb_estimators)
 
     print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
         oob=rf_transverse.oob_score_ * 100)))

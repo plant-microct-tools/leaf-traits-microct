@@ -119,17 +119,25 @@ if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTE
 else:
     # Load the ML segmented stack
     raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
-    print((np.unique(raw_pred_stack[100])))
+    uniq100th = np.unique(raw_pred_stack[100])
+
+    if np.any(uniq100th < 0):
+        raw_pred_stack = np.where(raw_pred_stack < 0, raw_pred_stack + 256, raw_pred_stack)
+        print(np.unique(raw_pred_stack[100]))
+    else:
+        print(uniq100th)
 
     # Trim at the edges -- The ML does a bad job there
-    # Here I remove 50 slices at the beginning and the end,
-    # and 40 pixels at the left and right edges
-    # if trim_slices == 0:
-    #     if trim_column_L == 0:
-    #         if trim_column_R == 0:
-    #             raw_pred_stack = raw_pred_stack
-    #
-    # raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
+    if trim_slices == 0:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack
+    else:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, :]
+        else:
+            raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
     # io.imshow(raw_pred_stack[100])
 
