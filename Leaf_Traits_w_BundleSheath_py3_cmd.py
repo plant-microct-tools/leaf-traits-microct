@@ -41,7 +41,7 @@ def Trim_Individual_Stack(large_stack, small_stack):
         large_stack = np.delete(large_stack, np.arange(
                         large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
     if np.all(dims <= 2):
-        print("*** no trimming necessary ***")
+        print("*** no rows/columns trimming necessary ***")
         return large_stack
     else:
         print("*** trimming rows and/or columns ***")
@@ -369,8 +369,21 @@ else:
         print('')
         print('### LOADING ORIGINAL SIZED BINARY STACK ###')
         binary_stack = img_as_bool(io.imread(filepath + binary_filename))
-        binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
-        binary_stack = binary_stack[:, :, (trim_column_L * 2):(-trim_column_R * 2)]
+        if len(binary_stack.shape) == 4:
+            binary_stack = binary_stack[:,:,:,0]
+
+        # Trim at the edges -- The ML does a bad job there
+        if trim_slices == 0:
+            if trim_column_L == 0:
+                if trim_column_R == 0:
+                    binary_stack = binary_stack
+        else:
+            if trim_column_L == 0:
+                if trim_column_R == 0:
+                    binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
+            else:
+                binary_stack = binary_stack[trim_slices:-trim_slices, :, (trim_column_L*2):(-trim_column_R*2)]
+
         # Check and trim the binary stack if necessary
         # This is to match the dimensions between all images
         # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
