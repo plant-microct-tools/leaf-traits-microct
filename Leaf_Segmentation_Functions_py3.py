@@ -61,6 +61,23 @@ def openAndReadFile(filename):
     return list_of_lines
 
 # written by MJ
+def define_params_traits(list_of_lines): # moved to 'Leaf_Segmentation_Functions_py3.py'
+    # Extract data from command line input
+    path_to_sample = list_of_lines[0]
+    binary_postfix = list_of_lines[1]
+    px_edge = float(list_of_lines[2])
+    to_resize = list_of_lines[3]
+    reuse_raw_binary = list_of_lines[4]
+    trim_slices = int(list_of_lines[5])
+    trim_column_L = int(list_of_lines[6])
+    trim_column_R = int(list_of_lines[7])
+    color_values = list_of_lines[8]
+    base_folder_name = list_of_lines[9]
+
+
+    return path_to_sample, binary_postfix, px_edge, to_resize, reuse_raw_binary, trim_slices, trim_column_L, trim_column_R, color_values, base_folder_name
+
+# written by MJ
 def define_params(list_of_lines): # moved to 'Leaf_Segmentation_Functions_py3.py'
     # Extract data from command line input
     sample_name = list_of_lines[0]
@@ -76,6 +93,36 @@ def define_params(list_of_lines): # moved to 'Leaf_Segmentation_Functions_py3.py
     base_folder_name = list_of_lines[10] # i.e. image folder
 
     return sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name
+
+def Trim_Individual_Stack(large_stack, small_stack):
+
+    dims = np.array(large_stack.shape, dtype='float') / \
+                    np.array(small_stack.shape, dtype='float')
+    slice_diff = large_stack.shape[0] - small_stack.shape[0]
+    if slice_diff != 0:
+        print('*** trimming slices ***')
+        large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
+    if np.all(dims <= 2):
+        print("*** no rows/columns trimming necessary ***")
+        return large_stack
+    else:
+        print("*** trimming rows and/or columns ***")
+        if dims[1] > 2:
+            if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
+                large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
+            else:
+                if (large_stack.shape[1]-2)/2 == small_stack.shape[1]:
+                    large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[1]-2, large_stack.shape[1]), axis=1)
+        if dims[2] > 2:
+            if (large_stack.shape[2]-1)/2 == small_stack.shape[2]:
+                large_stack = np.delete(large_stack, large_stack.shape[2]-1, axis=2)
+            else:
+                if (large_stack.shape[2]-2)/2 == small_stack.shape[2]:
+                    large_stack = np.delete(large_stack, np.arange(
+                        large_stack.shape[2]-2, large_stack.shape[2]), axis=2)
+        return large_stack
 
 def smooth_epidermis(img, epidermis, background, spongy, palisade, ias, vein):
     # FIX: clean this up, perhaps break into multiple functions
