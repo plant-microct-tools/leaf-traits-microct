@@ -124,9 +124,9 @@ python ~/_github/leaf-traits-microct/argfile_folder/ arg1.txt,arg2.txt,arg3.txt
 
 `/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This should be the complete path to the folder containing the `.txt` files used to control the segmentation program. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example.txt) is downloaded as part of this repository. Multiple argument files are called by separating by commas `,` (no spaces).
+`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
 
-The program will be independent once you launch the command. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment your whole stack.
+Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan.
 
 #### On building argument files:
 
