@@ -1,0 +1,24 @@
+# path to script (path to folder 'leaf-traits-microct', must end with '/')
+/path/to/this/repo/leaf-traits-microct/
+# sample name
+Carundinacea2004_0447_
+# phase reconstruction filename
+PHASE-8bit.tif
+# threshold for phase reconstruction (determined in ImageJ)
+82
+# grid reconstruction filename
+GRID-8bit.tif
+# threshold for grid reconstruction (determined in ImageJ)
+123
+# number of training slices (6-12 recommended)
+6
+# slice numbers for training slices separated by commas only (no spaces)
+83,275,321,467,603,692,710
+# rescale factor (default is 1)
+1
+# threshold rescale factor (default is 1)
+1
+# number of estimators (10-100, default is 50)
+50
+# path to image folder (needs to end with '/')
+/path/to/this/repo/leaf-traits-microct/image_folder/
