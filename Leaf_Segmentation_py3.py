@@ -19,8 +19,10 @@ from sklearn.externals import joblib
 
 def main():
     # Extract data from command line input
-    path_to_argfile_folder = sys.argv[1]
-    argfiles = sys.argv[2]
+    path = sys.argv[0]
+    argfiles = sys.argv[1]
+
+    path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/argfile_folder/'
 
     # define some things
     j = 0
