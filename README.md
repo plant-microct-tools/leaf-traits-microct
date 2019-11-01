@@ -112,7 +112,7 @@ From the terminal window, the program is called like this:
 python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py arg_file_name.txt
 ```
 
-Real example, in which three scans are analyzed back-to-back without interruption (using three argument files):
+Real example, in which three scans are segmented back-to-back without interruption (using three argument files):
 
 ```
 python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py arg1.txt,arg2.txt,arg3.txt
@@ -128,7 +128,7 @@ python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py arg1.txt,arg2.txt,
 
 Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan.
 
-#### On building argument files:
+#### On building argument files for segmentation:
 
 Lines that start with a `#` symbol are cues. Do not edit these lines. See below for descriptions of each argument in the [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt).
 
@@ -215,45 +215,71 @@ With this program, the full stack segmentation predicted with the random-forest 
 As with the segmentation function, the program is called through the command line:
 
 ```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py
-filename_ 'BINARY-suffix' pixel_size rescale_factor reuse_binary
-slices_to_trim columns_to_trim_on_the_left columns_to_trim_on_the_right
-'tissues,values' '/path/to/your/image/directory/'
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_file_name.txt
 ```
 
-Real example:
+Real example, in which two scans are analyzed back-to-back without interruption (using two argument files):
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py
-WWR_plant_5_rehydration_ 'BINARY-8bit.tif' 0.1625 2 False 50 40 40
-'51,204,0,255,102,153' '/run/media/guillaume/microCT_GTR_8tb/'
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_analysis1.txt,arg_analysis2.txt
 ```
 
 `python`: This just calls python 3.
 
-`/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` for the path to the repository.
+`/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`filename_`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. By base file name, I mean the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_BINARY-8bit.tif`, the gridrec file name.
+`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_TRAITS.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
 
-`BINARY_suffix`: These are the suffix put after `filename_` as explained above.
+Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan (if it is not already).
 
-`pixel_size`: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
+#### On building argument files for analysis:
 
-`rescale_factor`: Default is 1 (no rescaling). In the case you have downscaled the original image during segmentation, this is the upscale the _x_ and _y_ axis by this factor.
+Lines that start with a `#` symbol are cues. Do not edit these lines. See below for descriptions of each argument in the [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_TRAITS.txt).
 
-`reuse_binary`: If you have downscaled the image during the automated segmentation and that your thresholded stack, i.e. the binary image, gave an accurate representation of the mesophyll cells and the airspace, this original sized binary image can be reuse to create the post-processed stack.
+`# sample name`  
+`Carundinacea2004_0447_`:  
+This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. The base file name is the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
 
-`'tissue_values'`: A string of values correspond to the pixel value, found in ImageJ, for the following tissues in this exact order: epidermis (51), background (204), mesophyll cells (0), airspace (255), veins (102), and bundle sheaths (153). If bundle sheaths are absent, insert `-1` instead. In the command line, this would look like: `'51,204,0,255,102,153'` (don't forget `''`).
+`# binary suffix`  
+`BINARY-8bit.tif`:  
+These are the suffix put after `sample name` as explained above.
 
-`slices_to_trim`, `columns_to_trim_on_the_left`, and `columns_to_trim_on_the_right`: Most often, the automated segmentation performs poorly on the edges of the image stack. This can be useful when there are flase classifications and the top and bottom epidermises are connected, for example. With these variables, you can trim, or not, at the beginning and the end of the stack (`slices_to_trim`), and on the leaf and right side of the stack (`columns_to_trim_on_the_left` and `columns_to_trim_on_the_right`). Include a value if you want to trim, and a 0 if not.
+`# pixel size (any unit desired)`  
+`0.1625`:  
+The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
 
-`'/path/to/your/image/directory/'`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+`# rescale factor (default is 1)`  
+`1`:  
+Default is 1 (no rescaling). In the case you have downscaled the original image during segmentation, this is the upscale the _x_ and _y_ axis by this factor.
+
+`# reuse binary (use True --> use original size, or False --> do not use original size)`  
+`False`:  
+If you have downscaled the image during the automated segmentation and that your thresholded stack, i.e. the binary image, gave an accurate representation of the mesophyll cells and the airspace, this original sized binary image can be reuse to create the post-processed stack.
+
+`# slices to trim`  
+`50`:  
+Most often, the automated segmentation performs poorly on the edges of the image stack. This can be useful when there are flase classifications and the top and bottom epidermises are connected, for example. With this variable, you can trim, or not, at the beginning and the end of the stack.
+
+`# columns to trim on the left`  
+`40`:  
+With this variable, you can trim, or not, on the left side of the stack.
+
+`# columns to trim on the right`  
+`40`:  
+With this variable, you can trim, or not, on the right side of the stack.
+
+`# tissue values in exact order: epidermis, background, mesophyll cell, airspace, vein, bundle sheath`  
+`51,204,0,255,102,153`:  
+A string of values correspond to the pixel value, found in ImageJ, for the following tissues in this exact order: epidermis (51), background (204), mesophyll cells (0), airspace (255), veins (102), and bundle sheaths (153). If bundle sheaths are absent, insert `-1` instead. In the command line, this would look like: `'51,204,0,255,102,153'`.
+
+`# path to image folder (needs to end with '/')`  
+`/path/to/this/repo/leaf-traits-microct/image_folder/`:  
+Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
 
 
 A jupyter notebook with examples of the the post-processing and leaf trait analysis code will come soon.
 
-
-
+***
 
 ## Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity_py3.py`
 A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable and has been used to analysis more than 30 segmented scans in an automated command line function. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it. If you run into an error, please create an issue and copy the error message into it. An interactive version, probably as notebook, will be produced from this code.
