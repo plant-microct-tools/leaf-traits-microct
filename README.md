@@ -109,20 +109,20 @@ The program is run from the command line interface (`terminal` under macOS, `cmd
 From the terminal window, the program is called like this:
 
 ```
-python /path/to/this/repo/leaf-traits-microct/argfile_folder/ arg_file_name.txt
+python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py arg_file_name.txt
 ```
 
 Real example, in which three scans are analyzed back-to-back without interruption (using three argument files):
 
 ```
-python ~/_github/leaf-traits-microct/argfile_folder/ arg1.txt,arg2.txt,arg3.txt
+python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py arg1.txt,arg2.txt,arg3.txt
 ```
 
 
 
 `python`: This just calls python 3.
 
-`/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This should be the complete path to the folder containing the `.txt` files used to control the segmentation program. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
+`/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
 `arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
 
