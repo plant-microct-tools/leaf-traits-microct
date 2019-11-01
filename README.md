@@ -146,7 +146,7 @@ The suffix put after `sample name` as explained above.
 
 `# threshold for phase reconstruction (determined in ImageJ)`  
 `82`:  
-These are the threshold values for the phase reconstruction.
+This is the threshold values for the phase reconstruction.
 
 `# grid reconstruction filename`  
 `GRID-8bit.tif`:  
@@ -154,7 +154,7 @@ The suffix put after `sample name` as explained above.
 
 `# threshold for grid reconstruction (determined in ImageJ)`  
 `123`:  
-These are the threshold values for the grid reconstruction.
+This is the threshold values for the grid reconstruction.
 
 `# number of training slices (6-12 recommended)`  
 `6`:  
