@@ -61,22 +61,21 @@ def openAndReadFile(filename):
     return list_of_lines
 
 # written by MJ
-def define_params(list_of_lines):
+def define_params(list_of_lines): # moved to 'Leaf_Segmentation_Functions_py3.py'
     # Extract data from command line input
-    full_script_path = list_of_lines[0]
-    sample_name = list_of_lines[1]
-    postfix_phase = list_of_lines[2]
-    Th_phase = int(list_of_lines[3])
-    postfix_grid = list_of_lines[4]
-    Th_grid = int(list_of_lines[5])
-    nb_training_slices = int(list_of_lines[6])
-    raw_slices = list_of_lines[7]
-    rescale_factor = int(list_of_lines[8])
-    threshold_rescale_factor = int(list_of_lines[9])
-    nb_estimators = int(list_of_lines[10])
-    base_folder_name = list_of_lines[11] # replaced with full_script_path
+    sample_name = list_of_lines[0]
+    postfix_phase = list_of_lines[1]
+    Th_phase = int(list_of_lines[2])
+    postfix_grid = list_of_lines[3]
+    Th_grid = int(list_of_lines[4])
+    nb_training_slices = int(list_of_lines[5])
+    raw_slices = list_of_lines[6]
+    rescale_factor = int(list_of_lines[7])
+    threshold_rescale_factor = int(list_of_lines[8])
+    nb_estimators = int(list_of_lines[9])
+    base_folder_name = list_of_lines[10] # i.e. image folder
 
-    return full_script_path, sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name
+    return sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name
 
 def smooth_epidermis(img, epidermis, background, spongy, palisade, ias, vein):
     # FIX: clean this up, perhaps break into multiple functions
