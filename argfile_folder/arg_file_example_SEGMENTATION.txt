@@ -1,5 +1,3 @@
-# path to script (path to folder 'leaf-traits-microct', must end with '/')
-/path/to/this/repo/leaf-traits-microct/
 # sample name
 Carundinacea2004_0447_
 # phase reconstruction filename
