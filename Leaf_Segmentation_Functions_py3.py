@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Oct 10 10:07:04 2018
+Created on Fri Nov 1 11:50:00 2019
 
 @author: J. Mason Earles, Matt Jenkins, Guillaume Theroux-Rancourt
 """
@@ -14,30 +14,18 @@ import cv2
 import numpy as np
 import skimage.io as io
 from skimage import transform, img_as_ubyte
-# from skimage.external import tifffile
 from skimage.filters import sobel, gaussian
-# from skimage.segmentation import clear_border
-from skimage.morphology import ball, remove_small_objects, disk #, cube,
+from skimage.morphology import ball, remove_small_objects, disk
 from skimage.util import invert
 import scipy as sp
 import scipy.ndimage as spim
-#import scipy.spatial as sptl
 from tabulate import tabulate
 import pickle
-#from PIL import Image
 from tqdm import tqdm
-#from numba import jit
-#import sklearn as skl
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
-#from sklearn.metrics import accuracy_score, confusion_matrix
-#import matplotlib.pyplot as plt
 import pandas as pd
-#from scipy import misc
 from scipy.ndimage.filters import maximum_filter, minimum_filter, percentile_filter
-#from scipy.ndimage.morphology import distance_transform_edt
-#import vtk
-#import gc
 # Suppress all warnings (not errors) by uncommenting next two lines of code
 import warnings
 warnings.filterwarnings("ignore")
@@ -54,6 +42,41 @@ num_feature_layers = 37  # grid and phase recon; plus gaussian blurs; plus hessi
 # Import label encoder
 labenc = LabelEncoder()
 
+# written by MJ
+def openAndReadFile(filename):
+    #opens and reads '.txt' file made by user with instructions for program...may execute full process n times
+    #initialize empty list for lines
+    list_of_lines = []
+
+    with open(filename, 'r') as f:
+        for curline in f:
+            if curline.startswith("#"):
+                pass
+            else:
+                curline = curline.replace('\n','')
+                list_of_lines.append(curline)
+            if not curline:
+                break
+    f.close()
+    return list_of_lines
+
+# written by MJ
+def define_params(list_of_lines):
+    # Extract data from command line input
+    full_script_path = list_of_lines[0]
+    sample_name = list_of_lines[1]
+    postfix_phase = list_of_lines[2]
+    Th_phase = int(list_of_lines[3])
+    postfix_grid = list_of_lines[4]
+    Th_grid = int(list_of_lines[5])
+    nb_training_slices = int(list_of_lines[6])
+    raw_slices = list_of_lines[7]
+    rescale_factor = int(list_of_lines[8])
+    threshold_rescale_factor = int(list_of_lines[9])
+    nb_estimators = int(list_of_lines[10])
+    base_folder_name = list_of_lines[11] # replaced with full_script_path
+
+    return full_script_path, sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name
 
 def smooth_epidermis(img, epidermis, background, spongy, palisade, ias, vein):
     # FIX: clean this up, perhaps break into multiple functions
@@ -868,58 +891,6 @@ def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, fold
         print("***SAVING IMAGE STACK***")
         io.imsave(folder_name+'/'+sample_name
                   + 'GridPhase_invert_ds.tif', img_as_ubyte(tmp_invert_ds))
-
-
-def openAndReadFile(filename):
-    #opens and reads '.txt' file made by user with instructions for program...may execute full process n times
-    #initialize empty lists
-    gridphase_train_slices_subset = []
-    gridphase_test_slices_subset = []
-    label_train_slices_subset = []
-    label_test_slices_subset = []
-    #opens file
-    myFile = open(filename, "r")
-#reads a line
-    filepath = str(myFile.readline())  # function to read ONE line at a time
-    filepath = filepath.replace('\n', '')  # strip linebreaks
-    grid_name = str(myFile.readline())
-    grid_name = grid_name.replace('\n', '')
-    phase_name = str(myFile.readline())
-    phase_name = phase_name.replace('\n', '')
-    label_name = str(myFile.readline())
-    label_name = label_name.replace('\n', '')
-    Th_grid = float(myFile.readline())
-    Th_phase = float(myFile.readline())
-    line = myFile.readline().split(",")
-    for i in line:
-        i = int(i.rstrip('\n'))
-        gridphase_train_slices_subset.append(i)
-    line = myFile.readline().split(",")
-    for i in line:
-        i = int(i.rstrip('\n'))
-        gridphase_test_slices_subset.append(i)
-    line = myFile.readline().split(",")
-    for i in line:
-        i = int(i.rstrip('\n'))
-        label_train_slices_subset.append(i)
-    line = myFile.readline().split(",")
-    for i in line:
-        i = int(i.rstrip('\n'))
-        label_test_slices_subset.append(i)
-    image_process_bool = str(myFile.readline().rstrip('\n'))
-    train_model_bool = str(myFile.readline().rstrip('\n'))
-    full_stack_bool = str(myFile.readline().rstrip('\n'))
-    post_process_bool = str(myFile.readline().rstrip('\n'))
-    epid_value = int(myFile.readline().rstrip('\n'))
-    bg_value = int(myFile.readline().rstrip('\n'))
-    spongy_value = int(myFile.readline().rstrip('\n'))
-    palisade_value = int(myFile.readline().rstrip('\n'))
-    ias_value = int(myFile.readline().rstrip('\n'))
-    vein_value = int(myFile.readline().rstrip('\n'))
-    folder_name = str(myFile.readline())  # function to read ONE line at a time
-    #closes the file
-    myFile.close()
-    return filepath, grid_name, phase_name, label_name, Th_grid, Th_phase, gridphase_train_slices_subset, gridphase_test_slices_subset, label_train_slices_subset, label_test_slices_subset, image_process_bool, train_model_bool, full_stack_bool, post_process_bool, epid_value, bg_value, spongy_value, palisade_value, ias_value, vein_value, folder_name
 
 
 # This is to get the number of lines (i.e. pixels) to remove on each dimension
