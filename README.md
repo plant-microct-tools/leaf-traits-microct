@@ -124,13 +124,13 @@ python ~/_github/leaf-traits-microct/argfile_folder/ arg1.txt,arg2.txt,arg3.txt
 
 `/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This should be the complete path to the folder containing the `.txt` files used to control the segmentation program. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`arg_file_name.txt`: These are "argument files" built using the architecture described below. An "example argument file"(INSERT LINK) is downloaded as part of this repository. Multiple argument files are called by separating by commas `,` (no spaces).
+`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example.txt) is downloaded as part of this repository. Multiple argument files are called by separating by commas `,` (no spaces).
 
 The program will be independent once you launch the command. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment your whole stack.
 
 #### On building argument files:
 
-Lines that start with a `#` symbol are cues. Do not edit these lines. See below for descriptions of each argument in the "example argument file"(INSERT LINK).
+Lines that start with a `#` symbol are cues. Do not edit these lines. See below for descriptions of each argument in the [example argument file](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example.txt).
 
 `# path to script (path to folder 'leaf-traits-microct', must end with '/')`  
 `/path/to/this/repo/leaf-traits-microct/`:  
