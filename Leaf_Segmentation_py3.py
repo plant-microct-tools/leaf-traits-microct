@@ -22,6 +22,8 @@ def main():
     path = sys.argv[0]
     argfiles = sys.argv[1]
 
+    print(sys.argv)
+
     path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/argfile_folder/'
 
     # define some things
@@ -43,9 +45,14 @@ def main():
         print('\nWorking on scan: '+str(j+1)+' of '+str(len(filenames))+'\n')
         #read input file and define lots of stuff
         list_of_lines = openAndReadFile(path_to_argfile_folder+filenames[j])
+
         # define parameters using list_of_lines
         full_script_path, sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name = define_params(list_of_lines)
 
+        # If some parameters have been defined in the command line, grab them.
+        if len(sys.argv) > 2:
+            for ii in range(2, len(sys.argv)):
+                exec(sys.argv[ii])
         # Set directory of functions in order to import MLmicroCTfunctions (not necessary?)
         # path_to_script = full_script_path
 

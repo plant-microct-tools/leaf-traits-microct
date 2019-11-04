@@ -62,6 +62,11 @@ def main():
         # define parameters using list_of_lines
         path_to_sample, binary_postfix, px_edge, to_resize, reuse_raw_binary, trim_slices, trim_column_L, trim_column_R, color_values, base_folder_name = define_params_traits(list_of_lines)
 
+        # If some parameters have been defined in the command line, grab them.
+        if len(sys.argv) > 2:
+            for ii in range(2, len(sys.argv)):
+                exec(sys.argv[ii])
+
         # Pixel dimmension
         vx_volume = px_edge**3
 # TESTING
