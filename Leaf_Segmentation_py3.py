@@ -23,6 +23,12 @@ def main():
     argfiles = sys.argv[1]
 
     print(sys.argv)
+    print(len(sys.argv))
+
+    # if len(sys.argv) > 2:
+    #     for ii in range(2, len(sys.argv)):
+    #         print(sys.argv[ii])
+    #         exec(sys.argv[ii])
 
     path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/argfile_folder/'
 
@@ -45,18 +51,46 @@ def main():
         print('\nWorking on scan: '+str(j+1)+' of '+str(len(filenames))+'\n')
         #read input file and define lots of stuff
         list_of_lines = openAndReadFile(path_to_argfile_folder+filenames[j])
+        print(list_of_lines)
+
+        var_names = ['sample_name', 'postfix_phase', 'Th_phase', 'postfix_grid', 'Th_grid', 'nb_training_slices',
+                     'raw_slices', 'rescale_factor', 'threshold_rescale_factor', 'nb_estimators', 'base_folder_name']
+        
+
+        sample_name=postfix_phase=Th_phase=postfix_grid=Th_grid=nb_training_slices=raw_slices=rescale_factor=threshold_rescale_factor=nb_estimators=base_folder_name = str()
+
+        # If input have be added to the command line, there will be more than 2 arguments, so below won't affect
+        # when all input have been entered to the arg file.
+        sys_arg_nb = 2
+        sample_name, sys_arg_nb = check_if_empty(list_of_lines[0], sys_arg_nb)
+        postfix_phase, sys_arg_nb = check_if_empty(list_of_lines[1], sys_arg_nb)
+        Th_phase, sys_arg_nb = check_if_empty(list_of_lines[2], sys_arg_nb)
+        postfix_grid, sys_arg_nb = check_if_empty(list_of_lines[3], sys_arg_nb)
+        Th_grid, sys_arg_nb = check_if_empty(list_of_lines[4], sys_arg_nb)
+        nb_training_slices, sys_arg_nb = check_if_empty(list_of_lines[5], sys_arg_nb)
+        raw_slices, sys_arg_nb = check_if_empty(list_of_lines[6], sys_arg_nb)
+        rescale_factor, sys_arg_nb = check_if_empty(list_of_lines[7], sys_arg_nb)
+        threshold_rescale_factor, sys_arg_nb = check_if_empty(list_of_lines[8], sys_arg_nb)
+        nb_estimators, sys_arg_nb = check_if_empty(list_of_lines[9], sys_arg_nb)
+        base_folder_name, sys_arg_nb = check_if_empty(list_of_lines[10], sys_arg_nb)
+
+        for ii in range(len(var_names)):
+            print(var_names[ii])
+            print(locals()[var_names[ii]])
+
+        Th_phase = int(Th_phase)
+        Th_grid = int(Th_grid)
+        nb_training_slices = int(nb_training_slices)
+        rescale_factor = int(rescale_factor)
+        threshold_rescale_factor = int(threshold_rescale_factor)
+        nb_estimators = int(nb_estimators)
 
         # define parameters using list_of_lines
-        full_script_path, sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name = define_params(list_of_lines)
-
-        # If some parameters have been defined in the command line, grab them.
-        if len(sys.argv) > 2:
-            for ii in range(2, len(sys.argv)):
-                exec(sys.argv[ii])
-        # Set directory of functions in order to import MLmicroCTfunctions (not necessary?)
-        # path_to_script = full_script_path
+        # sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name = define_params(
+        #     list_of_lines)
 
         # Get the slice numbers into a vector of integer
+        print(raw_slices)
         ImgJ_slices = [int(x) for x in raw_slices.split(',')]
 
         # Create folder and define file names to be used

@@ -1,0 +1,22 @@
+# sample name
+EMPTY
+# phase reconstruction filename
+PAGANIN-8bit.tif
+# threshold for phase reconstruction (determined in ImageJ)
+EMPTY
+# grid reconstruction filename
+GRID-8bit.tif
+# threshold for grid reconstruction (determined in ImageJ)
+EMPTY
+# number of training slices (6-12 recommended)
+8
+# slice numbers for training slices separated by commas only (no spaces)
+EMPTY
+# rescale factor (default is 1)
+2
+# threshold rescale factor (default is 1)
+2
+# number of estimators (10-100, default is 50)
+50
+# path to image folder (needs to end with '/')
+/run/media/guillaume/microCT_GTR_8tb/Soybean_dehydration/WWR_plant_7_/
