@@ -119,7 +119,7 @@ python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py sample_na
 Real example in which all required parameters are defined and one optional parameter (`rescale_factor`) is defined:
 
 ```
-python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carundinacea2004_0447_ phase_filename=PHASE-8bit.tif threshold_phase=82 grid_filename=GRID-8bit slice_numbers_training_slices=83,275,321,467,603,692,710 threshold_grid=123 nb_training_slices=6 path_to_image_folder=~/_github/leaf-traits-microct/image_folder/ rescale_factor = 2
+python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carundinacea2004_0447_ phase_filename=PHASE-8bit.tif threshold_phase=82 grid_filename=GRID-8bit slice_numbers_training_slices=83,275,321,467,603,692,710 threshold_grid=123 nb_training_slices=6 path_to_image_folder=~/_github/leaf-traits-microct/image_folder/ rescale_factor=2
 ```
 
 **Required arguments (option 1):**
