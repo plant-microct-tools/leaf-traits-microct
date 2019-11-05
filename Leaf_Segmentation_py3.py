@@ -22,6 +22,8 @@ from sklearn.externals import joblib
 def main():
     # Extract data from command line input
     path = sys.argv[0]
+
+    # Need to check in other folder too
     path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/argfile_folder/'
 
     # create python-dictionary from command line inputs (ignore first)
@@ -29,11 +31,68 @@ def main():
     arg_dict = dict(j.split('=') for j in sys.argv)
     filenames = []
     for key, value in arg_dict.items():
-        if key == 'argfiles':
+        if key == 'argfiles' and len(sys.argv) == 2:
             for z in value.split(','):
                 z.strip()
                 z = z.replace('\n','')
                 filenames.append(z)
+        elif key == 'argfiles' and len(sys.argv) > 2:
+            print(key == 'sample_name') # False!?
+            # read input file and define lots of stuff
+            if key == 'argfiles':
+                arg_file = str(value)
+            list_of_lines = openAndReadFile(path_to_argfile_folder + arg_file)
+            print(list_of_lines)
+            print(arg_dict)
+            # Check if values are in command line and if not grab from arg_file
+            if key == 'sample_name':
+                sample_name = str(value)
+            else:
+                sample_name = list_of_lines[0]
+            print("sample_name = " + sample_name)
+            if key == 'phase_filename':
+                postfix_phase = str(value)
+            else:
+                postfix_phase = list_of_lines[1]
+            print("Suffix phase = " + postfix_phase)
+            if key == 'threshold_phase':
+                Th_phase = int(value)
+            else:
+                Th_phase = int(list_of_lines[2])
+            print("Th_phase = " + Th_phase)
+            if key == 'grid_filename':
+                postfix_grid = str(value)
+            else:
+                postfix_grid = list_of_lines[3]
+            if key == 'threshold_grid':
+                Th_grid = int(value)
+            else:
+                Th_grid = int(list_of_lines[4])
+            if key == 'nb_training_slices':
+                nb_training_slices = int(value)
+            else:
+                nb_training_slices = int(list_of_lines[5])
+            if key == 'slice_numbers_training_slices':
+                raw_slices = str(value)
+            else:
+                raw_slices = list_of_lines[6]
+            if key == 'rescale_factor':
+                rescale_factor = int(value)
+            else:
+                rescale_factor = int(list_of_lines[7])
+            if key == 'threshold_rescale_factor':
+                threshold_rescale_factor = int(value)
+            else:
+                threshold_rescale_factor = int(list_of_lines[8])
+            if key == 'nb_estimators':
+                nb_estimators = int(value)
+            else:
+                nb_estimators = int(list_of_lines[9])
+            if key == 'path_to_image_folder':
+                base_folder_name = str(value)
+            else:
+                base_folder_name = list_of_lines[10]
+            print(sample_name + str(Th_phase) + str(Th_grid) + raw_slices)
         else:
             # set up default values for optional parameters
             # read in desired values for parameters
@@ -68,25 +127,31 @@ def main():
         try: nb_estimators
         except NameError: nb_estimators = 50
 
-    if len(filenames)>0:
+    if len(filenames)>1:
         j = 0
         permission = 0
-        for i in range(0,len(filenames)): # optional but nice catch for incorrect filepath or filename entry
-            if os.path.exists(path_to_argfile_folder+filenames[i]) == False:
-                print("\nSome of the information you entered is incorrect. Try again.\n")
-                permission = 1
+        # for i in range(0,len(filenames)): # optional but nice catch for incorrect filepath or filename entry
+        #     if os.path.exists(path_to_argfile_folder+filenames[i]) == False:
+        #         print("\nSome of the information you entered is incorrect. Try again.\n")
+        #         permission = 1
         while j < len(filenames) and permission == 0:
             print('\nWorking on scan: '+str(j+1)+' of '+str(len(filenames))+'\n')
-
-            #read input file and define lots of stuff
-            list_of_lines = openAndReadFile(path_to_argfile_folder+filenames[j])
-            # print(list_of_lines) # comment out once built
+            # If only arg_files are loaded, then grab the values.
+            # If values have already been defined, skip it.
+            if os.path.exists(path_to_argfile_folder+filenames[j]) == False:
+                if os.path.exists(base_folder_name+'/argfile_folder/'+filenames[j]) == False:
+                    print("\nSome of the information you entered is incorrect. Try again.\n")
+                    permission = 1
+                elif os.path.exists(base_folder_name+'/argfile_folder/'+filenames[j]):
+                    list_of_lines = openAndReadFile(base_folder_name+'/argfile_folder/' + filenames[j])
+            else:
+                list_of_lines = openAndReadFile(path_to_argfile_folder + filenames[j])
 
             # define parameters using list_of_lines
             sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name = define_params(list_of_lines)
 
             # Get the slice numbers into a vector of integer
-            ImgJ_slices = [int(x) for x in raw_slices.split(',')]
+            imgj_slices = [int(x) for x in raw_slices.split(',')]
 
             # Create folder and define file names to be used
             folder_name = sample_name + '/'
@@ -107,7 +172,7 @@ def main():
             # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
             # of the same length, shuffle that sequence, and shuffle the slices in the same
             # order. This creates a bit of randomness in the training-testing slices.
-            labelled_slices = np.array(ImgJ_slices) - 1
+            labelled_slices = np.array(imgj_slices) - 1
             labelled_slices_seq = np.arange(labelled_slices.shape[0])
             np.random.shuffle(labelled_slices_seq)
             labelled_slices = labelled_slices[labelled_slices_seq]
@@ -122,7 +187,7 @@ def main():
             # print(test_slices)
     # TESTING
     #
-            Load the images
+            #Load the images
             print('***LOADING IMAGES***')
             gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor)
             phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor)
@@ -227,7 +292,7 @@ def main():
         # print(test_slices)
 # TESTING
 #
-        Load the images
+        # Load the images
         print('***LOADING IMAGES***')
         gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor)
         phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor)
