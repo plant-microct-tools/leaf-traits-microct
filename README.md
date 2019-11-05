@@ -107,7 +107,7 @@ The program is run from the command line interface (`terminal` under macOS, `cmd
 
 ***Option 1: Passing arguments using the command line***
 
-Note: If using this option, some arguments are required to be defined and others are optional. See [below](google.com) for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`. Do not use spaces in arguments.
+Note: If using this option, some arguments are _required_ to be defined and others are _optional_. See below for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`. Do not use spaces in arguments.
 
 From the terminal window, the program is called like this (replacing all `X`s with real values):
 
@@ -122,7 +122,7 @@ Real example in which all required parameters are defined and one optional param
 python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carundinacea2004_0447_ phase_filename=PHASE-8bit.tif threshold_phase=82 grid_filename=GRID-8bit slice_numbers_training_slices=83,275,321,467,603,692,710 threshold_grid=123 nb_training_slices=6 path_to_image_folder=~/_github/leaf-traits-microct/image_folder/ rescale_factor = 2
 ```
 
-**Required arguments:**
+**Required arguments (option 1):**
 
 `python`: This just calls python 3.
 
@@ -140,7 +140,7 @@ python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carund
 
 `path_to_image_folder`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
 
-**Optional arguments:**
+**Optional arguments (option 1):**
 
 `rescale_factor`: Default is 1 (no rescaling). Depending on the amount of RAM available, you might need to adjust this value. For stacks of smaller size, ~250 Mb, no rescaling should be necessary. Files larger than 1 Gb should be rescaled by 2. This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
 
