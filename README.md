@@ -105,7 +105,7 @@ The program is currently setup to run non-interactively from the command line us
 
 The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
 
-###### Option 1: Passing arguments using the command line
+***Option 1: Passing arguments using the command line***
 
 Note: If using this option, some arguments are required to be defined and others are optional. See [below](google.com) for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`.
 
@@ -149,7 +149,7 @@ python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carund
 `nb_estimators`: Default is 50. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
 
 
-###### Option 2: Passing arguments using `.txt` file(s)
+***Option 2: Passing arguments using `.txt` file(s)***
 
 From the terminal window, the program is called like this:
 
