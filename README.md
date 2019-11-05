@@ -101,13 +101,13 @@ Note however that if you used one python version to train the model, you will ne
 
 ***
 
-The program is currently setup to run non-interactively from the command line using two options. In the first option, the user passes arguments to the software using `.txt` file(s), which allows running multiple segmentation processes overnight, for example. In the second option, the user defines all parameters when calling the software using the command line. For this second option, only a single scan can be processed and the user must define all parameters except three parameters which are optional.
+The program is currently setup to run non-interactively from the command line using two options. In the first option, the user defines all parameters when calling the software using the command line. For this option, only a single scan can be processed and the user must define all parameters except three parameters which are optional. In the second option, the user passes arguments to the software using `.txt` file(s), which allows running multiple segmentation processes without interruption overnight, for example.
 
 The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
 
 ***Option 1: Passing arguments using the command line***
 
-Note: If using this option, some arguments are required to be defined and others are optional. See [below](google.com) for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`.
+Note: If using this option, some arguments are required to be defined and others are optional. See [below](google.com) for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`. Do not use spaces in arguments.
 
 From the terminal window, the program is called like this (replacing all `X`s with real values):
 
