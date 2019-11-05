@@ -101,34 +101,77 @@ Note however that if you used one python version to train the model, you will ne
 
 ***
 
-The program is currently setup to run non-interactively from the command line using `.txt` file(s), which allows running multiple segmentation processes overnight, for example. Another advantage is that it clears the memory efficiently when the program ends.
+The program is currently setup to run non-interactively from the command line using two options. In the first option, the user passes arguments to the software using `.txt` file(s), which allows running multiple segmentation processes overnight, for example. In the second option, the user defines all parameters when calling the software using the command line. For this second option, only a single scan can be processed and the user must define all parameters except three parameters which are optional.
 
 The program is run from the command line interface (`terminal` under macOS, `cmd` in Windows, whatever terminal you use under Linux). Note that under Windows, it is preferable to set the path to your python distribution, [as described here](https://stackoverflow.com/questions/3701646/how-to-add-to-the-pythonpath-in-windows).
 
+###### Option 1: Passing arguments using the command line
 
-From the terminal window, the program is called like this:
+Note: If using this option, some arguments are required to be defined and others are optional. See [below](google.com) for details. Also, arguments can be defined in any order. However when defining an argument, the argument names must be spelled correctly, with argument names on the left side of the `=` sign, and their definitions on the right side. For example, in `sample_name=Carundinacea2004_0447_` the argument name is `sample_name` and is defined as `Carundinacea2004_0447_`.
 
-```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py arg_file_name.txt
-```
-
-Real example, in which three scans are segmented back-to-back without interruption (using three argument files):
+From the terminal window, the program is called like this (replacing all `X`s with real values):
 
 ```
-python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py arg1.txt,arg2.txt,arg3.txt
+python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=X phase_filename=X threshold_phase=X grid_filename=X slice_numbers_training_slices=X threshold_grid=X nb_training_slices=X path_to_image_folder=/X/X/X
+
 ```
 
+Real example in which all required parameters are defined and one optional parameter (`rescale_factor`) is defined:
 
+```
+python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carundinacea2004_0447_ phase_filename=PHASE-8bit.tif threshold_phase=82 grid_filename=GRID-8bit slice_numbers_training_slices=83,275,321,467,603,692,710 threshold_grid=123 nb_training_slices=6 path_to_image_folder=~/_github/leaf-traits-microct/image_folder/ rescale_factor = 2
+```
+
+**Required arguments:**
 
 `python`: This just calls python 3.
 
 `/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
+`sample_name`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. The base file name is the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
+
+`phase_filename` and `grid_filename`: The suffix put after `sample name` as explained above.
+
+`threshold_phase` and `threshold_grid`: The threshold values for the phase and grid reconstructions, respectively.
+
+`slice_numbers_training_slices`: This is the list of slice numbers using ImageJ indexing rules, i.e. with 1 being the first element. Needs to be separated by commas.
+
+`nb_training_slices`: This is the number of slices used to train the model. As shown in the [preprint](https://www.biorxiv.org/content/10.1101/814954v1.full) to this method, the number of training slices can affect the precision of the model, as well as the biological estimates. We consider that 6 training slices should be appropriate minimum for most angiosperms leaves with reticaultate venation. We haven't done exhaustive testing on other types of leaves and will update this section once more leaf types have been tested.
+
+`path_to_image_folder`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+**Optional arguments:**
+
+`rescale_factor`: Default is 1 (no rescaling). Depending on the amount of RAM available, you might need to adjust this value. For stacks of smaller size, ~250 Mb, no rescaling should be necessary. Files larger than 1 Gb should be rescaled by 2. This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
+
+`threshold_rescale_factor`: Default is 1 (no rescaling). This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
+
+`nb_estimators`: Default is 50. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
+
+
+###### Option 2: Passing arguments using `.txt` file(s)
+
+From the terminal window, the program is called like this:
+
+```
+python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg_file_name.txt
+```
+
+Real example, in which three scans are segmented back-to-back without interruption (using three argument files):
+
+```
+python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg1.txt,arg2.txt,arg3.txt
+```
+
+`python`: This just calls python 3.
+
+`/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
+
+`argfiles=arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository). In this example, `argfiles` is the argument name (left side of the `=`) and `arg_file_name.txt` (right side) is the definition of the argument.
 
 Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan.
 
-#### On building argument files for segmentation:
+**On building argument files for segmentation:**
 
 Lines that start with a `#` symbol are cues. Do not edit these lines. See below for descriptions of each argument in the [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt).
 
