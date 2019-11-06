@@ -3,11 +3,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Tues Nov 05 14:33:35 2019
+Created on Wed Nov 06 09:03:25 2019
 @author: Guillaume Theroux-Rancourt, Matt Jenkins, J. Mason Earles
 """
 # Last edited by MJ
-
 
 # Import libraries
 from Leaf_Segmentation_Functions_py3 import *  # Custom ML microCT functions
@@ -20,7 +19,6 @@ from sklearn.externals import joblib
 def main():
     # Extract data from command line input
     path = sys.argv[0]
-    path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/argfile_folder/'
 
     # create python-dictionary from command line inputs (ignore first)
     sys.argv = sys.argv[1:]
@@ -37,6 +35,8 @@ def main():
                 z.strip()
                 z = z.replace('\n','')
                 filenames.append(z)
+        if key == 'path_to_argfile_folder':
+            path_to_argfile_folder = str(value)
         else:
             # read in desired values for parameters
             if key == 'sample_name':
@@ -72,9 +72,14 @@ def main():
     if len(filenames)>0:
         j = 0
         permission = 0
+
+        # # check if user defined a specific argfile_folder location, otherwise default to searching in base folder
+        # try: path_to_argfile_folder
+        # except NameError: path_to_argfile_folder = '/'.join(path.split('/')[:-1]) + '/image_folder/'
+
         for i in range(0,len(filenames)): # optional but nice catch for incorrect filepath or filename entry
             if os.path.exists(path_to_argfile_folder+filenames[i]) == False:
-                print('\nThe argument file is not present in the arg_file folder.\n')
+                print('\nThe argument file is not present in the arg_file folder or path_to_argfile_folder is incorrect. Try again.\n')
                 permission = 1
         while j < len(filenames) and permission == 0:
             print('\nWorking on scan: '+str(j+1)+' of '+str(len(filenames))+'\n')
@@ -183,9 +188,13 @@ def main():
             # Get the slice numbers into a vector of integer
             imgj_slices = [int(x) for x in raw_slices.split(',')]
 
-            # check for definition of nb_training_slices and if not define by default
+            # check for definition of nb_training_slices and if not present, then define by default
             try: nb_training_slices
             except NameError: nb_training_slices = len(imgj_slices) - 1
+            # check for definition of path_to_image_folder and if not present, then define by default
+            try: base_folder_name
+            except NameError: base_folder_name = '/'.join(path.split('/')[:-1]) + '/image_folder/'
+            # print(base_folder_name)
 
             # Create folder and define file names to be used
             folder_name = sample_name + '/'
