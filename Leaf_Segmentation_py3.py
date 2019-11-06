@@ -74,7 +74,7 @@ def main():
         permission = 0
         for i in range(0,len(filenames)): # optional but nice catch for incorrect filepath or filename entry
             if os.path.exists(path_to_argfile_folder+filenames[i]) == False:
-                print("\nSome of the information you entered is incorrect. Try again.\n")
+                print('\nThe argument file is not present in the arg_file folder.\n')
                 permission = 1
         while j < len(filenames) and permission == 0:
             print('\nWorking on scan: '+str(j+1)+' of '+str(len(filenames))+'\n')
@@ -87,7 +87,7 @@ def main():
             sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name = define_params(list_of_lines)
 
             # Get the slice numbers into a vector of integer
-            ImgJ_slices = [int(x) for x in raw_slices.split(',')]
+            imgj_slices = [int(x) for x in raw_slices.split(',')]
 
             # Create folder and define file names to be used
             folder_name = sample_name + '/'
@@ -103,7 +103,7 @@ def main():
             # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
             # of the same length, shuffle that sequence, and shuffle the slices in the same
             # order. This creates a bit of randomness in the training-testing slices.
-            labelled_slices = np.array(ImgJ_slices) - 1
+            labelled_slices = np.array(imgj_slices) - 1
             labelled_slices_seq = np.arange(labelled_slices.shape[0])
             np.random.shuffle(labelled_slices_seq)
             labelled_slices = labelled_slices[labelled_slices_seq]
@@ -181,11 +181,11 @@ def main():
             print('\nSingle scan mode...\n')
 
             # Get the slice numbers into a vector of integer
-            ImgJ_slices = [int(x) for x in raw_slices.split(',')]
+            imgj_slices = [int(x) for x in raw_slices.split(',')]
 
             # check for definition of nb_training_slices and if not define by default
             try: nb_training_slices
-            except NameError: nb_training_slices = len(ImgJ_slices)
+            except NameError: nb_training_slices = len(imgj_slices) - 1
 
             # Create folder and define file names to be used
             folder_name = sample_name + '/'
@@ -201,7 +201,7 @@ def main():
             # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
             # of the same length, shuffle that sequence, and shuffle the slices in the same
             # order. This creates a bit of randomness in the training-testing slices.
-            labelled_slices = np.array(ImgJ_slices) - 1
+            labelled_slices = np.array(imgj_slices) - 1
             labelled_slices_seq = np.arange(labelled_slices.shape[0])
             np.random.shuffle(labelled_slices_seq)
             labelled_slices = labelled_slices[labelled_slices_seq]
@@ -271,7 +271,7 @@ def main():
             print('Done!')
         #
         else:
-            print("\nNot all required arguments are defined. Check command line input and try again.\n")
+            print('\nNot all required arguments are defined. Check command line input and try again.\n')
 
 if __name__ == '__main__':
     main()
