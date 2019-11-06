@@ -40,7 +40,7 @@ def Trim_Individual_Stack(large_stack, small_stack):
         large_stack = np.delete(large_stack, np.arange(
                         large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
     if np.all(dims <= 2):
-        print("*** no trimming necessary ***")
+        print("*** no rows/columns trimming necessary ***")
         return large_stack
     else:
         print("*** trimming rows and/or columns ***")
@@ -119,17 +119,25 @@ if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTE
 else:
     # Load the ML segmented stack
     raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
-    print((np.unique(raw_pred_stack[100])))
+    uniq100th = np.unique(raw_pred_stack[100])
+
+    if np.any(uniq100th < 0):
+        raw_pred_stack = np.where(raw_pred_stack < 0, raw_pred_stack + 256, raw_pred_stack)
+        print(np.unique(raw_pred_stack[100]))
+    else:
+        print(uniq100th)
 
     # Trim at the edges -- The ML does a bad job there
-    # Here I remove 50 slices at the beginning and the end,
-    # and 40 pixels at the left and right edges
-    # if trim_slices == 0:
-    #     if trim_column_L == 0:
-    #         if trim_column_R == 0:
-    #             raw_pred_stack = raw_pred_stack
-    #
-    # raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
+    if trim_slices == 0:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack
+    else:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                raw_pred_stack = raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, :]
+        else:
+            raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
     # io.imshow(raw_pred_stack[100])
 
@@ -410,23 +418,27 @@ else:
     #binary_zip = zipfile.ZipFile(base_folder_name + sample_name + '/' + binary_filename + '.zip', 'r')
     #binary_zip.extractall(base_folder_name + sample_name + '/')
     #binary_raw = binary_zip.open(sample_name + '/' + binary_filename)
+    print(filepath + binary_filename)
     binary_stack = img_as_bool(io.imread(filepath + binary_filename))
+    if len(binary_stack.shape) == 4:
+        binary_stack = binary_stack[:,:,:,0]
 
-    # binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
-    # binary_stack = binary_stack[:, :, (trim_column_L*2):(-trim_column_R*2)]
+    # Trim at the edges -- The ML does a bad job there
+    if trim_slices == 0:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                binary_stack = binary_stack
+    else:
+        if trim_column_L == 0:
+            if trim_column_R == 0:
+                binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
+        else:
+            binary_stack = binary_stack[trim_slices:-trim_slices, :, (trim_column_L*2):(-trim_column_R*2)]
 
-    #os.remove(base_folder_name + sample_name + '/' + sample_name + '/' + binary_filename)
-    #os.rmdir(base_folder_name + sample_name + '/' + sample_name)
+    print(binary_stack.shape)
+    print(raw_pred_stack.shape)
 
-
-    # io.imshow(binary_stack[100])
-
-
-    #Check and trim the binary stack if necessary
-    # This is to match the dimensions between all images
-    # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
-
-    # binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
+    binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
     # TO MANUALLY DELETE SOME SLICES
     #binary_stack = np.delete(binary_stack, 910, axis=1)
