@@ -122,7 +122,7 @@ Real example in which all required parameters are defined and one optional param
 python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=Carundinacea2004_0447_ phase_filename=PHASE-8bit.tif threshold_phase=82 grid_filename=GRID-8bit slice_numbers_training_slices=83,275,321,467,603,692,710 threshold_grid=123 nb_training_slices=6 path_to_image_folder=~/_github/leaf-traits-microct/image_folder/ rescale_factor=2
 ```
 
-Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Not all required arguments are defined. Check command line input and try again` If this error is encountered, then at least one of the following _required arguments_ was not defined or was entered incorrectly. When _required arguments_ are entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` which will be in the corresponding image folder.
+Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Not all required arguments are defined. Check command line input and try again.` If this error is encountered, then at least one of the following _required arguments_ was not defined or was entered incorrectly. When _required arguments_ are entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` which will be in the corresponding image folder.
 
 **Required arguments (option 1):**
 
@@ -138,10 +138,11 @@ Once you launch the program from the command line, as above, the program will ei
 
 `slice_numbers_training_slices`: This is the list of slice numbers using ImageJ indexing rules, i.e. with 1 being the first element. Needs to be separated by commas.
 
-`path_to_image_folder`: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
 
 **Optional arguments (option 1):**
 
+
+`path_to_image_folder`: Assuming all your images for an experiment are located in the same folder, this is the path to this folder (don't forget the `/` at the end). This path will default to `/path/to/this/repo/leaf-traits-microct/image_folder/` unless otherwise specified.
 
 `nb_training_slices`: This is the number of slices used to train the model. As shown in the [preprint](https://www.biorxiv.org/content/10.1101/814954v1.full) to this method, the number of training slices can affect the precision of the model, as well as the biological estimates. We consider that 6 training slices should be appropriate minimum for most angiosperms leaves with reticaultate venation. We haven't done exhaustive testing on other types of leaves and will update this section once more leaf types have been tested. By default this term will equal the number of slices passed to `slice_numbers_training_slices`.
 
@@ -157,22 +158,24 @@ Once you launch the program from the command line, as above, the program will ei
 From the terminal window, the program is called like this:
 
 ```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg_file_name.txt
+python /path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg_file_name.txt path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/
 ```
 
 Real example, in which three scans are segmented back-to-back without interruption (using three argument files):
 
 ```
-python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg1.txt,arg2.txt,arg3.txt
+python ~/_github/leaf-traits-microct/Leaf_Segmentation_py3.py argfiles=arg1.txt,arg2.txt,arg3.txt path_to_argfile_folder=~/_github/leaf-traits-microct/image_folder/sample_name/argfile_folder/
 ```
 
 `python`: This just calls python 3.
 
 `/path/to/this/repo/leaf-traits-microct/Leaf_Segmentation_py3.py`: This should be the complete path to where the segmentation program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`argfiles=arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository). In this example, `argfiles` is the argument name (left side of the `=`) and `arg_file_name.txt` (right side) is the definition of the argument.
+`argfiles=arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for segmentation](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/argfile_folder/arg_file_example_SEGMENTATION.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the base folder or any other location. In this example, `argfiles` is the argument name (left side of the `=`) and `arg_file_name.txt` (right side of the `=`) is the definition of the argument.
 
-Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` which will be in the image folder corresponding to each scan.
+`path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This is the complete path to where the argfile for a segmentation can be found. When using _Option 2_ we highly recommend keeping the argument file for a scan in that scan's corresponding base folder, however you can keep them anywhere as long as the `path_to_argfile_folder` is entered correctly.
+
+Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `The argument file is not present in the arg_file folder or path_to_argfile_folder is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` which will be in the image folder corresponding to each scan.
 
 **On building argument files for segmentation:**
 
