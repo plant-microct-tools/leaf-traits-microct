@@ -314,20 +314,22 @@ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.
 From the terminal window, the program is called like this:
 
 ```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_file_name.txt
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_file_name.txt path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/
 ```
 
 Real example, in which two scans are analyzed back-to-back without interruption (using two argument files):
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_analysis1.txt,arg_analysis2.txt
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_analysis1.txt,arg_analysis2.txt
 ```
 
 `python`: This just calls python 3.
 
 `/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the trait analysis program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/example_argfile_folder/arg_file_example_TRAITS.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
+`argfiles=arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/example_argfile_folder/arg_file_example_TRAITS.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
+
+`path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This is the complete path to where the argfile for a segmentation can be found. When using _Option 2_ we highly recommend keeping the argument file for a scan in that scan's corresponding base folder, however you can keep them anywhere as long as the `path_to_argfile_folder` is entered correctly.
 
 Once you launch the program from the command line, as above, the program will either begin working on scans or throw an error. If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan (if it is not already).
 
