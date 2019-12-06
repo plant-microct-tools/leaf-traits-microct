@@ -320,7 +320,7 @@ python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd
 Real example, in which two scans are analyzed back-to-back without interruption (using two argument files):
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_analysis1.txt,arg_analysis2.txt
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_analysis1.txt,arg_analysis2.txt path_to_argfile_folder=~/_github/leaf-traits-microct/image_folder/sample_name/argfile_folder/
 ```
 
 `python`: This just calls python 3.
