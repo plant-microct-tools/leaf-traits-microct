@@ -63,9 +63,10 @@ def main():
                 to_resize = int(value)
             if key == 'reuse_binary':
                 reuse_raw_binary = str(value)
-            # Binary suffix is only required if reuse binary is set to True
-            if key == 'binary_suffix':
-                binary_postfix = str(value)
+                # Binary suffix is onlz required if reuse binary is set to True
+                if reuse_raw_binary == 'True':
+                    if key == 'binary_suffix':
+                        binary_postfix = str(value)
             if key == 'trim_slices':
                 trim_slices = int(value)
             if key == 'trim_column_L':
@@ -414,8 +415,6 @@ def main():
                     print('')
                     print('### LOADING ORIGINAL SIZED BINARY STACK ###')
                     binary_stack = img_as_bool(io.imread(filepath + binary_filename))
-                    binary_stack, to_trim = Trim_Individual_Stack(binary_stack, to_resize)
-                    
                     if len(binary_stack.shape) == 4:
                         binary_stack = binary_stack[:,:,:,0]
 
@@ -434,7 +433,7 @@ def main():
                     # Check and trim the binary stack if necessary
                     # This is to match the dimensions between all images
                     # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
-
+                    binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
                 else:
                     print('### USING PREDICTIONS INSTEAD OF ORIGINAL BINARY STACK ###')
@@ -717,7 +716,7 @@ def main():
         except NameError: req_not_def = 1
         if reuse_raw_binary=='True':
             try: binary_postfix
-            except NameError: req_not_def = 1
+            except NameError: req_not_def =1
 
         if req_not_def==0:
             print('\nSingle scan mode...\n')
@@ -1029,8 +1028,6 @@ def main():
                     print('')
                     print('### LOADING ORIGINAL SIZED BINARY STACK ###')
                     binary_stack = img_as_bool(io.imread(filepath + binary_filename))
-                    binary_stack, to_trim = Trim_Individual_Stack(binary_stack, int(to_resize))
-                    
                     if len(binary_stack.shape) == 4:
                         binary_stack = binary_stack[:,:,:,0]
 
@@ -1049,7 +1046,7 @@ def main():
                     # Check and trim the binary stack if necessary
                     # This is to match the dimensions between all images
                     # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
-
+                    binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
                 else:
                     print('### USING PREDICTIONS INSTEAD OF ORIGINAL BINARY STACK ###')
@@ -1328,7 +1325,6 @@ def main():
             #
         else:
             print('\nNot all required arguments are defined. Check command line input and try again.\n')
-            print(sample_name, str(px_edge), to_resize, units, reuse_raw_binary, str(trim_slices), color_values, binary_postfix, base_folder_name)
 
 
 if __name__ == '__main__':

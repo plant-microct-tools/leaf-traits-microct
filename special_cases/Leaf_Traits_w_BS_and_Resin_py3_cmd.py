@@ -72,10 +72,6 @@ color_values = sys.argv[6]
 base_folder_name = str(sys.argv[7])
 binary_postfix = sys.argv[8]
 leaf_type = sys.argv[9]
-if len(sys.argv) == 10:
-    sa_resampling = 1
-else:
-    sa_resampling = sys.argv[10]
 
 # Pixel dimmension
 vx_volume = px_edge**3
@@ -116,8 +112,6 @@ if os.path.isfile(filepath + sample_name + 'RESULTS.txt'):
     print('This file has already been processed!')
     print('')
     assert False
-
-print(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED.tif')
 
 if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED.tif'):
     print('###LOADING POST-PROCESSED SEGMENTED STACK###')
@@ -556,9 +550,9 @@ if leaf_type == 'needle':
     abaxial_epidermis_value = -1
 else:
     epid_vals = [30,60]
-    epid_bool = [i in epid_vals for i in large_segmented_stack[100,:,100]]
+    epid_bool = [i in epid_vals for i in large_segmented_stack[200,:,200]]
     epid_indx = [i for i, x in enumerate(epid_bool) if x]
-    adaxial_epidermis_value = large_segmented_stack[100,epid_indx[0],100]
+    adaxial_epidermis_value = large_segmented_stack[200,epid_indx[0],200]
     # adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
     #     large_segmented_stack[100, :, 100] != bg_value).argmax()]
     if adaxial_epidermis_value == 30:
@@ -624,7 +618,7 @@ print('### Compute surface area of IAS ###')
 print('### This may take a while and freeze your computer ###')
 
 ias_vert_faces = marching_cubes_lewiner(
-    large_segmented_stack == ias_value, 0, allow_degenerate=False, step_size=sa_resampling)
+    large_segmented_stack == ias_value, 0, allow_degenerate=False)
 ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
 true_ias_SA = ias_SA * (px_edge**2)
 print(('IAS surface area: '+str(true_ias_SA)+' µm**2'))
