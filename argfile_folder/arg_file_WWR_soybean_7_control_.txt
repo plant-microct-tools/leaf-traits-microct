@@ -1,0 +1,20 @@
+# sample name
+WWR_soybean_7_control_
+# binary suffix
+BINARY-8bit.tif
+# pixel size (any unit desired)
+0.325
+# rescale factor (default is 1)
+2
+# reuse binary (use True --> use original size, or False --> do not use original size)
+False
+# slices to trim
+50
+# columns to trim on the left
+40
+# columns to trim on the right
+40
+# tissue values in exact order: epidermis, background, mesophyll cell, airspace, vein, bundle sheath
+51,204,0,255,102,153
+# path to image folder (needs to end with '/')
+/run/media/guillaume/microCT_GTR_8tb/Soybean_dehydration/WWR_plant_7_/

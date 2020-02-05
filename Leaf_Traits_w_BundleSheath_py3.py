@@ -40,7 +40,7 @@ def Trim_Individual_Stack(large_stack, small_stack):
         large_stack = np.delete(large_stack, np.arange(
                         large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
     if np.all(dims <= 2):
-        print("*** no rows/columns trimming necessary ***")
+        print("*** no trimming necessary ***")
         return large_stack
     else:
         print("*** trimming rows and/or columns ***")
@@ -70,18 +70,12 @@ trim_column_L = int(sys.argv[4])
 trim_column_R = int(sys.argv[5])
 color_values = sys.argv[6]
 base_folder_name = str(sys.argv[7])
-binary_postfix = sys.argv[8]
-leaf_type = sys.argv[9]
-if len(sys.argv) == 10:
-    sa_resampling = 1
-else:
-    sa_resampling = sys.argv[10]
 
 # Pixel dimmension
 vx_volume = px_edge**3
 
 # Define the different tissue values
-epid_value, bg_value, mesophyll_value, ias_value, vein_value, bs_value, resin_value = [int(x) for x in color_values.split(',')]
+epid_value, bg_value, mesophyll_value, ias_value, vein_value, bs_value = [int(x) for x in color_values.split(',')]
 
 # Load segmented image
 # Set directory of functions in order to import MLmicroCTfunctions
@@ -89,19 +83,13 @@ path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
 # os.chdir(path_to_script)
 
 sample_path_split = path_to_sample.split('/')
-
-# If input path to sample is of length 1, i.e. only the sample name,
-# create the folder names based on default file naming.
-if len(sample_path_split) == 1:
-    sample_name = path_to_sample
-    folder_name = '/MLresults/'
-    raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
-else:
-    sample_name = sample_path_split[-3]
-    folder_name = sample_path_split[-2] + '/'
-    raw_ML_prediction_name = sample_path_split[-1]
+sample_name = sample_path_split[-3]
+folder_name = sample_path_split[-2] + '/'
+raw_ML_prediction_name = sample_path_split[-1]
 filepath = base_folder_name + sample_name + '/'
-binary_filename = sample_name + binary_postfix # 'BINARY-8bit.tif'
+
+# folder_name = 'MLresults/'
+binary_filename = sample_name + 'BINARY-8bit.tif'
 # raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
 
 print('')
@@ -117,33 +105,18 @@ if os.path.isfile(filepath + sample_name + 'RESULTS.txt'):
     print('')
     assert False
 
-print(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED.tif')
-
 if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED.tif'):
     print('###LOADING POST-PROCESSED SEGMENTED STACK###')
     large_segmented_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
 else:
     # Load the ML segmented stack
     raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
-    uniq100th = np.unique(raw_pred_stack[100])
-
-    if np.any(uniq100th < 0):
-        raw_pred_stack = np.where(raw_pred_stack < 0, raw_pred_stack + 256, raw_pred_stack)
-        print(np.unique(raw_pred_stack[100]))
-    else:
-        print(uniq100th)
+    print((np.unique(raw_pred_stack[100])))
 
     # Trim at the edges -- The ML does a bad job there
-    if trim_slices == 0:
-        if trim_column_L == 0:
-            if trim_column_R == 0:
-                raw_pred_stack = raw_pred_stack
-    else:
-        if trim_column_L == 0:
-            if trim_column_R == 0:
-                raw_pred_stack = raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, :]
-        else:
-            raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
+    # Here I remove 50 slices at the beginning and the end,
+    # and 40 pixels at the left and right edges
+    raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
     # io.imshow(raw_pred_stack[100])
 
@@ -184,20 +157,18 @@ else:
     print('The two largest values below should be in the same order of magnitude')
     print((epidermis_area[ordered_epidermis[-4:]]))
 
-    if leaf_type == 'laminar':
-        if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
-            print('#########################################')
-            print('#########################################')
-            print('ERROR: Both epidermis might be connected!')
-            print('' + sample_name)
-            print('#########################################')
-            print('#########################################')
-            assert False
+    if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
+        print('#########################################')
+        print('#########################################')
+        print('ERROR: Both epidermis might be connected!')
+        print('' + sample_name)
+        print('#########################################')
+        print('#########################################')
+        assert False
 
     print("")
-    print('The center of the epidermis should be more or less the same on the')
-    print('1st and 3rd columns for the two largest values.')
-    print((epidermis_centroid[ordered_epidermis[-2:]]))
+    print('The center of the epidermis should be more or less the same on the 1st and 3rd columns')
+    print((epidermis_centroid[ordered_epidermis[-4:]]))
     print("")
 
     two_largest_epidermis = (unique_epidermis_volumes
@@ -228,12 +199,8 @@ else:
     # Find the fvalues of each epidermis: assumes adaxial epidermis is at the top of the image
     adaxial_epidermis_value = unique_epidermis_volumes[100, :, 100][(
         unique_epidermis_volumes[100, :, 100] != 0).argmax()]
-
-    if leaf_type == 'needle':
-        abaxial_epidermis_value = -1
-    else:
-        abaxial_epidermis_value = int(np.arange(start=1, stop=3)[
-                                      np.arange(start=1, stop=3) != adaxial_epidermis_value])
+    abaxial_epidermis_value = int(np.arange(start=1, stop=3)[
+                                  np.arange(start=1, stop=3) != adaxial_epidermis_value])
 
     # Compute volume
     epidermis_adaxial_volume = epidermis_area[adaxial_epidermis_value - 1] * (px_edge * (px_edge*2)**2)
@@ -244,8 +211,7 @@ else:
         (unique_epidermis_volumes == abaxial_epidermis_value), axis=1) * (px_edge*2)
     epidermis_adaxial_thickness = np.sum(
         (unique_epidermis_volumes == adaxial_epidermis_value), axis=1) * (px_edge*2)
-    del props_of_unique_epidermis
-    gc.collect()
+
 
     ###################
     ## VEINS
@@ -284,8 +250,6 @@ else:
 
     # Get the values again
     vein_volume = np.sum(largest_veins) * (px_edge * (px_edge*2)**2)
-    del props_of_unique_veins
-    gc.collect()
 
     #Check if it's correct
     #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_veins.tif',
@@ -297,99 +261,49 @@ else:
     ## BUNDLE SHEATHS
     ###################
     print('### BUNDLE SHEATHS ###')
-    if bs_value > 0:
-        # Get the bs volumes
-        unique_bs_volumes = label(raw_pred_stack == bs_value, connectivity=1)
-        props_of_unique_bs = regionprops(unique_bs_volumes)
+    # Get the veins volumes
+    unique_bs_volumes = label(raw_pred_stack == bs_value, connectivity=1)
+    props_of_unique_bs = regionprops(unique_bs_volumes)
 
-        # io.imshow(unique_bs_volumes[100])
+    # io.imshow(unique_bs_volumes[100])
 
-        bs_area = np.zeros(len(props_of_unique_bs))
-        bs_label = np.zeros(len(props_of_unique_bs))
-        bs_centroid = np.zeros([len(props_of_unique_bs), 3])
-        for regions in np.arange(len(props_of_unique_bs)):
-            bs_area[regions] = props_of_unique_bs[regions].area
-            bs_label[regions] = props_of_unique_bs[regions].label
-            bs_centroid[regions] = props_of_unique_bs[regions].centroid
+    bs_area = np.zeros(len(props_of_unique_bs))
+    bs_label = np.zeros(len(props_of_unique_bs))
+    bs_centroid = np.zeros([len(props_of_unique_bs), 3])
+    for regions in np.arange(len(props_of_unique_bs)):
+        bs_area[regions] = props_of_unique_bs[regions].area
+        bs_label[regions] = props_of_unique_bs[regions].label
+        bs_centroid[regions] = props_of_unique_bs[regions].centroid
 
-        # Find the largest bs
-        ordered_bs = np.argsort(bs_area)
-        #bs_area[ordered_bs[-80:]]
-        #bs_area[ordered_bs[:1000]]
-        #bs_centroid[ordered_bs[-4:]]
+    # Find the largest bs
+    ordered_bs = np.argsort(bs_area)
+    #bs_area[ordered_bs[-80:]]
+    #bs_area[ordered_bs[:1000]]
+    #bs_centroid[ordered_bs[-4:]]
 
-        #print(np.sum(bs_area <= 1000))
+    #print(np.sum(bs_area <= 1000))
 
-        # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
-        # the noise left by the segmentation method and kept only the largest bs.
-        # This should be adjusted depending on the species/images/maginification.
-        large_bs_ids = bs_label[bs_area > 100000]
+    # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
+    # the noise left by the segmentation method and kept only the largest bs.
+    # This should be adjusted depending on the species/images/maginification.
+    large_bs_ids = bs_label[bs_area > 100000]
 
-        largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
+    largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
 
-        del unique_bs_volumes
+    del unique_bs_volumes
 
-        # Get the values again
-        bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
-        del props_of_unique_bs
-        gc.collect()
+    # Get the values again
+    bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
 
-        #Check if it's correct
-        #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
-        #          img_as_ubyte(largest_bs))
-        # io.imshow(largest_bs[100])
-    else:
-        print('bundle sheath not labelled -- skipped')
+    #Check if it's correct
+    #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
+    #          img_as_ubyte(largest_bs))
+    # io.imshow(largest_bs[100])
 
 
-    ###################
-    ## RESIN CANAL
-    ###################
-    print('### RESIN CANALS ###')
-    if resin_value > 0:
-        # Get the bs volumes
-        unique_resin_volumes = label(raw_pred_stack == resin_value, connectivity=1)
-        props_of_unique_resin = regionprops(unique_resin_volumes)
-
-        # io.imshow(unique_resin_volumes[100])
-
-        resin_area = np.zeros(len(props_of_unique_resin))
-        resin_label = np.zeros(len(props_of_unique_resin))
-        resin_centroid = np.zeros([len(props_of_unique_resin), 3])
-        for regions in np.arange(len(props_of_unique_resin)):
-            resin_area[regions] = props_of_unique_resin[regions].area
-            resin_label[regions] = props_of_unique_resin[regions].label
-            resin_centroid[regions] = props_of_unique_resin[regions].centroid
-
-        # Find the largest bs
-        ordered_resin = np.argsort(resin_area)
-        #resin_area[ordered_bs[-80:]]
-        #resin_area[ordered_bs[:1000]]
-        #resin_centroid[ordered_bs[-4:]]
-
-        #print(np.sum(resin_area <= 1000))
-
-        # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
-        # the noise left by the segmentation method and kept only the largest bs.
-        # This should be adjusted depending on the species/images/maginification.
-        large_resin_ids = resin_label[resin_area > 100000]
-
-        largest_resin = np.in1d(unique_resin_volumes, large_resin_ids).reshape(raw_pred_stack.shape)
-
-        del unique_resin_volumes
-
-        # Get the values again
-        resin_volume = np.sum(largest_resin) * (px_edge * (px_edge*2)**2)
-        del props_of_unique_resin
-        gc.collect()
-
-        #Check if it's correct
-        #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
-        #          img_as_ubyte(largest_bs))
-        # io.imshow(largest_bs[100])
-    else:
-        print('resin canal(s) not labelled -- skipped')
-
+    # FREE UP SOME MEMORY
+    del props_of_unique_bs, props_of_unique_epidermis, props_of_unique_veins
+    gc.collect()
 
 
     ###################
@@ -424,26 +338,21 @@ else:
     #binary_zip = zipfile.ZipFile(base_folder_name + sample_name + '/' + binary_filename + '.zip', 'r')
     #binary_zip.extractall(base_folder_name + sample_name + '/')
     #binary_raw = binary_zip.open(sample_name + '/' + binary_filename)
-    print(filepath + binary_filename)
     binary_stack = img_as_bool(io.imread(filepath + binary_filename))
-    if len(binary_stack.shape) == 4:
-        binary_stack = binary_stack[:,:,:,0]
 
-    # Trim at the edges -- The ML does a bad job there
-    if trim_slices == 0:
-        if trim_column_L == 0:
-            if trim_column_R == 0:
-                binary_stack = binary_stack
-    else:
-        if trim_column_L == 0:
-            if trim_column_R == 0:
-                binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
-        else:
-            binary_stack = binary_stack[trim_slices:-trim_slices, :, (trim_column_L*2):(-trim_column_R*2)]
+    binary_stack = binary_stack[trim_slices:-trim_slices, :, :]
+    binary_stack = binary_stack[:, :, (trim_column_L*2):(-trim_column_R*2)]
 
-    print(binary_stack.shape)
-    print(raw_pred_stack.shape)
+    #os.remove(base_folder_name + sample_name + '/' + sample_name + '/' + binary_filename)
+    #os.rmdir(base_folder_name + sample_name + '/' + sample_name)
 
+
+    # io.imshow(binary_stack[100])
+
+
+    #Check and trim the binary stack if necessary
+    # This is to match the dimensions between all images
+    # Basically, it trims odds numbered dimension so to be able to divide/multiply them by 2.
     binary_stack = Trim_Individual_Stack(binary_stack, raw_pred_stack)
 
     # TO MANUALLY DELETE SOME SLICES
@@ -461,7 +370,6 @@ else:
     vein_value_new = 147
     ias_value_new = 255
     bs_value_new = 102
-    resin_value_new = 42
 
     print('### CREATING THE POST-PROCESSED SEGMENTED STACK ###')
 
@@ -473,24 +381,13 @@ else:
                                                   [binary_stack.shape[1], binary_stack.shape[2]],
                                                   anti_aliasing=False, order=0))
         # Creates a boolean 2D array of the bundle sheath (from the largest veins id'ed earlier)
-        if bs_value > 0:
-            temp_bs = img_as_bool(transform.resize(largest_bs[idx],
-                                                   [binary_stack.shape[1], binary_stack.shape[2]],
-                                                   anti_aliasing=False, order=0))
-        if resin_value > 0:
-            temp_resin = img_as_bool(transform.resize(largest_resin[idx],
-                                                   [binary_stack.shape[1], binary_stack.shape[2]],
-                                                   anti_aliasing=False, order=0))
-
+        temp_bs = img_as_bool(transform.resize(largest_bs[idx],
+                                               [binary_stack.shape[1], binary_stack.shape[2]],
+                                               anti_aliasing=False, order=0))
         # Creates a 2D array with the epidermis being assinged values 30 or 60
-        if leaf_type == 'needle':
-            temp_epid = img_as_bool(transform.resize(unique_epidermis_volumes[idx],
-                                             [binary_stack.shape[1], binary_stack.shape[2]],
-                                             anti_aliasing=False, preserve_range=True, order=0))
-        else:
-            temp_epid = transform.resize(unique_epidermis_volumes[idx],
-                                         [binary_stack.shape[1], binary_stack.shape[2]],
-                                         anti_aliasing=False, preserve_range=True, order=0) * 30
+        temp_epid = transform.resize(unique_epidermis_volumes[idx],
+                                     [binary_stack.shape[1], binary_stack.shape[2]],
+                                     anti_aliasing=False, preserve_range=True, order=0) * 30
         # Creates a 2D mask of only the leaf to remove the backgroud from the
         # original sized binary image.
         leaf_mask = img_as_bool(transform.resize(raw_pred_stack[idx] != bg_value,
@@ -499,14 +396,8 @@ else:
         # binary_stack is a boolean, so you need to multiply it.
         large_segmented_stack[idx][leaf_mask] = binary_stack[idx][leaf_mask] * ias_value_new
         large_segmented_stack[idx][temp_veins] = vein_value_new
-        if bs_value > 0:
-            large_segmented_stack[idx][temp_bs] = bs_value_new
-        if resin_value > 0:
-            large_segmented_stack[idx][temp_resin] = resin_value_new
-        if leaf_type == 'needle':
-            large_segmented_stack[idx][temp_epid] = 30
-        else:
-            large_segmented_stack[idx][temp_epid > 0] = temp_epid[temp_epid > 0]
+        large_segmented_stack[idx][temp_bs] = bs_value_new
+        large_segmented_stack[idx][temp_epid != 0] = temp_epid[temp_epid != 0]
 
     # io.imshow(large_segmented_stack[100])
     print("")
@@ -547,43 +438,38 @@ else:
 ias_value = 255
 vein_value = 147
 bs_value = 102
-resin_value = 42
 
 # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
 # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
-if leaf_type == 'needle':
-    adaxial_epidermis_value = 30
-    abaxial_epidermis_value = -1
+epid_vals = [30,60]
+epid_bool = [i in epid_vals for i in large_segmented_stack[200,:,200]]
+epid_indx = [i for i, x in enumerate(epid_bool) if x]
+
+adaxial_epidermis_value = large_segmented_stack[200,epid_indx[0],200]
+# adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
+#     large_segmented_stack[100, :, 100] != bg_value).argmax()]
+
+if adaxial_epidermis_value == 30:
+    abaxial_epidermis_value = 60
 else:
-    epid_vals = [30,60]
-    epid_bool = [i in epid_vals for i in large_segmented_stack[100,:,100]]
-    epid_indx = [i for i, x in enumerate(epid_bool) if x]
-    adaxial_epidermis_value = large_segmented_stack[100,epid_indx[0],100]
-    # adaxial_epidermis_value = large_segmented_stack[100, :, 100][(
-    #     large_segmented_stack[100, :, 100] != bg_value).argmax()]
-    if adaxial_epidermis_value == 30:
-        abaxial_epidermis_value = 60
-    else:
-        if adaxial_epidermis_value == 60:
-            abaxial_epidermis_value = 30
+    if adaxial_epidermis_value == 60:
+        abaxial_epidermis_value = 30
 
 #Measure the different volumes
-
-# Somehow those two lines can give negative values in some cases
-# I expect it's because of bad labelling of the background.
-# leaf_volume = np.sum(large_segmented_stack != bg_value) * vx_volume
-# mesophyll_volume = np.sum((large_segmented_stack != bg_value) & (large_segmented_stack
-#                                                                  != adaxial_epidermis_value) & (large_segmented_stack != abaxial_epidermis_value)) * vx_volume
-
+leaf_volume = np.sum(large_segmented_stack != bg_value) * vx_volume
+mesophyll_volume = np.sum((large_segmented_stack != bg_value) & (large_segmented_stack
+                                                                 != adaxial_epidermis_value) & (large_segmented_stack != abaxial_epidermis_value)) * vx_volume
 cell_volume = np.sum(large_segmented_stack == mesophyll_value) * vx_volume
 air_volume = np.sum(large_segmented_stack == ias_value) * vx_volume
 epidermis_abaxial_volume = np.sum(large_segmented_stack == abaxial_epidermis_value) * vx_volume
 epidermis_adaxial_volume = np.sum(large_segmented_stack == adaxial_epidermis_value) * vx_volume
 vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
 bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
-resin_volume = np.sum(large_segmented_stack == resin_value) * vx_volume
-mesophyll_volume = cell_volume + air_volume
-leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume + resin_volume
+
+print(leaf_volume)
+print((cell_volume + air_volume + epidermis_abaxial_volume
+       + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume))
+
 
 #Measure the thickness of the leaf, the epidermis, and the mesophyll
 leaf_thickness = np.sum(np.array(large_segmented_stack
@@ -624,21 +510,21 @@ print('### Compute surface area of IAS ###')
 print('### This may take a while and freeze your computer ###')
 
 ias_vert_faces = marching_cubes_lewiner(
-    large_segmented_stack == ias_value, 0, allow_degenerate=False, step_size=sa_resampling)
+    large_segmented_stack == ias_value, 0, allow_degenerate=False)
 ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
 true_ias_SA = ias_SA * (px_edge**2)
 print(('IAS surface area: '+str(true_ias_SA)+' µm**2'))
 print(('or '+str(float(true_ias_SA/1000000))+' mm**2'))
 # end Matt's code adaptation
 
-
+# Here, if bundle sheaths weren't labelled, then it will assign a value of 0
 try:
-    bs_volume
+    bundle_sheath_volume
 except NameError:
-    bs_volume = 0
+    bundle_sheath_volume = 0
 
 print(('Sm: '+str(true_ias_SA/leaf_area)))
-print(('SAmes/Vmes: '+str(true_ias_SA/mesophyll_volume)))
+print(('Ames/Vmes: '+str(true_ias_SA/(mesophyll_volume-vein_volume-bundle_sheath_volume))))
 
 
 # NOTE ON SA CODE ABOVE
@@ -698,9 +584,8 @@ data_out = {'LeafArea': leaf_area,
             'ADEpidermisVolume': epidermis_adaxial_volume,
             'ABEpidermisVolume': epidermis_abaxial_volume,
             'VeinVolume': vein_volume,
-            'BSVolume': bs_volume,
-            'ResinVolume': resin_volume,
-            'VeinBSVolume': vein_volume+bs_volume,
+            'BSVolume': bundle_sheath_volume,
+            'VeinBSVolume': vein_volume+bundle_sheath_volume,
             'CellVolume': cell_volume,
             'IASVolume': air_volume,
             'IASSurfaceArea': true_ias_SA,
@@ -715,9 +600,7 @@ results_out = DataFrame(data_out, index={sample_name})
 print('### Saving results to text file ###')
 results_out.to_csv(base_folder_name + sample_name + '/' + sample_name
                    + 'RESULTS.txt', sep='\t', encoding='utf-8')
-print('Data saved')
-for key, value in data_out.items():
-    print(str(key) + ' : ' + str(round(value, 3)))
+
 print('')
 print('Done with ' + sample_name)
 print('')
