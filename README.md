@@ -276,7 +276,7 @@ python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd
 Real example:
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 tissue_values=51,204,0,255,102,153 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/'
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False tissue2=palisade,22,True,True
 ```
 
 **Required arguments (option 1):**
@@ -295,9 +295,9 @@ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.
 
 `reuse_binary`: If you have downscaled the image during the automated segmentation and that your thresholded stack, i.e. the binary image, gave an accurate representation of the mesophyll cells and the airspace, this original sized binary image can be reuse to create the post-processed stack. Use True to reuse the original binary in its original size, or False to not use original binary and instead use the airspace and mesophyll cell predictions. _Note that if you reuse the original binary stack, i.e. set this to `True`, then you will need to provide a `binary_suffix`. See optional arguments below._
 
-`tissue_values`: A string of values correspond to the pixel value, found in ImageJ, for the following tissues in this exact order: epidermis (51), background (204), mesophyll cells (0), airspace (255), veins (102), and bundle sheaths (153). If bundle sheaths are absent, insert `-1` instead. In the command line, this would look like: `'51,204,0,255,102,153'`.
-
 `path_to_image_folder `: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+`tissue1`, `tissue2`, and up to `tissue10`: Must define at least one tissue class, and up to ten. These are unique tissue classes. Defines (in specific order) the tissue type, corresponding pixel value, whether or not the tissue is split into multiple non-contiguous volumes, whether or not to compute surface area of tissue class. For example using `tissue1=epidermis,128,True,False` defines the name of 'tissue' as 'epidermis', the pixel value of 'tissue1' as '128', the 'True' specifies 'tissue1' is split into multiple volumes, and the 'False' tells the software not to calculate a surface area for 'tissue1'.
 
 **Optional arguments (option 1):**
 
