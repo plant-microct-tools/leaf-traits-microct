@@ -235,9 +235,9 @@ With this program, the full stack segmentation predicted with the random-forest 
 - 3D stacks of the post-processed segmentation, with the `SEGMENTED.tif` suffix. (coming soon, traits only for now)
 - A text file (`LEAFtraits.txt` suffix) with the following anatomical variables measured, and includes other values of importances to the image stack:
 	- Tissue name
-		-> Computed volume
-		-> Computer thickness
-		-> Computed Surface Area
+		- Computed volume
+		- Computer thickness
+		- Computed Surface Area
 
 
 ***
