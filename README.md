@@ -232,32 +232,12 @@ Assuming all your image folder for an experiments are located in the same folder
 
 With this program, the full stack segmentation predicted with the random-forest machine learning program above is first cleaned up to remove some segmentation errors before saving the post-processed/cleaned up file (saved with `SEGMENTED.tif` as suffix), and then traits are analyzed. The program can be used for both or only for traits analysis when the post-processed file has been saved. Being produced with this function are:
 
-- 3D stacks of the post-processed segmentation, with the `SEGMENTED.tif` suffix.
-- A text file (`RESULTS.txt` suffix) with the following anatomical variables measured, and includes other values of importances to the image stack:
-	- Leaf area: `LeafArea`
-	- Thicknesses: 
-		- Leaf: `LeafThickness`
-		- Mesophyll: `MesophyllThickness`
-		- Adaxial epidermis: `ADEpidermisThickness`
-		- Abaxial epidermis: `ABEpidermisThickness`
-	- Standard deviation of thicknesses: Same labels as for thicknesses but with `_SD` as the end.
-	- Volumes:
-		- Leaf: `LeafVolume`
-		- Mesophyll: `MesophyllVolume`
-		- Adaxial epidermis: `ADEpidermisVolume`
-		- Abaxial epidermis: `ABEpidermisVolume`
-		- Veins: `VeinVolume`
-		- Bundle sheath: `BSVolume`
-		- Veins and bundlesheaths together: `VeinBSVolume`
-		- Mesophyll cells: `CellVolume`
-		- Airspace: `IASVolume`
-	- Surface area of the intercellular airspace: `IASSurfaceArea`
-	- Other values:
-		- Number of slices trimmed at the beginning and at the end of the stack: `_SLICEStrimmed`
-		- Number of slices trimmed at the left of the stack in cross sectionnal view: `_X_trimmed_left`
-		- Number of slices trimmed at the right of the stack in cross sectionnal view: `_X_trimmed_right`
-		- Pixel size: `PixelSize`
-		- Units for pixel size: `Units`
+- 3D stacks of the post-processed segmentation, with the `SEGMENTED.tif` suffix. (coming soon, traits only for now)
+- A text file (`LEAFtraits.txt` suffix) with the following anatomical variables measured, and includes other values of importances to the image stack:
+	- Tissue name
+		-> Computed volume
+		-> Computer thickness
+		-> Computed Surface Area
 
 
 ***
@@ -276,7 +256,7 @@ python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd
 Real example:
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False tissue2=palisade,22,True,True
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False,2,27 tissue2=palisade,22,True,True,2,8
 ```
 
 **Required arguments (option 1):**
@@ -297,7 +277,7 @@ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.
 
 `path_to_image_folder `: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
 
-`tissue1`, `tissue2`, and up to `tissue10`: Must define at least one tissue class, and up to ten. These are unique tissue classes. Defines (in specific order) the tissue type, corresponding pixel value, whether or not the tissue is split into multiple non-contiguous volumes, whether or not to compute surface area of tissue class. For example using `tissue1=epidermis,128,True,False` defines the name of 'tissue' as 'epidermis', the pixel value of 'tissue1' as '128', the 'True' specifies 'tissue1' is split into multiple volumes, and the 'False' tells the software not to calculate a surface area for 'tissue1'.
+`tissue1`, `tissue2`, and up to `tissue10`: Must define at least one tissue class, and up to ten. These are unique tissue classes. Defines (in specific order) the tissue type, corresponding pixel value, whether or not the tissue is split into multiple non-contiguous volumes, whether or not to compute surface area of tissue class, integer step size for measuring SA (default is 2, and we recommend using this value), and the volume threshold which is the minimum volume for unique volumes that will be considered when measuring. For example using `tissue1=epidermis,128,True,False,2,27` defines the name of 'tissue' as 'epidermis', the pixel value of 'tissue1' as '128', the 'True' specifies 'tissue1' is split into multiple volumes, the 'False' tells the software not to calculate a surface area for 'tissue1', the '2' tells the software to use a integer step size of '2' for computing SA, and the '27' tells the software to ignore unique volumes in this tissue class if they are less than 27 pixels^3.
 
 **Optional arguments (option 1):**
 
