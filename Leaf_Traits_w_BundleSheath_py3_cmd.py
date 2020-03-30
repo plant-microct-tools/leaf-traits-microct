@@ -344,52 +344,52 @@ def main():
 
             # Define the different tissue values
             if 'tissue1' in locals():
-                t1_name, t1_value, t1_split, t1_sa = [x for x in tissue1.split(',')]
+                t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh = [x for x in tissue1.split(',')]
                 t1_name = str(t1_name)
                 t1_value = int(t1_value)
             else: pass
             if 'tissue2' in locals():
-                t2_name, t2_value, t2_split, t2_sa = [x for x in tissue2.split(',')]
+                t2_name, t2_value, t2_split, t2_sa, t2_step, t2_volThresh = [x for x in tissue2.split(',')]
                 t2_name = str(t2_name)
                 t2_value = int(t2_value)
             else: pass
             if 'tissue3' in locals():
-                t3_name, t3_value, t3_split, t3_sa = [x for x in tissue3.split(',')]
+                t3_name, t3_value, t3_split, t3_sa, t3_step, t3_volThresh = [x for x in tissue3.split(',')]
                 t3_name = str(t3_name)
                 t3_value = int(t3_value)
             else: pass
             if 'tissue4' in locals():
-                t4_name, t4_value, t4_split, t4_sa = [x for x in tissue4.split(',')]
+                t4_name, t4_value, t4_split, t4_sa, t4_step, t4_volThresh = [x for x in tissue4.split(',')]
                 t4_name = str(t4_name)
                 t4_value = int(t4_value)
             else: pass
             if 'tissue5' in locals():
-                t5_name, t5_value, t5_split, t5_sa = [x for x in tissue5.split(',')]
+                t5_name, t5_value, t5_split, t5_sa, t5_step, t5_volThresh = [x for x in tissue5.split(',')]
                 t5_name = str(t5_name)
                 t5_value = int(t5_value)
             else: pass
             if 'tissue6' in locals():
-                t6_name, t6_value, t6_split, t6_sa = [x for x in tissue6.split(',')]
+                t6_name, t6_value, t6_split, t6_sa, t6_step, t6_volThresh = [x for x in tissue6.split(',')]
                 t6_name = str(t6_name)
                 t6_value = int(t6_value)
             else: pass
             if 'tissue7' in locals():
-                t7_name, t7_value, t7_split, t7_sa = [x for x in tissue7.split(',')]
+                t7_name, t7_value, t7_split, t7_sa, t7_step, t7_volThresh = [x for x in tissue7.split(',')]
                 t7_name = str(t7_name)
                 t7_value = int(t7_value)
             else: pass
             if 'tissue8' in locals():
-                t8_name, t8_value, t8_split, t8_sa = [x for x in tissue8.split(',')]
+                t8_name, t8_value, t8_split, t8_sa, t8_step, t8_volThresh = [x for x in tissue8.split(',')]
                 t8_name = str(t8_name)
                 t8_value = int(t8_value)
             else: pass
             if 'tissue9' in locals():
-                t9_name, t9_value, t9_split, t9_sa = [x for x in tissue9.split(',')]
+                t9_name, t9_value, t9_split, t9_sa, t9_step, t9_volThresh = [x for x in tissue9.split(',')]
                 t9_name = str(t9_name)
                 t9_value = int(t9_value)
             else: pass
             if 'tissue10' in locals():
-                t10_name, t10_value, t10_split, t10_sa = [x for x in tissue10.split(',')]
+                t10_name, t10_value, t10_split, t10_sa, t10_step, t10_volThresh = [x for x in tissue10.split(',')]
                 t10_name = str(t10_name)
                 t10_value = int(t10_value)
             else: pass
