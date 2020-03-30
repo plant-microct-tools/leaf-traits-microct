@@ -24,6 +24,7 @@ import pickle
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
+from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter, minimum_filter, percentile_filter
 # Suppress all warnings (not errors) by uncommenting next two lines of code
