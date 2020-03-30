@@ -132,7 +132,7 @@ def main():
 
             # Define the dimension of a pixel
             if to_resize > 1:
-                px_dimension = (px_edge, px_edge/2, px_edge/2)
+                px_dimension = (px_edge, px_edge/to_resize, px_edge/to_resize)
             else:
                 px_dimension = (px_edge, px_edge, px_edge)
 
@@ -327,7 +327,7 @@ def main():
 
         # Define the dimension of a pixel
         if to_resize > 1:
-            px_dimension = (px_edge, px_edge/2, px_edge/2)
+            px_dimension = (px_edge, px_edge/to_resize, px_edge/to_resize)
         else:
             px_dimension = (px_edge, px_edge, px_edge)
 
