@@ -1177,8 +1177,8 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         computed_thickness = np.sum(tissue_cleaned_stack, axis=1) * np.prod(px_dimension[1:])
 
         del unique_volumes
-        del props_of_unique_veins
-        gc.collect()
+        # del props_of_unique_veins # fix these
+        # gc.collect()
 
         print('volume of ' + tissue_name + ': ', computed_volume)
         print('thickness of '+tissue_name+': ', np.median(computed_thickness))
@@ -1190,7 +1190,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         vert_faces = marching_cubes_lewiner(
             tissue_cleaned_stack, 0, allow_degenerate=False, step_size=SA_step, spacing=px_dimension)
         computed_SA = mesh_surface_area(vert_faces[0], vert_faces[1])
-        print(('surface area of '+tissue_name+': '+str(ias_SA)+' '+units+'**2'))
+        print(('\n'+'surface area of '+tissue_name+': '+str(computed_SA)+' '+units+'**2'))
     else:
         computed_SA = -1
 
