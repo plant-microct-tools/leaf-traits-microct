@@ -1168,7 +1168,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
 
     else:
         # Remove volumes below a threshold
-        large_volumes_ids = volumes_label[volumes_area > volume_threshold]
+        large_volumes_ids = volumes_label[volumes_area > int(volume_threshold)]
         # Find the largest volumes
         tissue_cleaned_stack = np.in1d(unique_volumes, large_volumes_ids).reshape(stack.shape)
 

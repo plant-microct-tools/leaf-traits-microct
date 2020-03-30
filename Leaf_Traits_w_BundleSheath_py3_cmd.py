@@ -459,7 +459,7 @@ def main():
 
     #
                 if 'tissue1' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh, px_dimension, units)
                     if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
                         with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                             file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
@@ -469,47 +469,47 @@ def main():
                             file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                             file.close()
                 if 'tissue2' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t2_name, t2_value, t2_split, t2_sa, t2_step, t2_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t2_name, t2_value, t2_split, t2_sa, t2_step, t2_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue3' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t3_name, t3_value, t3_split, t3_sa, t3_step, t3_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t3_name, t3_value, t3_split, t3_sa, t3_step, t3_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue4' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t4_name, t4_value, t4_split, t4_sa, t4_step, t4_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t4_name, t4_value, t4_split, t4_sa, t4_step, t4_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue5' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t5_name, t5_value, t5_split, t5_sa, t5_step, t5_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t5_name, t5_value, t5_split, t5_sa, t5_step, t5_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue6' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t6_name, t6_value, t6_split, t6_sa, t6_step, t6_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t6_name, t6_value, t6_split, t6_sa, t6_step, t6_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue7' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t7_name, t7_value, t7_split, t7_sa, t7_step, t7_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t7_name, t7_value, t7_split, t7_sa, t7_step, t7_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue8' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t8_name, t8_value, t8_split, t8_sa, t8_step, t8_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t8_name, t8_value, t8_split, t8_sa, t8_step, t8_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue9' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t9_name, t9_value, t9_split, t9_sa, t9_step, t9_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t9_name, t9_value, t9_split, t9_sa, t9_step, t9_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
                 if 'tissue10' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t10_name, t10_value, t10_split, t10_sa, t10_step, t10_volThresh, px_edge, units)
+                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t10_name, t10_value, t10_split, t10_sa, t10_step, t10_volThresh, px_dimension, units)
                     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
