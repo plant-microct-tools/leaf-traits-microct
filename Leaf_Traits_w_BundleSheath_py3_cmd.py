@@ -109,11 +109,6 @@ def main():
             try: px_edge
             except NameError: px_edge = 1
 
-            # Define the dimension of a pixel
-            if to_resize > 1:
-                px_dimension = (px_edge, px_edge/2, px_edge/2)
-            else:
-                px_dimension = (px_edge, px_edge, px_edge)
 
     if len(filenames)>0: # read instructions from .txt file mode, not updated for flexible tissue classes as of 02.2020
         # define some things
@@ -134,6 +129,12 @@ def main():
 
             # define parameters using list_of_lines
             sample_name, binary_postfix, px_edge, units, to_resize, reuse_raw_binary, trim_slices, trim_column_L, trim_column_R, color_values, base_folder_name = define_params_traits(list_of_lines)
+
+            # Define the dimension of a pixel
+            if to_resize > 1:
+                px_dimension = (px_edge, px_edge/2, px_edge/2)
+            else:
+                px_dimension = (px_edge, px_edge, px_edge)
 
             # Pixel dimmension
             vx_volume = px_edge**3
@@ -323,6 +324,12 @@ def main():
         if reuse_raw_binary=='True':
             try: binary_postfix
             except NameError: req_not_def = 1
+
+        # Define the dimension of a pixel
+        if to_resize > 1:
+            px_dimension = (px_edge, px_edge/2, px_edge/2)
+        else:
+            px_dimension = (px_edge, px_edge, px_edge)
 
         if req_not_def==0:
             print('\nSingle scan mode...\n')
