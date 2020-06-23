@@ -1093,15 +1093,15 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
     ordered_volumes = np.argsort(volumes_area)
 
     # This case is when the desired tissue is split into two in the stack
-    if full_tissue == False:
+    if full_tissue == 'True':
         # Find the two largest volumes - E.g. the two epidermis
         print('The two largest values below should be in the same order of magnitude')
         print((volumes_area[ordered_volumes[-4:]]))
-        if volumes_area[ordered_volumes[-1]] > (10 * volumes_area[ordered_volumes[-2]]):
+        if volumes_area[ordered_volumes[-1]] > (100 * volumes_area[ordered_volumes[-2]]):
             print('#########################################')
             print('#########################################')
             print('ERROR: Both volumes are still connected!')
-            print('' + sample_name)
+            print('' + tissue_name)
             print('#########################################')
             print('#########################################')
             assert False
@@ -1112,8 +1112,8 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         print((volumes_centroid[ordered_volumes[-2:]]))
         print("")
 
-        two_largest_volumes = (unique_volumes_volumes
-                                 == ordered_volumes[-1] + 1) | (unique_volumes_volumes == ordered_volumes[-2] + 1)
+        two_largest_volumes = (unique_volumes
+                                 == ordered_volumes[-1] + 1) | (unique_volumes == ordered_volumes[-2] + 1)
 
         # Check if it's correct
         # io.imsave(filepath + folder_name + 'test_volumes.tif',
@@ -1131,6 +1131,8 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
             volumes_label[regions] = props_of_unique_volumes[regions].label
             volumes_centroid[regions] = props_of_unique_volumes[regions].centroid
 
+
+
         ## io.imshow(unique_volumes_volumes[100])
 
         # Transform the array to 8-bit: no need for the extra precision as there are only 3 values
@@ -1143,6 +1145,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         #           There should be a better way to find what is the value at the top and at the bottom
         first_volume_value = unique_volumes_volumes[100, :, 100][(
                  unique_volumes_volumes[100, :, 100] != 0).argmax()]
+        print(first_volume_value)
         second_volume_value = int(np.arange(start=1, stop=3)[
                                            np.arange(start=1, stop=3) != first_volume_value])
 
@@ -1155,7 +1158,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         first_volume_thickness = np.sum((unique_volumes_volumes == first_volume_value), axis=1) * np.prod(px_dimension[1:])
         second_volume_thickness = np.sum((unique_volumes_volumes == second_volume_value), axis=1) * np.prod(px_dimension[1:])
         del props_of_unique_volumes
-        gc.collect()
+        # gc.collect()
 
         computed_volume = (first_volume_volume, second_volume_volume)
         computed_thickness = (first_volume_thickness, second_volume_thickness)
@@ -1183,7 +1186,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         print('volume of ' + tissue_name + ': ', computed_volume)
         print('thickness of '+tissue_name+': ', np.median(computed_thickness))
 
-    if surface_area:
+    if surface_area == 'True':
         print("")
         print('### Computing surface area')
         print('### This may take a while and freeze your computer')
@@ -1195,3 +1198,27 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         computed_SA = -1
 
     return tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA
+
+# def data_frame_export(tissue_name, full_tissue, computed_volume, computed_thickness, computed_SA, leaf_area=leaf_area, leaf_thickness_leaf_thickness):
+#     data_out = {'LeafArea':leaf_area,
+#                 'LeafThickness':leaf_thickness.mean(),
+#                 'LeafThickness_SD':leaf_thickness.std(),
+#                 'MesophyllThickness':mesophyll_thickness.mean(),
+#                 'MesophyllThickness_SD':mesophyll_thickness.std(),
+#                 'ADEpidermisThickness':epidermis_adaxial_thickness.mean(),
+#                 'ADEpidermisThickness_SD':epidermis_adaxial_thickness.std(),
+#                 'ABEpidermisThickness':epidermis_abaxial_thickness.mean(),
+#                 'ABEpidermisThickness_SD':epidermis_abaxial_thickness.std(),
+#                 'LeafVolume':leaf_volume,
+#                 'MesophyllVolume':mesophyll_volume,
+#                 'ADEpidermisVolume':epidermis_adaxial_volume,
+#                 'ABEpidermisVolume':epidermis_abaxial_volume,
+#                 'VeinVolume':vein_volume,
+#                 'CellVolume':cell_volume,
+#                 'IASVolume':air_volume,
+#                 'IASSurfaceArea':true_ias_SA,
+#                 '_SLICEStrimmed':trim_slices,
+#                 '_X_VALUEStrimme':trim_column*2}
+#     results_out = DataFrame(data_out, index={sample_name})
+#     # Save the data to a CSV
+#     results_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'RESULTS.txt', sep='\t', encoding='utf-8')

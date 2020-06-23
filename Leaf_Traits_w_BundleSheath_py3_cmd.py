@@ -74,6 +74,8 @@ def main():
                 trim_column_R = int(value)
             if key == 'path_to_image_folder':
                 base_folder_name = str(value)
+            if key == 'bg_value':
+                bg_value = int(value)
 
             # if key == 'tissue_values':  # removed 02.2020; replaced with lines 81 - 134
             #     color_values = str(value)
@@ -258,6 +260,13 @@ def main():
                     else:
                         raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
+                if os.path.isfile(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+                    results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                                       sep='\t', encoding='utf-8', mode='a', header=False)
+                else:
+                    results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                                       sep='\t', encoding='utf-8')
+
     ##### move funciton tissue_cleanup() from scratch.py to 'Leaf_Segmentation_Functions_py3.py', so it can be called easily --> done 3.23.2020 by MRJ
     ##### then use this function based on the tissues defined by the user (up to 10)
                 if 'tissue1' in locals():
@@ -327,7 +336,7 @@ def main():
 
         # Define the dimension of a pixel
         if to_resize > 1:
-            px_dimension = (px_edge, px_edge/to_resize, px_edge/to_resize)
+            px_dimension = (px_edge, px_edge * to_resize, px_edge * to_resize)
         else:
             px_dimension = (px_edge, px_edge, px_edge)
 
@@ -457,14 +466,44 @@ def main():
                     else:
                         raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
-    #
+                leaf_thickness = np.sum(np.array(raw_pred_stack != bg_value, dtype='bool'), axis=1) * px_edge
+                leaf_area = raw_pred_stack.shape[0] * raw_pred_stack.shape[2] * np.prod(px_dimension[1:])
+                # mesophyll_thickness = np.sum(
+                #     (raw_pred_stack != bg_value) & (raw_pred_stack != adaxial_epidermis_value) & (
+                #                 raw_pred_stack != abaxial_epidermis_value), axis=1) * px_edge
+
+                #
                 if 'tissue1' in locals():
                     tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh, px_dimension, units)
+                    # data_out = {'TissueName':tissue_name,
+                    #             'LeafArea':leaf_area,
+                    #             'LeafThickness':leaf_thickness.mean(),
+                    #             'LeafThickness_SD':leaf_thickness.std(),
+                    #             'TissueThickness_mean':computed_thickness.mean(),
+                    #             'TissueThickness_median':np.median(computed_thickness),
+                    #             'TissueThickness_SD':computed_thickness.std(),
+                    #             'TissueVolume':computed_volume,
+                    #             'MesophyllVolume':mesophyll_volume,
+                    #             'TissueSA':computed_SA,
+                    #             '_SLICEStrimmed':trim_slices,
+                    #             '_X_VALUEStrimme':trim_column*2}
+                    # results_out = DataFrame(data_out, index={sample_name})
+                    if os.path.isfile(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+                        results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                                           sep='\t', encoding='utf-8', mode='a', header=False)
+                    else:
+                        results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                                           sep='\t', encoding='utf-8')
+
                     if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
+                        # results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                        #                    sep='\t', encoding='utf-8', mode='a', header=False)
                         with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
                             file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                             file.close()
                     else:
+                        # results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
+                        #                    sep='\t', encoding='utf-8')
                         with open(filepath + sample_name + 'LEAFtraits.txt', 'w', encoding='utf-8') as file:
                             file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                             file.close()
@@ -514,6 +553,7 @@ def main():
                         file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
                         file.close()
     #
+
             print('')
             print('Done with ' + sample_name)
             print('')
