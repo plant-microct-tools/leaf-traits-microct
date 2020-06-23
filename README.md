@@ -250,13 +250,13 @@ Note: If using this option, some arguments are _required_ to be defined and othe
 
 
 ```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=XYZ px_size=1 units=X rescale_factor=1 reuse_binary=True/False binary_suffix=X trim_slices=X trim_column_L=X trim_column_R=X tissue_values=1,2,3,4,5,6 path_to_image_folder='/this/is/a/long/path/'
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=XYZ px_size=1 units=X bg_value=1 rescale_factor=1 reuse_binary=True/False binary_suffix=X trim_slices=X trim_column_L=X trim_column_R=X tissue_values=1,2,3,4,5,6 path_to_image_folder='/this/is/a/long/path/'
 ```
 
 Real example:
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False,2,27 tissue2=palisade,22,True,True,2,8
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um bg_value=204 rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False,2,27 tissue2=palisade,22,True,True,2,8
 ```
 
 **Required arguments (option 1):**
@@ -270,6 +270,8 @@ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.
 `pixel_size `: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
 
 `units`: What units the pixels are set to. For tracking purposes and only used in the result file.
+
+`bg_value`: The value of the background color.
 
 `rescale_factor`: Default is 1 (no rescaling). In the case you have downscaled the original image during segmentation, this is to upscale the _x_ and _y_ axis by this factor.
 
