@@ -372,7 +372,7 @@ def main():
                     # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
                     # the noise left by the segmentation method and kept only the largest bs.
                     # This should be adjusted depending on the species/images/maginification.
-                    large_bs_ids = bs_label[bs_area > 100000]
+                    large_bs_ids = bs_label[bs_area > (100000/8)]
 
                     largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
 
@@ -987,7 +987,7 @@ def main():
                     # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
                     # the noise left by the segmentation method and kept only the largest bs.
                     # This should be adjusted depending on the species/images/maginification.
-                    large_bs_ids = bs_label[bs_area > 100000]
+                    large_bs_ids = bs_label[bs_area > (100000/8)]
 
                     largest_bs = np.in1d(unique_bs_volumes, large_bs_ids).reshape(raw_pred_stack.shape)
 
