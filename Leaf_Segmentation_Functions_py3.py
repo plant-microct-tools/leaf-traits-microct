@@ -1097,7 +1097,7 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         # Find the two largest volumes - E.g. the two epidermis
         print('The two largest values below should be in the same order of magnitude')
         print((volumes_area[ordered_volumes[-4:]]))
-        if volumes_area[ordered_volumes[-1]] > (100 * volumes_area[ordered_volumes[-2]]):
+        if volumes_area[ordered_volumes[-1]] > (20 * volumes_area[ordered_volumes[-2]]):
             print('#########################################')
             print('#########################################')
             print('ERROR: Both volumes are still connected!')
@@ -1155,8 +1155,8 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
         second_volume_volume = volumes_area[second_volume_value - 1] * np.prod(px_dimension)
 
         # Thickness return a 2D array, i.e. the thcikness of each column
-        first_volume_thickness = np.sum((unique_volumes_volumes == first_volume_value), axis=1) * np.prod(px_dimension[1:])
-        second_volume_thickness = np.sum((unique_volumes_volumes == second_volume_value), axis=1) * np.prod(px_dimension[1:])
+        first_volume_thickness = np.sum((unique_volumes_volumes == first_volume_value), axis=1) * px_dimension[1]
+        second_volume_thickness = np.sum((unique_volumes_volumes == second_volume_value), axis=1) * px_dimension[1]
         del props_of_unique_volumes
         # gc.collect()
 
@@ -1199,26 +1199,42 @@ def tissue_cleanup_and_analysis(stack, tissue_name, tissue_color, full_tissue, s
 
     return tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA
 
-# def data_frame_export(tissue_name, full_tissue, computed_volume, computed_thickness, computed_SA, leaf_area=leaf_area, leaf_thickness_leaf_thickness):
-#     data_out = {'LeafArea':leaf_area,
-#                 'LeafThickness':leaf_thickness.mean(),
-#                 'LeafThickness_SD':leaf_thickness.std(),
-#                 'MesophyllThickness':mesophyll_thickness.mean(),
-#                 'MesophyllThickness_SD':mesophyll_thickness.std(),
-#                 'ADEpidermisThickness':epidermis_adaxial_thickness.mean(),
-#                 'ADEpidermisThickness_SD':epidermis_adaxial_thickness.std(),
-#                 'ABEpidermisThickness':epidermis_abaxial_thickness.mean(),
-#                 'ABEpidermisThickness_SD':epidermis_abaxial_thickness.std(),
-#                 'LeafVolume':leaf_volume,
-#                 'MesophyllVolume':mesophyll_volume,
-#                 'ADEpidermisVolume':epidermis_adaxial_volume,
-#                 'ABEpidermisVolume':epidermis_abaxial_volume,
-#                 'VeinVolume':vein_volume,
-#                 'CellVolume':cell_volume,
-#                 'IASVolume':air_volume,
-#                 'IASSurfaceArea':true_ias_SA,
-#                 '_SLICEStrimmed':trim_slices,
-#                 '_X_VALUEStrimme':trim_column*2}
-#     results_out = DataFrame(data_out, index={sample_name})
-#     # Save the data to a CSV
-#     results_out.to_csv(base_folder_name + sample_name + '/' + sample_name + 'RESULTS.txt', sep='\t', encoding='utf-8')
+def data_frame_export(sample_name, tissue_name, full_tissue, computed_volume, computed_thickness, computed_SA, leaf_area,
+                      leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R):
+
+    if full_tissue == 'True':
+        if isinstance(computed_SA, int):
+            computed_SA = (computed_SA, computed_SA)
+        data_out = {'TissueName':(tissue_name + '_1', tissue_name + '_2'),
+                    'LeafArea':(leaf_area, leaf_area),
+                    'LeafThickness_mean':(leaf_thickness.mean(), leaf_thickness.mean()),
+                    'LeafThickness_median': (np.median(leaf_thickness), np.median(leaf_thickness)),
+                    'LeafThickness_SD':(leaf_thickness.std(), leaf_thickness.std()),
+                    'TissueThickness_mean':(computed_thickness[0].mean(), computed_thickness[1].mean()),
+                    'TissueThickness_median':(np.median(computed_thickness[0]), np.median(computed_thickness[1])),
+                    'TissueThickness_SD':(np.std(computed_thickness[0]), np.std(computed_thickness[1])),
+                    'TissueVolume':computed_volume,
+                    'TissueSA':computed_SA,
+                    '_SLICEStrimmed':(trim_slices, trim_slices),
+                    '_X_VALUEStrimmed_L':(trim_column_L*to_resize, trim_column_L*to_resize),
+                    '_X_VALUEStrimmed_R':(trim_column_R*to_resize, trim_column_R*to_resize)}
+        results_out = pd.DataFrame(data_out, index=[sample_name, sample_name])
+    else:
+        data_out = {'TissueName':tissue_name,
+                    'LeafArea':leaf_area,
+                    'LeafThickness_mean':leaf_thickness.mean(),
+                    'LeafThickness_median':np.median(leaf_thickness),
+                    'LeafThickness_SD':leaf_thickness.std(),
+                    'TissueThickness_mean':np.mean(computed_thickness),
+                    'TissueThickness_median':np.median(computed_thickness),
+                    'TissueThickness_SD':np.std(computed_thickness),
+                    'TissueVolume':computed_volume,
+                    'TissueSA':computed_SA,
+                    '_SLICEStrimmed':trim_slices,
+                    '_X_VALUEStrimmed_L':trim_column_L*to_resize,
+                    '_X_VALUEStrimmed_R':trim_column_R*to_resize}
+        results_out = pd.DataFrame(data_out, index={sample_name})
+    # TESTING THE OUTPUTS
+    # print(data_out)
+    # print(results_out)
+    return results_out

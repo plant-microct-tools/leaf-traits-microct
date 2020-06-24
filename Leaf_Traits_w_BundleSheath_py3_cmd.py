@@ -16,7 +16,7 @@ import skimage.io as io
 from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
 # import zipfile
 import gc
-from Leaf_Segmentation_Functions_py3 import delete_dangling_epidermis, openAndReadFile, Trim_Individual_Stack, define_params_traits, tissue_cleanup_and_analysis
+from Leaf_Segmentation_Functions_py3 import delete_dangling_epidermis, openAndReadFile, Trim_Individual_Stack, define_params_traits, tissue_cleanup_and_analysis, data_frame_export
 #import cv2
 
 __author__ = "Guillaume Théroux-Rancourt and Matt Jenkins"
@@ -434,7 +434,7 @@ def main():
             print(' ' + sample_name)
 
             # Check if the file has already been processed -- Just in case!
-            if os.path.isfile(filepath + sample_name + 'RESULTS.txt'):
+            if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
                 print('')
                 print('This file has already been processed!')
                 print('')
@@ -442,7 +442,11 @@ def main():
 
             if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED.tif'):
                 print('###LOADING POST-PROCESSED SEGMENTED STACK###')
-                large_segmented_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
+                raw_pred_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
+                print('')
+                print('This still needs to be implemented to fully work!')
+                print('Please rename your SEGMENTED file and rerun the program.')
+                print('')
             else:
                 # Load the ML segmented stack
                 raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
@@ -466,92 +470,104 @@ def main():
                     else:
                         raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
 
-                leaf_thickness = np.sum(np.array(raw_pred_stack != bg_value, dtype='bool'), axis=1) * px_edge
-                leaf_area = raw_pred_stack.shape[0] * raw_pred_stack.shape[2] * np.prod(px_dimension[1:])
-                # mesophyll_thickness = np.sum(
-                #     (raw_pred_stack != bg_value) & (raw_pred_stack != adaxial_epidermis_value) & (
-                #                 raw_pred_stack != abaxial_epidermis_value), axis=1) * px_edge
+            leaf_thickness = np.sum(np.array(raw_pred_stack != bg_value, dtype='bool'), axis=1) * (px_edge*to_resize)
+            leaf_area = raw_pred_stack.shape[0] * raw_pred_stack.shape[2] * np.prod(px_dimension[:2])
+            print('Mean leaf thickness: ' + str(leaf_thickness.mean()) + ' ' + units)
+            print('Leaf area of sample: ' + str(leaf_area) + ' ' + units + str(2))
+            # mesophyll_thickness = np.sum(
+            #     (raw_pred_stack != bg_value) & (raw_pred_stack != adaxial_epidermis_value) & (
+            #                 raw_pred_stack != abaxial_epidermis_value), axis=1) * px_edge
 
-                #
-                if 'tissue1' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh, px_dimension, units)
-                    # data_out = {'TissueName':tissue_name,
-                    #             'LeafArea':leaf_area,
-                    #             'LeafThickness':leaf_thickness.mean(),
-                    #             'LeafThickness_SD':leaf_thickness.std(),
-                    #             'TissueThickness_mean':computed_thickness.mean(),
-                    #             'TissueThickness_median':np.median(computed_thickness),
-                    #             'TissueThickness_SD':computed_thickness.std(),
-                    #             'TissueVolume':computed_volume,
-                    #             'MesophyllVolume':mesophyll_volume,
-                    #             'TissueSA':computed_SA,
-                    #             '_SLICEStrimmed':trim_slices,
-                    #             '_X_VALUEStrimme':trim_column*2}
-                    # results_out = DataFrame(data_out, index={sample_name})
-                    if os.path.isfile(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt'):
-                        results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
-                                           sep='\t', encoding='utf-8', mode='a', header=False)
-                    else:
-                        results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
-                                           sep='\t', encoding='utf-8')
-
-                    if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
-                        # results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
-                        #                    sep='\t', encoding='utf-8', mode='a', header=False)
-                        with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                            file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                            file.close()
-                    else:
-                        # results_out.to_csv(sample_name + '-GEOMETRIC-TORTUOSITY-RESULTS.txt',
-                        #                    sep='\t', encoding='utf-8')
-                        with open(filepath + sample_name + 'LEAFtraits.txt', 'w', encoding='utf-8') as file:
-                            file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                            file.close()
-                if 'tissue2' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t2_name, t2_value, t2_split, t2_sa, t2_step, t2_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue3' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t3_name, t3_value, t3_split, t3_sa, t3_step, t3_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue4' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t4_name, t4_value, t4_split, t4_sa, t4_step, t4_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue5' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t5_name, t5_value, t5_split, t5_sa, t5_step, t5_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue6' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t6_name, t6_value, t6_split, t6_sa, t6_step, t6_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue7' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t7_name, t7_value, t7_split, t7_sa, t7_step, t7_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue8' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t8_name, t8_value, t8_split, t8_sa, t8_step, t8_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue9' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t9_name, t9_value, t9_split, t9_sa, t9_step, t9_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
-                if 'tissue10' in locals():
-                    tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t10_name, t10_value, t10_split, t10_sa, t10_step, t10_volThresh, px_dimension, units)
-                    with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
-                        file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
-                        file.close()
+            #
+            if 'tissue1' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t1_name, t1_value, t1_split, t1_sa, t1_step, t1_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t1_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
+                    results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                       sep='\t', encoding='utf-8', mode='a', header=False)
+                else:
+                    results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                       sep='\t', encoding='utf-8')
+                # if os.path.isfile(filepath + sample_name + 'LEAFtraits.txt'):
+                #     with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #         file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #         file.close()
+                # else:
+                #      with open(filepath + sample_name + 'LEAFtraits.txt', 'w', encoding='utf-8') as file:
+                #         file.write(str(sample_name)+'\n'+str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #         file.close()
+            if 'tissue2' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t2_name, t2_value, t2_split, t2_sa, t2_step, t2_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t2_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue3' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t3_name, t3_value, t3_split, t3_sa, t3_step, t3_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t3_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue4' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t4_name, t4_value, t4_split, t4_sa, t4_step, t4_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t4_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue5' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t5_name, t5_value, t5_split, t5_sa, t5_step, t5_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t5_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue6' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t6_name, t6_value, t6_split, t6_sa, t6_step, t6_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t6_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue7' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t7_name, t7_value, t7_split, t7_sa, t7_step, t7_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t7_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue8' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t8_name, t8_value, t8_split, t8_sa, t8_step, t8_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t8_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue9' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t9_name, t9_value, t9_split, t9_sa, t9_step, t9_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t9_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
+            if 'tissue10' in locals():
+                tissue_name, tissue_color, tissue_cleaned_stack, computed_volume, computed_thickness, computed_SA = tissue_cleanup_and_analysis(raw_pred_stack, t10_name, t10_value, t10_split, t10_sa, t10_step, t10_volThresh, px_dimension, units)
+                results_out = data_frame_export(sample_name, tissue_name, t10_split, computed_volume, computed_thickness, computed_SA, leaf_area, leaf_thickness, to_resize, trim_slices, trim_column_L, trim_column_R)
+                results_out.to_csv(filepath + sample_name + 'LEAFtraits.txt',
+                                   sep='\t', encoding='utf-8', mode='a', header=False)
+                # with open(filepath + sample_name + 'LEAFtraits.txt', 'a', encoding='utf-8') as file:
+                #     file.write(str(tissue_name)+'\n'+'Computed volume = '+str(computed_volume)+'\n'+'Computed thickness = '+str(computed_thickness)+'\n'+'Computed Surface Area = '+str(computed_SA)+'\n')
+                #     file.close()
     #
 
             print('')
