@@ -283,18 +283,28 @@ print("  Unique pattern values :", str(unique_vals))  # to get all the unique va
 # Remove the large stack to free up memory
 del composite_stack_large
 
-print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX OF STOMATA***')
+print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***'
+print('***         OF STOMATA AND EPIDERMIS         ***')
 rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
+rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD = bbox2_3D(composite_stack, epidermis_ad_value)
+rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB = bbox2_3D(composite_stack, epidermis_ab_value)
+
+print("AD epidermis bbox:")
+print(rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD)
+print("AB epidermis bbox:")
+print(rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB)
+print("stomata bbox")
+print(rmin, rmax, cmin, cmax, zmin, zmax)
 
 print("  Small stack shape: ", str(composite_stack.shape))
-print("  Small stack nbytes: ", str(composite_stack.nbytes))
+print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
 print("   Bounding area:")
 print("     slices:", zmin, zmax)
 print("     y:", cmin, cmax)
 print("     x:", rmin, rmax)
-composite_stack = composite_stack[zmin:, cmin:cmax, rmin:rmax]
+composite_stack = composite_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
 print("  New shape: ", str(composite_stack.shape))
-print("  New nbytes: ", str(composite_stack.nbytes))
+print("  New nbytes: ", str(composite_stack.nbytes/1e9))
 
 # Create the binary stacks needed for the analysis
 print('')
@@ -405,6 +415,7 @@ else:
                          "SA_single_region_um2": SA_single_region,
                          "Pore_volume_single_region_um3": Pore_volume_single_region
                          }
+
     if 'single_stoma_data' in locals():
         print('***EXPORTING SINGLE STOMA DATA TO TXT FILE***')
         full_stoma_out = DataFrame(single_stoma_data)
