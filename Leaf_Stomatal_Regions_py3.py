@@ -183,6 +183,16 @@ def get_bad_neighbours(pos, img_stack, value1, value2, shape):
         bad_neigh[j] = (img_stack[tuple(neigh[j])] == value1) | (img_stack[tuple(neigh[j])] == value1)
     return np.any(bad_neigh)
 
+# Find the 3D bounding box
+def bbox2_3D(img, value):
+    # From https://stackoverflow.com/questions/31400769/bounding-box-of-numpy-array
+    z = np.any(img == value, axis=(1, 2))
+    c = np.any(img == value, axis=(0, 2))
+    r = np.any(img == value, axis=(0, 1))
+    zmin, zmax = np.where(z)[0][[0, -1]]
+    cmin, cmax = np.where(c)[0][[0, -1]]
+    rmin, rmax = np.where(r)[0][[0, -1]]
+    return rmin, rmax, cmin, cmax, zmin, zmax
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
@@ -273,6 +283,19 @@ print("  Unique pattern values :", str(unique_vals))  # to get all the unique va
 # Remove the large stack to free up memory
 del composite_stack_large
 
+print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX OF STOMATA***')
+rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
+
+print("  Small stack shape: ", str(composite_stack.shape))
+print("  Small stack nbytes: ", str(composite_stack.nbytes))
+print("   Bounding area:")
+print("     slices:", rmin, rmax)
+print("     columns:", cmin, cmax)
+print("     slices:", zmin, zmax)
+composite_stack = composite_stack[zmin:, cmin:cmax, rmin:rmax]
+print("  New shape: ", str(composite_stack.shape))
+print("  New nbytes: ", str(composite_stack.nbytes))
+
 # Create the binary stacks needed for the analysis
 print('')
 print('***CREATE BINARY STACKS***')
@@ -328,6 +351,7 @@ for regions in tqdm(np.arange(len(props_of_unique_stoma))):
         invert(unique_stoma == props_of_unique_stoma[regions].label)), mask, dtype="float32")
     stomata_regions[L_euc_stom == L_euc] = props_of_unique_stoma[regions].label
     del L_euc_stom
+    gc.collect()
 
 del L_euc
 gc.collect()
