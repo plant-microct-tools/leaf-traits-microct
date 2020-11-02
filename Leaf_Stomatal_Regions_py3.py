@@ -293,34 +293,6 @@ if np.sum(stomata_stack) == 0:
     print('ERROR: at least one stomata is disconnected from the airspace!')
     assert False
 
-# Detect edges of airspace
-# Better to work on largest airspace as this is what is needed further down.
-if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
-    print('***LOADING THE OUTLINE OF THE AIRSPACE***')
-    mesophyll_edge = img_as_bool(io.imread(filepath + sample_name + 'MESOPHYLL_EDGE.tif'))
-else:
-    # This piece of code is really innefficent. I could be improved to be Faster
-    # by not searching for all outline positions but only those near the epidermis.
-    print('***CREATING THE OUTLINE OF THE AIRSPACE***')
-    airspace_outline_smaller = Erosion3DimJ(largest_airspace)
-    airspace_edge = invert(Threshold(largest_airspace-airspace_outline_smaller, 0))
-    # io.imsave(filepath + '_airspace_edge.tif', img_as_ubyte(airspace_edge))
-    del airspace_outline_smaller
-
-    print('  Removing the airspace edge neighbour to the epidermis')
-    print('  (this will take several minutes)')
-    edge_neighbours = np.zeros(airspace_edge.shape, dtype='uint8')
-    mesophyll_edge = np.zeros(airspace_edge.shape, dtype='bool')
-    p = np.transpose(np.where(airspace_edge))
-    shape = airspace_edge.shape
-    bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
-                                                      (p[i, ], composite_stack, epidermis_ab_value,
-                                                       epidermis_ad_value, shape)
-                                                      for i in tqdm(np.arange(p.shape[0])))
-    for i in tqdm(np.arange(p.shape[0])):
-        mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
-    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
-
 # ## Get the Euclidian distance from all stomata
 if os.path.isfile(filepath + sample_name + '-L_Euc.tif'):
     print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
@@ -417,13 +389,40 @@ else:
     else:
         thefile = open(filepath + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
 
+    # Detect edges of airspace
+    # Better to work on largest airspace as this is what is needed further down.
+    if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
+        print('***LOADING THE OUTLINE OF THE AIRSPACE***')
+        mesophyll_edge = img_as_bool(io.imread(filepath + sample_name + 'MESOPHYLL_EDGE.tif'))
+    else:
+        # This piece of code is really innefficent. I could be improved to be Faster
+        # by not searching for all outline positions but only those near the epidermis.
+        print('***CREATING THE OUTLINE OF THE AIRSPACE***')
+        airspace_outline_smaller = Erosion3DimJ(largest_airspace)
+        airspace_edge = invert(Threshold(largest_airspace - airspace_outline_smaller, 0))
+        # io.imsave(filepath + '_airspace_edge.tif', img_as_ubyte(airspace_edge))
+        del airspace_outline_smaller
+
+        print('  Removing the airspace edge neighbour to the epidermis')
+        print('  (this will take several minutes)')
+        edge_neighbours = np.zeros(airspace_edge.shape, dtype='uint8')
+        mesophyll_edge = np.zeros(airspace_edge.shape, dtype='bool')
+        p = np.transpose(np.where(airspace_edge))
+        shape = airspace_edge.shape
+        bad_neighbours = joblib.Parallel(n_jobs=nb_cores)(joblib.delayed(get_bad_neighbours)
+                                                          (p[i,], composite_stack, epidermis_ab_value,
+                                                           epidermis_ad_value, shape)
+                                                          for i in tqdm(np.arange(p.shape[0])))
+        for i in tqdm(np.arange(p.shape[0])):
+            mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
+        io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
 
     # Select only the values at the edge of the airspace and within the full stomata
     # Will have to find a way to include a larger zone of stomata
     edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
 
-    print('***SAVING THE MESOPHYLL EDGE WITHIN STOMATAL REGIONS STACK***')
-    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_STOM_REGIONS.tif', img_as_ubyte(edge_and_full_stomata_mask))
+    print('***SAVING THE STOMATAL REGIONS STACK***')
+    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS.tif', img_as_ubyte(edge_and_full_stomata_mask))
 
 t1 = time.time() - t_start
 print('')
