@@ -1,5 +1,7 @@
 # Tools to process and analyze plant leaf microCT scans
 
+_This is a fork made for my own edits to the code intended for my own research. For the stable release please visit the main repository._
+
 X-ray micro-computed tomography (microCT) is rapidly becoming a popular technique for measuring the 3D geometry of plant organs, such as roots, stems, leaves, flowers, and fruits. Due to the large size of these datasets (> 20 Gb per 3D image), along with the often irregular and complex geometries of many plant organs, image segmentation represents a substantial bottleneck in the scientific pipeline. Here, we are developing a Python module that utilizes machine learning to dramatically improve the efficiency of microCT image segmentation with minimal user input. By segmentation we mean the identification of specific tissues within the leaves as single values within an image file.
 
 We also provide further tools to process segmented images, to extract leaf anatomical traits commonly measured, such as in [Théroux-Rancourt et al. (2017)](#references), or to compute airspace tortuosity and related airspace diffusion traits from [Earles et al. (2018)](#references).
