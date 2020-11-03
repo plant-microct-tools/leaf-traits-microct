@@ -211,10 +211,10 @@ filepath = base_folder_name + sample_name + '/'
 px_edge_rescaled = px_edge * rescale_factor
 
 # Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+if os.path.isfile(filepath + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
 # Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+if os.path.isfile(filepath + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
     print('This file has already been processed!')
     assert False
 
@@ -269,42 +269,49 @@ if stomata_value not in unique_vals:
     print('************************************************')
     raise ValueError(sample_name + ': STOMATA HAVE NOT BEEN LABELLED!')
 
-# If stomata are label, carry on with resizing the image stack
-if rescale_factor == 1:
-    composite_stack = np.copy(composite_stack_large)
+if os.path.isfile(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
+    print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
+    composite_stack = io.imread(filepath + sample_name + '-SEGMENTED_w_STOMATA_BBOX.tif')
 else:
-    composite_stack = np.asarray(StackResize(
-        composite_stack_large, rescale_factor), dtype='uint8')
+    # If stomata are label, carry on with resizing the image stack
+    if rescale_factor == 1:
+        composite_stack = np.copy(composite_stack_large)
+    else:
+        composite_stack = np.asarray(StackResize(
+            composite_stack_large, rescale_factor), dtype='uint8')
 
-print("  Large stack shape: ", str(composite_stack_large.shape))
-print("  Small stack shape: ", str(composite_stack.shape))
-print("  Unique pattern values :", str(unique_vals))  # to get all the unique values
+    print("  Large stack shape: ", str(composite_stack_large.shape))
+    print("  Small stack shape: ", str(composite_stack.shape))
+    print("  Unique pattern values :", str(unique_vals))  # to get all the unique values
 
-# Remove the large stack to free up memory
-del composite_stack_large
+    # Remove the large stack to free up memory
+    del composite_stack_large
 
-print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***'
-print('***         OF STOMATA AND EPIDERMIS         ***')
-rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
-rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD = bbox2_3D(composite_stack, epidermis_ad_value)
-rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB = bbox2_3D(composite_stack, epidermis_ab_value)
+    print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***')
+    print('***         OF STOMATA AND EPIDERMIS         ***')
+    rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
+    rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD = bbox2_3D(composite_stack, epidermis_ad_value)
+    rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB = bbox2_3D(composite_stack, epidermis_ab_value)
 
-print("AD epidermis bbox:")
-print(rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD)
-print("AB epidermis bbox:")
-print(rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB)
-print("stomata bbox")
-print(rmin, rmax, cmin, cmax, zmin, zmax)
+    print("AD epidermis bbox:")
+    print(rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD)
+    print("AB epidermis bbox:")
+    print(rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB)
+    print("stomata bbox")
+    print(rmin, rmax, cmin, cmax, zmin, zmax)
 
-print("  Small stack shape: ", str(composite_stack.shape))
-print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
-print("   Bounding area:")
-print("     slices:", zmin, zmax)
-print("     y:", cmin, cmax)
-print("     x:", rmin, rmax)
-composite_stack = composite_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
-print("  New shape: ", str(composite_stack.shape))
-print("  New nbytes: ", str(composite_stack.nbytes/1e9))
+    print("  Small stack shape: ", str(composite_stack.shape))
+    print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
+    print("   Bounding area:")
+    print("     slices:", zmin, zmax)
+    print("     y:", cminAD, cmaxAB)
+    print("     x:", rmin, rmax)
+    composite_stack = composite_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
+    print("  New shape: ", str(composite_stack.shape))
+    print("  New nbytes: ", str(composite_stack.nbytes/1e9))
+
+    print("***SAVING BOUNDING BOX CROPPED SEGMENTED STACK TO HARD DRIVE***")
+    io.imsave(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif', composite_stack)
 
 # Create the binary stacks needed for the analysis
 print('')
@@ -327,9 +334,9 @@ if np.sum(stomata_stack) == 0:
     assert False
 
 # ## Get the Euclidian distance from all stomata
-if os.path.isfile(filepath + sample_name + '-L_Euc.tif'):
+if os.path.isfile(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
-    L_euc = io.imread(filepath + sample_name + '-L_Euc.tif')
+    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
 else:
     print('***COMPUTING EUCLIDIAN DISTANCE MAP***')
     t0 = time.time()
@@ -337,7 +344,7 @@ else:
     t1 = time.time() - t0
     print('  L_euc processing time: '+str(np.round(t1))+' s')
     print('***SAVING EUCLIDIAN DISTANCE MAP TO HARD DRIVE***')
-    io.imsave(filepath + sample_name + '-L_Euc.tif', L_euc)
+    io.imsave(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif', L_euc)
 
 
 print('***FINDING THE UNIQUE STOMATA REGIONS***')
@@ -386,7 +393,7 @@ for i in np.arange(len(regions_full_in_center)):
 # DisplayRndSlices(full_stomata_regions_mask, 4)
 
 print('***SAVING THE UNIQUE STOMATAL REGIONS STACK***')
-io.imsave(filepath + sample_name + '-STOMATAL_REGIONS.tif',
+io.imsave(filepath + sample_name + 'STOMATAL_REGIONS_BBOX_CROPPPED.tif',
           img_as_ubyte(stomata_regions*int(np.floor(255/max(regions_all)))))
 
 print('  Number of pixels in full stomatal regions: ' + \
@@ -419,16 +426,15 @@ else:
     if 'single_stoma_data' in locals():
         print('***EXPORTING SINGLE STOMA DATA TO TXT FILE***')
         full_stoma_out = DataFrame(single_stoma_data)
-        full_stoma_out.to_csv(base_folder_name + sample_name + '/'
-                              + sample_name + 'SINGLE-STOMA-RESULTS', sep='\t', encoding='utf-8')
+        full_stoma_out.to_csv(filepath + sample_name + 'SINGLE-STOMA-RESULTS.txt', sep='\t', encoding='utf-8')
     else:
         thefile = open(filepath + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
 
     # Detect edges of airspace
     # Better to work on largest airspace as this is what is needed further down.
-    if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE.tif'):
+    if os.path.isfile(filepath + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif'):
         print('***LOADING THE OUTLINE OF THE AIRSPACE***')
-        mesophyll_edge = img_as_bool(io.imread(filepath + sample_name + 'MESOPHYLL_EDGE.tif'))
+        mesophyll_edge = img_as_bool(io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif'))
     else:
         # This piece of code is really innefficent. I could be improved to be Faster
         # by not searching for all outline positions but only those near the epidermis.
@@ -450,14 +456,15 @@ else:
                                                           for i in tqdm(np.arange(p.shape[0])))
         for i in tqdm(np.arange(p.shape[0])):
             mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
-        io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
+        io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif', img_as_ubyte(mesophyll_edge))
 
     # Select only the values at the edge of the airspace and within the full stomata
     # Will have to find a way to include a larger zone of stomata
     edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
 
     print('***SAVING THE STOMATAL REGIONS STACK***')
-    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS.tif', img_as_ubyte(edge_and_full_stomata_mask))
+    io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif',
+              img_as_ubyte(edge_and_full_stomata_mask))
 
 t1 = time.time() - t_start
 print('')
