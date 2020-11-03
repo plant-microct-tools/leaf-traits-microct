@@ -306,7 +306,7 @@ else:
     print("     slices:", zmin, zmax)
     print("     y:", cminAD, cmaxAB)
     print("     x:", rmin, rmax)
-    composite_stack = composite_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
+    composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
     print("  New shape: ", str(composite_stack.shape))
     print("  New nbytes: ", str(composite_stack.nbytes/1e9))
 
