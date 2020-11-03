@@ -271,7 +271,7 @@ if stomata_value not in unique_vals:
 
 if os.path.isfile(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
-    composite_stack = io.imread(filepath + sample_name + '-SEGMENTED_w_STOMATA_BBOX.tif')
+    composite_stack = io.imread(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
 else:
     # If stomata are label, carry on with resizing the image stack
     if rescale_factor == 1:
