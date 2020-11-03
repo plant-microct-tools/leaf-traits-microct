@@ -304,7 +304,7 @@ else:
     print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
     print("   Bounding area:")
     print("     slices:", zmin, zmax)
-    print("     y:", cminAD, cmaxAB)
+    print("     y:", cminAD, cmax)
     print("     x:", rmin, rmax)
     composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
     print("  New shape: ", str(composite_stack.shape))
