@@ -213,14 +213,10 @@ px_edge_rescaled = px_edge * rescale_factor
 # Check if file has already been processed
 if os.path.isfile(filepath + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
-# Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
-    print('This file has already been processed!')
-    assert False
 
 # Read composite stack including slabelling of stomata
 print('************************************************')
-print('***STARTING STOMTAL REGIONS COMPUTATION FOR***')
+print('***STARTING STOMATAL REGIONS COMPUTATION FOR***')
 print('            ' + sample_name)
 print('')
 
