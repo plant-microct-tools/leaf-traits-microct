@@ -232,8 +232,8 @@ else:
     # CURRENTLY WORKS ON NOT RESCALED STACKS (i.e. rescale=1)
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
     composite_stack = io.imread(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
-    print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
-    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
+    # print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
+    # L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***LOADING PRECOMPUTED FULL STOMATAL REGIONS MESOPHYLL EDGE***')
     edge_and_full_stomata_mask = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif')
 
@@ -311,6 +311,8 @@ else:
         L_geo = np.float32(L_geo)
         print('***SAVING GEODESIC DISTANCE MAP TO HARD DRIVE***')
         io.imsave(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif', L_geo)
+    print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
+    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***COMPUTING TORTUOSITY FACTOR, TAU***')
     Tortuosity_Factor = np.square(L_geo / L_euc)
     Tortuosity_Factor[Tortuosity_Factor < 1] = 1
@@ -327,6 +329,7 @@ else:
 
     # Remove L_geo to free up memory
     del L_geo
+    del L_euc
     del Tortuosity_factor_average_ax0
     del Tortuosity_factor_average_ax2
     gc.collect()
@@ -398,6 +401,8 @@ else:
 
     # Compute path lenthening.
     # Uncomment the end to remove data close to the epidermis where lateral diffusivity values
+    print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
+    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***COMPUTING PATH LENGTHENING MAP***')
     Path_lenghtening = (L_euc / L_epi)  # * (L_epi>10)
     Path_lenghtening_average_ax0 = np.mean(Path_lenghtening, axis=0)
