@@ -348,8 +348,8 @@ print(np.nanmedian(Tortuosity_values_for_stats))
 print(np.nanmean(Tortuosity_values_for_stats))
 print(np.nanstd(Tortuosity_values_for_stats))
 print(np.nanvar(Tortuosity_values_for_stats))
-print(np.nanmin(Tortuosity_values_for_stats))
-print(np.nanmax(Tortuosity_values_for_stats))
+# print(np.nanmin(Tortuosity_values_for_stats))
+# print(np.nanmax(Tortuosity_values_for_stats))
 print('')
 
 Tortuosity_at_airspace_edge_median = np.nanmedian(np.where(Tortuosity_at_airspace_edge != 0,
@@ -432,8 +432,8 @@ print(np.nanmean(Path_lenghtening_values_for_stats))
 print(np.nanstd(Path_lenghtening_values_for_stats))
 print(np.nanvar(Path_lenghtening_values_for_stats))
 print(np.shape(Path_lenghtening_values_for_stats))
-print(np.nanmin(Path_lenghtening_values_for_stats))
-print(np.nanmax(Path_lenghtening_values_for_stats))
+# print(np.nanmin(Path_lenghtening_values_for_stats))
+# print(np.nanmax(Path_lenghtening_values_for_stats))
 print('')
 
 Path_lenght_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,
