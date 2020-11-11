@@ -444,6 +444,9 @@ del Path_lenghtening
 gc.collect()
 
 # COMPUTE SUMMARY VALUES FOR EXPOSED SURFACE AND POROSITY
+print('***COMPUTING SUMMARY VALUES FOR EXPOSED SURFACE AND POROSITY***')
+mesophyll_edge = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif')
+
 surface_cumsum = np.cumsum(np.sum(mesophyll_edge, axis=(0, 2)))
 surface_rel = surface_cumsum/np.float(surface_cumsum.max())
 surface_rel_ = surface_rel[surface_rel > 0]
@@ -458,7 +461,7 @@ pos_at_50_porosity = (porosity_rel_ >= 0.5).argmax()
 porosity_sum = np.sum(airspace_stack, axis=(0, 2))
 porosity_rel = porosity_sum/np.float(porosity_sum.max())
 
-print('***SAVING DATA***')
+print('***SAVING RESULT FILES***')
 # Write the data into a data frame
 data_out = {'Tortuosity_MEAN': np.nanmean(Tortuosity_values_for_stats),
             'Tortuosity_MEDIAN': np.nanmedian(Tortuosity_values_for_stats),
