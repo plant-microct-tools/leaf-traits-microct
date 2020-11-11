@@ -292,7 +292,7 @@ if np.sum(stomata_stack) == 0:
     print('ERROR: at least one stomata is disconnected from the airspace!')
     assert False
 
-if os.path.isfile(filepath + sample_name + 'Python_tortuosity.tif'):
+if os.path.isfile(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED TORTUOSITY FACTOR***')
     Tortuosity_Factor = io.imread(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif')
 else:
