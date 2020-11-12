@@ -200,9 +200,9 @@ def bbox2_3D(img, value):
     return rmin, rmax, cmin, cmax, zmin, zmax
 
 # TESTING
-path_to_sample = 'S12_Leaf2_1_/S12_Leaf2_1_SEGMENTED_w_STOMATA_BBOX.tif'
-base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/2019/_TORT_TO_DO/'
-rescale_factor = 1
+# path_to_sample = 'S12_Leaf2_1_/S12_Leaf2_1_SEGMENTED_w_STOMATA_BBOX.tif'
+# base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/2019/_TORT_TO_DO/'
+# rescale_factor = 1
 
 # Set directory of functions in order to import MLmicroCTfunctions
 path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
