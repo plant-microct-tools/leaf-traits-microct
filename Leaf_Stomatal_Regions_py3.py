@@ -202,16 +202,18 @@ sample_path_split = path_to_sample.split('/')
 if len(sample_path_split) == 1:
     sample_name = path_to_sample
     filename = sample_name + 'SEGMENTED.tif'
+    filepath = base_folder_name + sample_name + '/'
 elif len(sample_path_split) == 2:
     sample_name = sample_path_split[-2]
     filename = sample_path_split[-1]
+    filepath = base_folder_name + sample_name + '/'
 elif len(sample_path_split) == 3:
     sample_name = sample_path_split[-3]
     base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
+    filepath = base_folder_name
     filename = sample_path_split[-1]
 
 print('Base folder path: ', base_folder_name)
-filepath = base_folder_name + sample_name + '/'
 print('Filepath: ', filepath)
 
 px_edge_rescaled = px_edge * rescale_factor
