@@ -315,6 +315,9 @@ stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
 stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
 
+# Cropping the composite stack to the largest arispace bounding box
+composite_stack = composite_stack[zmin:zmax, cmin:cmax, rmin:rmax]
+
 # Check if stomata stack does include values
 # Will throw an error if at least one stomata is disconnected from the airspace
 if np.sum(stomata_stack) == 0:
