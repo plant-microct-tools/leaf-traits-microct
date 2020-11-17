@@ -295,8 +295,24 @@ stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
 print('***FINDING THE LARGEST AIRSPACE***')
 largest_airspace = getLargestAirspace(airspace_stack)
 largest_airspace_w_stomata = getLargestAirspace(stomata_airspace_stack)
+
+print('***CROPPING THE LARGEST AIRSPACE STACK***')
+rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(largest_airspace_w_stomata, True)
+print("  Largest airspace stack shape: ", str(largest_airspace.shape))
+print("  Largest airspace stack nbytes: ", str(largest_airspace.nbytes/1e9))
+print("  Bounding area:")
+print("     slices:", zmin, zmax)
+print("          y:", cmin, cmax)
+print("          x:", rmin, rmax)
+largest_airspace = largest_airspace[zmin:zmax, cmin:cmax, rmin:rmax]
+largest_airspace_w_stomata = largest_airspace_w_stomata[zmin:zmax, cmin:cmax, rmin:rmax]
+print("  New shape: ", str(largest_airspace.shape))
+print("  New nbytes: ", str(largest_airspace.nbytes/1e9))
+
+
 mask = ~largest_airspace.astype(bool)
 stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
+stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
 
 # Check if stomata stack does include values
