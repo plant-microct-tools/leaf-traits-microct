@@ -89,7 +89,15 @@ seg_values = sys.argv[4]
 nb_cores = multiprocessing.cpu_count() if len(sys.argv) == 6 else int(sys.argv[5])
 base_path = str(sys.argv[5]) if len(sys.argv) == 6 else str(sys.argv[6])
 
+# TESTING
+# path_to_sample = 'S9_L1_2_/S9_L1_2_SEGMENTED_w_STOMATA.tif'
+# rescale_factor = 1
+# px_edge = 0.325
+# seg_values = 'default'
+# nb_cores = 8
+# base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/2019/_TORT_TO_DO/'
 
+ 
 # Function to resize in all 3 dimensions
 # Loops over each slice: Faster and more memory efficient
 # than working on the whole array at once.
@@ -308,8 +316,8 @@ else:
     print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
     print("   Bounding area:")
     print("     slices:", zmin, zmax)
-    print("     y:", cminAD, cmax)
-    print("     x:", rmin, rmax)
+    print("          y:", cminAD, cmax)
+    print("          x:", rmin, rmax)
     composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
     print("  New shape: ", str(composite_stack.shape))
     print("  New nbytes: ", str(composite_stack.nbytes/1e9))
@@ -327,9 +335,31 @@ stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
 print('***FINDING THE LARGEST AIRSPACE***')
 largest_airspace = getLargestAirspace(airspace_stack)
 largest_airspace_w_stomata = getLargestAirspace(stomata_airspace_stack)
+
+# Removing not longer used array
+del stomata_airspace_stack
+
+print('***CROPPING THE LARGEST AIRSPACE STACK***')
+rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(largest_airspace_w_stomata, True)
+
+print("  Largest airspace stack shape: ", str(largest_airspace.shape))
+print("  Largest airspace stack nbytes: ", str(largest_airspace.nbytes/1e9))
+print("  Bounding area:")
+print("     slices:", zmin, zmax)
+print("          y:", cmin, cmax)
+print("          x:", rmin, rmax)
+largest_airspace = largest_airspace[zmin:zmax, cmin:cmax, rmin:rmax]
+largest_airspace_w_stomata = largest_airspace_w_stomata[zmin:zmax, cmin:cmax, rmin:rmax]
+print("  New shape: ", str(largest_airspace.shape))
+print("  New nbytes: ", str(largest_airspace.nbytes/1e9))
+
 mask = ~largest_airspace.astype(bool)
 stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
+stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
+
+# Cropping the composite stack to the largest arispace bounding box
+composite_stack = composite_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 
 # Check if stomata stack does include values
 # Will throw an error if at least one stomata is disconnected from the airspace
@@ -474,239 +504,3 @@ t1 = time.time() - t_start
 print('')
 print('Total processing time: '+str(np.round(t1)/60)+' min')
 print(sample_name + 'done!  (' + path_to_sample + ')')
-
-
-# TESTING
-# L_euc_average_ax0 = np.mean(L_euc, axis=0)
-# L_euc_average_ax2 = np.mean(L_euc, axis=2)
-
-# ## Get the geodesic distance map
-#
-# In the cell below, a purified/largest airspace stack needs to be used as an
-# input as airspace unconnected to a stomata make the program run into an error
-# (`ValueError: the array phi contains no zero contour (no zero level set)`).
-#
-# I initially ran into a error when trying to get a masked array to compute the
-# distance map. The error I think was that stomata where often outside of the
-# mask I was trying to impose, so an empty mask was produced. I solved that by
-# creating an array with the stomata and the airspace together, and then
-# creating the masked array of stomata position within the airspace+stomata stack.
-#
-# __Note:__ The airspace should be assigned a value of 1, and the stomata a
-# value of 0. Cells and background should be white or have no value assigned.
-
-# stomata_airspace_mask = ~largest_airspace_w_stomata.astype(bool)
-#
-# largest_airspace_masked_array = np.ma.masked_array(
-#     stom_mask, stomata_airspace_mask)
-#
-# if os.path.isfile(filepath + sample_name + '-Python_tortuosity.tif'):
-#     print('***LOADING PRECOMPUTED TORTUOSITY FACTOR***')
-#     Tortuosity_Factor = io.imread(filepath + sample_name + '-Python_tortuosity.tif')
-# else:
-#     if os.path.isfile(filepath + sample_name + '-L_geo.tif'):
-#         print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
-#         L_geo = io.imread(filepath + sample_name + '-L_geo.tif')
-#     else:
-#         print('***COMPUTING GEODESIC DISTANCE MAP***')
-#         t0 = time.time()
-#         L_geo = skfmm.distance(largest_airspace_masked_array)
-#         t1 = time.time() - t0
-#         print('  L_geo processing time: '+str(np.round(t1))+' s')
-#         L_geo = np.float32(L_geo)
-#         print('***SAVING GEODESIC DISTANCE MAP TO HARD DRIVE***')
-#         io.imsave(filepath + sample_name + '-L_geo.tif', L_geo)
-#     print('***COMPUTING TORTUOSITY FACTOR, TAU***')
-#     Tortuosity_Factor = np.square(L_geo / L_euc)
-#     Tortuosity_Factor[Tortuosity_Factor < 1] = 1
-#     Tortuosity_factor_average_ax0 = np.mean(Tortuosity_Factor, axis=0)
-#     Tortuosity_factor_average_ax2 = np.mean(Tortuosity_Factor, axis=2)
-#
-#     print('***SAVING TORTUOSITY MAP TO HARD DRIVE***')
-#     io.imsave(filepath + sample_name + '-Python_tortuosity.tif',
-#               np.asarray(Tortuosity_Factor, dtype="float32"))
-#     io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax0.tif',
-#               np.asarray(Tortuosity_factor_average_ax0, dtype="float32"))
-#     io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax2.tif',
-#               np.asarray(Tortuosity_factor_average_ax2, dtype="float32"))
-#
-#     # Remove L_geo to free up memory
-#     del L_geo
-#     del Tortuosity_factor_average_ax0
-#     del Tortuosity_factor_average_ax2
-#     gc.collect()
-#
-# # ## Compute lateral diffusivity
-# print('***MAP THE ABAXIAL EPIDERMIS***')
-# # To get the _abaxial_ epidermis layer as a single line
-# if epidermis_ab_value != epidermis_ad_value:
-#     epidermis_ab_stack = np.asarray(
-#                                 Threshold(composite_stack, epidermis_ab_value),
-#                                 np.bool)
-#     epidermis_ab_stack_shifted_down = np.roll(epidermis_ab_stack, 3, axis=1)
-#     epidermis_edge_bottom = Threshold(
-#                invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down, 0)
-#     epidermis_edge_bottom = epidermis_ab_stack
-# else:
-#     mesophyll_stack = np.asarray(
-#         Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), np.bool)
-#     mesophyll_stack_shifted_up = np.roll(mesophyll_stack, -3, axis=1)
-# #    mesophyll_stack_shifted_down = np.roll(mesophyll_stack, 3, axis=1)
-#     epidermis_edge_bottom = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_up, 0)
-# #    epidermis_edge_top = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_down , 0)
-# #    amphistomatous_epidermis = Threshold(epidermis_edge_bottom + epidermis_edge_top, 1)
-#
-# epidermis_edge_purified = getLargestAirspace(epidermis_edge_bottom)
-#
-# if os.path.isfile(filepath + sample_name + '-Python_Path_lenghtening.tif'):
-#     print('***LOADING PRECOMPUTED PATH LENGTHENING MAP***')
-#     Path_lenghtening = io.imread(filepath + sample_name + '-Python_Path_lenghtening.tif')
-# else:
-#     # Compute L_epi
-#     if os.path.isfile(filepath + sample_name + 'L_epi.tif'):
-#         print('***LOADING PRECOMPUTED EPIDERMIS DISTANCE MAP***')
-#         L_epi = io.imread(filepath + sample_name + 'L_epi.tif')
-#     else:
-#         print('***COMPUTING L_EPI MAP***')
-#         epidermis_mask = invert(epidermis_edge_purified)
-#         t0 = time.time()
-#         L_epi = np.ma.masked_array(distance_transform_edt(epidermis_mask), mask, dtype="float32")
-#         t1 = time.time() - t0
-#         print('  L_epi processing time: '+str(np.round(t1, 1))+' s')
-#         print('***SAVING EPIDERMIS DISTANCE MAP TO HARD DRIVE***')
-#         io.imsave(filepath + sample_name + 'L_epi.tif', L_epi)
-#
-#     # Compute path lenthening.
-#     # Uncomment the end to remove data close to the epidermis where lateral diffusivity values
-#     print('***COMPUTING PATH LENGTH MAP***')
-#     Path_lenghtening = (L_euc / L_epi)  # * (L_epi>10)
-#
-#     # Remove L_euc and L_epi
-#     del L_epi
-#     gc.collect()
-#
-#     print('  Saving path length maps as TIFF files')
-#     io.imsave(filepath + sample_name + '-Python_Path_lenghtening.tif',
-#               np.asarray(Path_lenghtening, dtype="float32"))
-#     io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax0.tif',
-#               np.asarray(Path_lenghtening_average_ax0, dtype="float32"))
-#     io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax2.tif',
-#               np.asarray(Path_lenghtening_average_ax2, dtype="float32"))
-#
-#
-# #########################################
-# ##########################################
-# ## THIS CODE BELOW COULD BE MOVED ABOVE TO COMPUTE IT BEFORE EVERYTHING ELSE
-# ## MIGHT SAVE SOME RAM
-#
-# # np.where applies a condition to find True value, select those in an array
-# # (here values above or equal to 1, as tortuosity cannot be less than 1),
-# # and fills the False values with a specified value (here 0).
-# Tortuosity_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
-#                                        np.where(Tortuosity_Factor >= 1,
-#                                                 Tortuosity_Factor, 0), 0)
-# Tortuosity_values_for_stats = Tortuosity_at_airspace_edge[Tortuosity_at_airspace_edge >= 1]
-#
-# print("***TORTUOSITY VALUES AT THE AIRSPACE EDGE***")
-# print(np.nanmedian(Tortuosity_values_for_stats))
-# print(np.nanmean(Tortuosity_values_for_stats))
-# print(np.nanstd(Tortuosity_values_for_stats))
-# print(np.nanvar(Tortuosity_values_for_stats))
-# print(np.nanmin(Tortuosity_values_for_stats))
-# print(np.nanmax(Tortuosity_values_for_stats))
-# print('')
-#
-# Path_lenghtening_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
-#                                              np.where(Path_lenghtening >= 1,
-#                                                       Path_lenghtening, 0), 0)
-# Path_lenghtening_values_for_stats = Path_lenghtening_at_airspace_edge[Path_lenghtening_at_airspace_edge >= 1]
-#
-# print('***PATH LENGTH VALUES AT AIRSPACE EDGE***')
-# print('  median: ' + str(np.nanmedian(Path_lenghtening_values_for_stats)))
-# print(np.nanmean(Path_lenghtening_values_for_stats))
-# print(np.nanstd(Path_lenghtening_values_for_stats))
-# print(np.nanvar(Path_lenghtening_values_for_stats))
-# print(np.shape(Path_lenghtening_values_for_stats))
-# print(np.nanmin(Path_lenghtening_values_for_stats))
-# print(np.nanmax(Path_lenghtening_values_for_stats))
-# print('')
-#
-# print('***COMPUTING SUMMARY VALUES***')
-# Path_lenght_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,
-#                                                             Path_lenghtening_at_airspace_edge, np.nan), axis=0)
-#
-# Tortuosity_at_airspace_edge_median = np.nanmedian(np.where(Tortuosity_at_airspace_edge != 0,
-#                                                            Tortuosity_at_airspace_edge, np.nan), axis=0)
-#
-#
-# Path_length_profile = np.nanmedian(Path_lenght_at_airspace_edge_median, axis=1)
-#
-# Tortuosity_profile = np.nanmedian(Tortuosity_at_airspace_edge_median, axis=1)
-#
-#
-# surface_cumsum = np.cumsum(np.sum(mesophyll_edge, axis=(0, 2)))
-# surface_rel = surface_cumsum/np.float(surface_cumsum.max())
-# surface_rel_ = surface_rel[surface_rel > 0]
-# pos_at_50_surface = (surface_rel_ >= 0.5).argmax()
-# surface_sum = np.sum(mesophyll_edge, axis=(0, 2))
-# surface_rel = surface_sum/np.float(surface_sum.max())
-#
-#
-# porosity_cumsum = np.cumsum(np.sum(airspace_stack, axis=(0, 2)))
-# porosity_rel = porosity_cumsum/np.float(porosity_cumsum.max())
-# porosity_rel_ = porosity_rel[surface_rel > 0]
-# pos_at_50_porosity = (porosity_rel_ >= 0.5).argmax()
-# porosity_sum = np.sum(airspace_stack, axis=(0, 2))
-# porosity_rel = porosity_sum/np.float(porosity_sum.max())
-#
-# print('***SAVING DATA***')
-# # Write the data into a data frame
-# data_out = {'Tortuosity_MEAN': np.nanmean(Tortuosity_values_for_stats),
-#             'Tortuosity_MEDIAN': np.nanmedian(Tortuosity_values_for_stats),
-#             'Tortuosity_SD': np.std(Tortuosity_values_for_stats),
-#             'Tortuosity_VAR': np.var(Tortuosity_values_for_stats),
-#             'Tortuosity_SKEW': stats.skew(Tortuosity_values_for_stats),
-#             'Tortuosity_50percent_surface': Tortuosity_profile[pos_at_50_surface],
-#
-#             'Path_lenghtening_MEAN': np.nanmean(Path_lenghtening_values_for_stats),
-#             'Path_lenghtening_MEDIAN': np.nanmedian(Path_lenghtening_values_for_stats),
-#             'Path_lenghtening_SD': np.std(Path_lenghtening_values_for_stats),
-#             'Path_lenghtening_VAR': np.var(Path_lenghtening_values_for_stats),
-#             'Path_lenghtening_SKEW': stats.skew(Path_lenghtening_values_for_stats),
-#             'Path_lenghtening_50percent_surface': Path_length_profile[pos_at_50_surface]}
-#
-# results_out = DataFrame(data_out, index={sample_name})
-# # Save the data to a CSV
-# results_out.to_csv(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt',
-#                    sep='\t', encoding='utf-8')
-#
-# if 'single_stoma_data' in locals():
-#     full_stoma_out = DataFrame(single_stoma_data)
-#     full_stoma_out.to_csv(base_folder_name + sample_name + '/'
-#                           + sample_name + 'SINGLE-STOMA-RESULTS', sep='\t', encoding='utf-8')
-# else:
-#     thefile = open(filepath + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
-#
-#
-# # To save a txt file will all the data points
-# thefile = open(filepath + sample_name + '_Path_lenghtening_profile.txt', 'w')
-# for item in Path_length_profile:
-#     thefile.write("%s\n" % item)
-#
-# thefile = open(filepath + sample_name + '_Tortuosity_profile.txt', 'w')
-# for item in Tortuosity_profile:
-#     thefile.write("%s\n" % item)
-#
-# thefile = open(filepath + sample_name + '_SurfaceArea_profile.txt', 'w')
-# for item in surface_rel:
-#     thefile.write("%s\n" % item)
-#
-# thefile = open(filepath + sample_name + '_Porosity_profile.txt', 'w')
-# for item in porosity_rel:
-#     thefile.write("%s\n" % item)
-#
-#
-# t1 = time.time() - t_start
-# print('')
-# print('Total processing time: '+str(np.round(t1)/60)+' min')
-# print(sample_name + 'done!  (' + path_to_sample + ')')
