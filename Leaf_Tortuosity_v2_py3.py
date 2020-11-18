@@ -306,9 +306,9 @@ print("          y:", cmin, cmax)
 print("          x:", rmin, rmax)
 largest_airspace = largest_airspace[zmin:zmax, cmin:cmax, rmin:rmax]
 largest_airspace_w_stomata = largest_airspace_w_stomata[zmin:zmax, cmin:cmax, rmin:rmax]
+airspace_stack = airspace_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 print("  New shape: ", str(largest_airspace.shape))
 print("  New nbytes: ", str(largest_airspace.nbytes/1e9))
-
 
 mask = ~largest_airspace.astype(bool)
 stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
