@@ -224,14 +224,14 @@ print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
 
 # Create folder to store results
-if not os.path.exists(filepath + sample_name + 'STOMATA_and_TORTUOSITY/'):
-    os.makedirs(filepath + sample_name + 'STOMATA_and_TORTUOSITY/')
+if not os.path.exists(filepath + 'STOMATA_and_TORTUOSITY/'):
+    os.makedirs(filepath + 'STOMATA_and_TORTUOSITY/')
 
 # Define pixel dimension to rescale factor
 px_edge_rescaled = px_edge * rescale_factor
 
 # Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'STOMATA_and_TORTUOSITY/SINGLE-STOMA-RESULTS.txt'):
+if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
 
 # Read composite stack including slabelling of stomata
@@ -285,9 +285,9 @@ if stomata_value not in unique_vals:
     print('************************************************')
     raise ValueError(sample_name + ': STOMATA HAVE NOT BEEN LABELLED!')
 
-if os.path.isfile(filepath + sample_name + 'STOMATA_and_TORTUOSITY/SEGMENTED_w_STOMATA_BBOX.tif'):
+if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
-    composite_stack = io.imread(filepath + sample_name + 'STOMATA_and_TORTUOSITY/SEGMENTED_w_STOMATA_BBOX.tif')
+    composite_stack = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
 else:
     # If stomata are label, carry on with resizing the image stack
     if rescale_factor == 1:
@@ -327,7 +327,7 @@ else:
     print("  New nbytes: ", str(composite_stack.nbytes/1e9))
 
     print("***SAVING BOUNDING BOX CROPPED SEGMENTED STACK TO HARD DRIVE***")
-    io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/SEGMENTED_w_STOMATA_BBOX.tif', composite_stack)
+    io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif', composite_stack)
 
 # Create the binary stacks needed for the analysis
 print('')
@@ -373,7 +373,7 @@ if np.sum(stomata_stack) == 0:
 
 if os.path.isfile(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
-    L_geo = io.imread(filepath + sample_name + 'STOMATA_and_TORTUOSITY/L_geo_BBOX_CROPPED.tif')
+    L_geo = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_geo_BBOX_CROPPED.tif')
     stomata_airspace_mask = ~largest_airspace_w_stomata.astype(bool)
     largest_airspace_masked_array = np.ma.masked_array(
         stom_mask, stomata_airspace_mask)
@@ -391,7 +391,7 @@ else:
     L_geo = np.float32(L_geo)
     max_L_geo = np.max(L_geo)
     print('***SAVING GEODESIC DISTANCE MAP TO HARD DRIVE***')
-    io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/L_geo_BBOX_CROPPED.tif', L_geo)
+    io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_geo_BBOX_CROPPED.tif', L_geo)
 
 # Create a rounded array of L_geo to find matches for each stoma
 L_geo_round = np.float32(np.round(L_geo, 0))
@@ -449,7 +449,7 @@ for i in np.arange(len(regions_full_in_center)):
 # DisplayRndSlices(full_stomata_regions_mask, 4)
 
 print('***SAVING THE UNIQUE STOMATAL REGIONS STACK***')
-io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/STOMATAL_REGIONS_BBOX_CROPPPED.tif',
+io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATAL_REGIONS_BBOX_CROPPPED.tif',
           img_as_ubyte(stomata_regions*int(np.floor(255/max(regions_all)))))
 
 print('  Number of pixels in full stomatal regions: ' + \
@@ -482,15 +482,15 @@ else:
     if 'single_stoma_data' in locals():
         print('***EXPORTING SINGLE STOMA DATA TO TXT FILE***')
         full_stoma_out = DataFrame(single_stoma_data)
-        full_stoma_out.to_csv(filepath + sample_name + 'STOMATA_and_TORTUOSITY/SINGLE-STOMA-RESULTS.txt', sep='\t', encoding='utf-8')
+        full_stoma_out.to_csv(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SINGLE-STOMA-RESULTS.txt', sep='\t', encoding='utf-8')
     else:
-        thefile = open(filepath + sample_name + 'STOMATA_and_TORTUOSITY/NO_SINGLE_STOMA_REGIONS.txt', 't')
+        thefile = open(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
 
     # Detect edges of airspace
     # Better to work on largest airspace as this is what is needed further down.
-    if os.path.isfile(filepath + sample_name + 'STOMATA_and_TORTUOSITY/MESOPHYLL_EDGE_BBOX_CROPPPED.tif'):
+    if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif'):
         print('***LOADING THE OUTLINE OF THE AIRSPACE***')
-        mesophyll_edge = img_as_bool(io.imread(filepath + sample_name + 'STOMATA_and_TORTUOSITY/MESOPHYLL_EDGE_BBOX_CROPPPED.tif'))
+        mesophyll_edge = img_as_bool(io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif'))
     else:
         # This piece of code is really innefficent. I could be improved to be Faster
         # by not searching for all outline positions but only those near the epidermis.
@@ -512,24 +512,24 @@ else:
                                                           for i in tqdm(np.arange(p.shape[0])))
         for i in tqdm(np.arange(p.shape[0])):
             mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
-        io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/MESOPHYLL_EDGE_BBOX_CROPPPED.tif', img_as_ubyte(mesophyll_edge))
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif', img_as_ubyte(mesophyll_edge))
 
     # Select only the values at the edge of the airspace and within the full stomata
     # Will have to find a way to include a larger zone of stomata
     edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
 
     print('***SAVING THE STOMATAL REGIONS STACK***')
-    io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif',
+    io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif',
               img_as_ubyte(edge_and_full_stomata_mask))
     
-if os.path.isfile(filepath + sample_name + 'STOMATA_and_TORTUOSITY/L_Euc_BBOX_CROPPED.tif') == False:
+if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_Euc_BBOX_CROPPED.tif'):
     print('***COMPUTING EUCLIDIAN DISTANCE MAP***')
     t0 = time.time()
     L_euc = np.ma.masked_array(distance_transform_edt(stom_mask), mask, dtype="float32")
     t1 = time.time() - t0
     print('  L_euc processing time: '+str(np.round(t1))+' s')
     print('***SAVING EUCLIDIAN DISTANCE MAP TO HARD DRIVE***')
-    io.imsave(filepath + sample_name + 'STOMATA_and_TORTUOSITY/L_Euc_BBOX_CROPPED.tif', L_euc)
+    io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_Euc_BBOX_CROPPED.tif', L_euc)
 
 t1 = time.time() - t_start
 print('')
