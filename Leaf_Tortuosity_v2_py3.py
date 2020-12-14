@@ -328,7 +328,7 @@ if os.path.isfile(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif')
     print('***LOADING PRECOMPUTED TORTUOSITY FACTOR***')
     Tortuosity_Factor = io.imread(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif')
 else:
-    if os.path.isfile(filepath + sample_name + '-L_geo_BBOX_CROPPED.tif'):
+    if os.path.isfile(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif'):
         print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
         L_geo = io.imread(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif')
     else:
