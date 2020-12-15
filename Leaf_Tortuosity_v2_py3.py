@@ -213,6 +213,7 @@ if len(sample_path_split) == 1:
     sample_name = path_to_sample
     filename = sample_name + 'SEGMENTED.tif'
     filepath = base_folder_name + sample_name + '/'
+    save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 elif len(sample_path_split) == 2:
     sample_name = sample_path_split[-2]
     filename = sample_path_split[-1]
@@ -229,11 +230,11 @@ print('Filepath: ', filepath)
 px_edge_rescaled = px_edge * rescale_factor
 
 # Check if file has already been processed
-if os.path.isfile(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
+if os.path.isfile(save_path + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
 
 # Check if the stomatal regions have been already identified
-if not os.path.isfile(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
+if not os.path.isfile(save_path + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
     raise ValueError('The stomatal regions have not been identified!\nPlease run Leaf_Stomatal_Regions_py3.py first.')
 else:
     # Read composite stack including slabelling of stomata
@@ -244,11 +245,11 @@ else:
     # HERE WE ASSUME THAT THIS FILE HAS BEEN RESCALED IF NEEDED.
     # CURRENTLY WORKS ON NOT RESCALED STACKS (i.e. rescale=1)
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
-    composite_stack = io.imread(filepath + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
+    composite_stack = io.imread(save_path + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
     # print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
     # L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***LOADING PRECOMPUTED FULL STOMATAL REGIONS MESOPHYLL EDGE***')
-    edge_and_full_stomata_mask = img_as_bool(io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif'))
+    edge_and_full_stomata_mask = img_as_bool(io.imread(save_path + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif'))
 
 print("***IDENTIFYING THE UNIQUE COLOR VALUES***")
 unique_vals = np.unique(composite_stack)
@@ -324,13 +325,13 @@ if np.sum(stomata_stack) == 0:
     print('ERROR: at least one stomata is disconnected from the airspace!')
     assert False
 
-if os.path.isfile(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif'):
+if os.path.isfile(save_path + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED TORTUOSITY FACTOR***')
-    Tortuosity_Factor = io.imread(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif')
+    Tortuosity_Factor = io.imread(save_path + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif')
 else:
-    if os.path.isfile(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif'):
+    if os.path.isfile(save_path + sample_name + 'L_geo_BBOX_CROPPED.tif'):
         print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
-        L_geo = io.imread(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif')
+        L_geo = io.imread(save_path + sample_name + 'L_geo_BBOX_CROPPED.tif')
     else:
         print('***COMPUTING GEODESIC DISTANCE MAP***')
         stomata_airspace_mask = ~largest_airspace_w_stomata.astype(bool)
@@ -342,9 +343,9 @@ else:
         print('  L_geo processing time: '+str(np.round(t1))+' s')
         L_geo = np.float32(L_geo)
         print('***SAVING GEODESIC DISTANCE MAP TO HARD DRIVE***')
-        io.imsave(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif', L_geo)
+        io.imsave(save_path + sample_name + 'L_geo_BBOX_CROPPED.tif', L_geo)
     print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
-    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
+    L_euc = io.imread(save_path + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***COMPUTING TORTUOSITY FACTOR, TAU***')
     Tortuosity_Factor = np.square(L_geo / L_euc)
     Tortuosity_Factor[Tortuosity_Factor < 1] = 1
@@ -352,11 +353,11 @@ else:
     Tortuosity_factor_average_ax2 = np.mean(Tortuosity_Factor, axis=2)
 
     print('***SAVING TORTUOSITY MAP TO HARD DRIVE***')
-    io.imsave(filepath + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif',
+    io.imsave(save_path + sample_name + 'Python_tortuosity_BBOX_CROPPED.tif',
               np.asarray(Tortuosity_Factor, dtype="float32"))
-    io.imsave(filepath + sample_name + 'Python_tortuosity_MEAN-ax0.tif',
+    io.imsave(save_path + sample_name + 'Python_tortuosity_MEAN-ax0.tif',
               np.asarray(Tortuosity_factor_average_ax0, dtype="float32"))
-    io.imsave(filepath + sample_name + 'Python_tortuosity_MEAN-ax2.tif',
+    io.imsave(save_path + sample_name + 'Python_tortuosity_MEAN-ax2.tif',
               np.asarray(Tortuosity_factor_average_ax2, dtype="float32"))
 
     # Remove L_geo to free up memory
@@ -376,7 +377,7 @@ Tortuosity_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
 Tortuosity_values_for_stats = Tortuosity_at_airspace_edge[Tortuosity_at_airspace_edge >= 1]
 
 # To save a txt file will all the data points
-thefile = open(filepath + sample_name + 'Tortuosity_values_for_stats.txt', 'w')
+thefile = open(save_path + sample_name + 'Tortuosity_values_for_stats.txt', 'w')
 for item in Tortuosity_values_for_stats:
     thefile.write("%s\n" % item)
 thefile.close()
@@ -395,20 +396,20 @@ Tortuosity_at_airspace_edge_median = np.nanmedian(np.where(Tortuosity_at_airspac
 Tortuosity_profile = np.nanmedian(Tortuosity_at_airspace_edge_median, axis=1)
 
 # To save as tif file will all the data points
-io.imsave(filepath + sample_name + 'Tortuosity_at_airspace_edge_median.tif', Tortuosity_at_airspace_edge_median)
+io.imsave(save_path + sample_name + 'Tortuosity_at_airspace_edge_median.tif', Tortuosity_at_airspace_edge_median)
 
 del Tortuosity_Factor
 gc.collect()
 
 # COMPUTE DISTANCE FROM EPIDERMIS MAP
-if os.path.isfile(filepath + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif'):
+if os.path.isfile(save_path + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED PATH LENGTHENING MAP***')
-    Path_lenghtening = io.imread(filepath + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif')
+    Path_lenghtening = io.imread(save_path + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif')
 else:
     # Compute L_epi
-    if os.path.isfile(filepath + sample_name + 'L_epi_BBOX_CROPPED.tif'):
+    if os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
         print('***LOADING PRECOMPUTED EPIDERMIS DISTANCE MAP***')
-        L_epi = io.imread(filepath + sample_name + 'L_epi_BBOX_CROPPED.tif')
+        L_epi = io.imread(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif')
     else:
         print('***MAP THE ABAXIAL EPIDERMIS***')
         # To get the _abaxial_ epidermis layer as a single line
@@ -438,12 +439,12 @@ else:
         t1 = time.time() - t0
         print('  L_epi processing time: '+str(np.round(t1, 1))+' s')
         print('***SAVING EPIDERMIS DISTANCE MAP TO HARD DRIVE***')
-        io.imsave(filepath + sample_name + 'L_epi_BBOX_CROPPED.tif', L_epi)
+        io.imsave(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif', L_epi)
 
     # Compute path lenthening.
     # Uncomment the end to remove data close to the epidermis where lateral diffusivity values
     print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
-    L_euc = io.imread(filepath + sample_name + 'L_Euc_BBOX_CROPPED.tif')
+    L_euc = io.imread(save_path + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***COMPUTING PATH LENGTHENING MAP***')
     Path_lenghtening = (L_euc / L_epi)  # * (L_epi>10)
     Path_lenghtening_average_ax0 = np.mean(Path_lenghtening, axis=0)
@@ -455,11 +456,11 @@ else:
     gc.collect()
 
     print('  Saving path length maps as TIFF files')
-    io.imsave(filepath + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif',
+    io.imsave(save_path + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif',
               np.asarray(Path_lenghtening, dtype="float32"))
-    io.imsave(filepath + sample_name + 'Python_Path_lenghtening_MEAN_ax0.tif',
+    io.imsave(save_path + sample_name + 'Python_Path_lenghtening_MEAN_ax0.tif',
               np.asarray(Path_lenghtening_average_ax0, dtype="float32"))
-    io.imsave(filepath + sample_name + 'Python_Path_lenghtening_MEAN_ax2.tif',
+    io.imsave(save_path + sample_name + 'Python_Path_lenghtening_MEAN_ax2.tif',
               np.asarray(Path_lenghtening_average_ax2, dtype="float32"))
 
 Path_lenghtening_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
@@ -468,18 +469,18 @@ Path_lenghtening_at_airspace_edge = np.where(edge_and_full_stomata_mask == True,
 Path_lenghtening_values_for_stats = Path_lenghtening_at_airspace_edge[Path_lenghtening_at_airspace_edge >= 1]
 
 # To save a txt file will all the data points
-thefile = open(filepath + sample_name + 'Path_lenghtening_values_for_stats.txt', 'w')
+thefile = open(save_path + sample_name + 'Path_lenghtening_values_for_stats.txt', 'w')
 for item in Path_lenghtening_values_for_stats:
     thefile.write("%s\n" % item)
 thefile.close()    
 
 print('***PATH LENGTH VALUES AT AIRSPACE EDGE***')
-print('  median: ',np.nanmedian(Path_lenghtening_values_for_stats))
-print('    mean: ',np.nanmean(Path_lenghtening_values_for_stats))
-print('      sd: ',np.nanstd(Path_lenghtening_values_for_stats))
-print('     var: ',np.nanvar(Path_lenghtening_values_for_stats))
-print('     min: ',np.nanmin(Path_lenghtening_values_for_stats))
-print('     max: ',np.nanmax(Path_lenghtening_values_for_stats))
+print('  median: ', np.nanmedian(Path_lenghtening_values_for_stats))
+print('    mean: ', np.nanmean(Path_lenghtening_values_for_stats))
+print('      sd: ', np.nanstd(Path_lenghtening_values_for_stats))
+print('     var: ', np.nanvar(Path_lenghtening_values_for_stats))
+print('     min: ', np.nanmin(Path_lenghtening_values_for_stats))
+print('     max: ', np.nanmax(Path_lenghtening_values_for_stats))
 print('')
 
 Path_lenght_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_airspace_edge != 0.,
@@ -487,7 +488,7 @@ Path_lenght_at_airspace_edge_median = np.nanmedian(np.where(Path_lenghtening_at_
 Path_length_profile = np.nanmedian(Path_lenght_at_airspace_edge_median, axis=1)
 
 # To save as tif file will all the data points
-io.imsave(filepath + sample_name + 'Path_length_at_airspace_edge_median.tif', Path_lenght_at_airspace_edge_median)
+io.imsave(save_path + sample_name + 'Path_length_at_airspace_edge_median.tif', Path_lenght_at_airspace_edge_median)
 #io.imsave(filepath + sample_name + 'Path_length_profile.tif', Path_length_profile)
 
 del Path_lenghtening
@@ -495,7 +496,7 @@ gc.collect()
 
 # COMPUTE SUMMARY VALUES FOR EXPOSED SURFACE AND POROSITY
 print('***COMPUTING SUMMARY VALUES FOR EXPOSED SURFACE AND POROSITY***')
-mesophyll_edge = io.imread(filepath + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif')
+mesophyll_edge = io.imread(save_path + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif')
 
 surface_cumsum = np.cumsum(np.sum(mesophyll_edge, axis=(0, 2)))
 surface_rel = surface_cumsum/np.float(surface_cumsum.max())
@@ -529,26 +530,26 @@ data_out = {'Tortuosity_MEAN': np.nanmean(Tortuosity_values_for_stats),
 
 results_out = DataFrame(data_out, index={sample_name})
 # Save the data to a CSV
-results_out.to_csv(filepath + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt',
+results_out.to_csv(save_path + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt',
                    sep='\t', encoding='utf-8')
 
 # To save a txt file will all the data points
-thefile = open(filepath + sample_name + 'Path_lenghtening_profile.txt', 'w')
+thefile = open(save_path + sample_name + 'Path_lenghtening_profile.txt', 'w')
 for item in Path_length_profile:
     thefile.write("%s\n" % item)
 thefile.close()    
 
-thefile = open(filepath + sample_name + 'Tortuosity_profile.txt', 'w')
+thefile = open(save_path + sample_name + 'Tortuosity_profile.txt', 'w')
 for item in Tortuosity_profile:
     thefile.write("%s\n" % item)
 thefile.close()
 
-thefile = open(filepath + sample_name + 'SurfaceArea_profile.txt', 'w')
+thefile = open(save_path + sample_name + 'SurfaceArea_profile.txt', 'w')
 for item in surface_rel:
     thefile.write("%s\n" % item)
 thefile.close()
 
-thefile = open(filepath + sample_name + 'Porosity_profile.txt', 'w')
+thefile = open(save_path + sample_name + 'Porosity_profile.txt', 'w')
 for item in porosity_rel:
     thefile.write("%s\n" % item)
 thefile.close()
