@@ -218,11 +218,13 @@ elif len(sample_path_split) == 2:
     sample_name = sample_path_split[-2]
     filename = sample_path_split[-1]
     filepath = base_folder_name + sample_name + '/'
+    save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 elif len(sample_path_split) == 3:
     sample_name = sample_path_split[-3]
     base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
     filepath = base_folder_name
     filename = sample_path_split[-1]
+    save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 
 print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
