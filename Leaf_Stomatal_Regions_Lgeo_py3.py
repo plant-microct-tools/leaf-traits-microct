@@ -60,7 +60,7 @@ import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
 from skimage.util import invert
-from skimage.measure import label, regionprops, marching_cubes_lewiner, mesh_surface_area
+from skimage.measure import label, regionprops, marching_cubes, mesh_surface_area
 from skimage.transform import resize
 import time
 from tqdm import tqdm
@@ -234,7 +234,7 @@ px_edge_rescaled = px_edge * rescale_factor
 if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SINGLE-STOMA-RESULTS.txt'):
     raise ValueError('This file has already been processed!')
 
-# Read composite stack including slabelling of stomata
+# Read composite stack including labelling of stomata
 print('************************************************')
 print('***STARTING STOMATAL REGIONS COMPUTATION FOR***')
 print('            ' + sample_name)
@@ -466,7 +466,7 @@ else:
     Pore_volume_single_region = np.copy(SA_single_region)
     for regions in tqdm(np.arange(len(regions_full_in_center))):
         regions_bool = stomata_regions == regions_full_in_center[regions]
-        ias_vert_faces = marching_cubes_lewiner(regions_bool)
+        ias_vert_faces = marching_cubes(regions_bool)
         ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
         SA_single_region[regions] = ias_SA * (px_edge_rescaled**2)
         Pore_volume_single_region[regions] = np.sum(regions_bool) * (px_edge_rescaled**3)
