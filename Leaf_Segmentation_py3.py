@@ -13,8 +13,7 @@ from Leaf_Segmentation_Functions_py3 import *  # Custom ML microCT functions
 import sys
 import os
 import gc
-from sklearn.externals import joblib
-
+import joblib
 
 def main():
     # Extract data from command line input
