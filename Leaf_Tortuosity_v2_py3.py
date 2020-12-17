@@ -87,12 +87,52 @@ t_start = time.time()
 
 # Extract data from command line input
 full_script_path = sys.argv[0]
-path_to_sample = str(sys.argv[1])
-rescale_factor = int(sys.argv[2])
-px_edge = float(sys.argv[3])
-seg_values = sys.argv[4]
-nb_cores = multiprocessing.cpu_count() if len(sys.argv) == 6 else int(sys.argv[5])
-base_path = str(sys.argv[5]) if len(sys.argv) == 6 else str(sys.argv[6])
+
+# create python-dictionary from command line inputs (ignore first)
+sys.argv = sys.argv[1:]
+arg_dict = dict(j.split('=') for j in sys.argv)
+
+# define variables for later on
+filenames = []  # list of arg files
+req_not_def = 0  # permission variable for required definitions when using command line option
+
+# define important variables using command line
+for key, value in arg_dict.items():
+    if key == 'argfiles':
+        for z in value.split(','):
+            z.strip()
+            z = z.replace('\n', '')
+            filenames.append(z)
+    if key == 'path_to_argfile_folder':
+        path_to_argfile_folder = str(value)
+    else:
+        # read in desired values for parameters
+        if key == 'path_to_sample':
+            path_to_sample = str(value)
+        if key == 'stomata_stack_suffix':
+            stomata_stack_suffix = str(value)
+        if key == 'px_edge':
+            px_edge = float(value)
+        if key == 'seg_values':
+            seg_values = value
+        if key == 'nb_cores':
+            nb_cores = int(value)
+        if key == 'base_path':
+            base_path = str(value)
+        # set up default values for some optional parameters
+        try:
+            rescale_factor
+        except NameError:
+            rescale_factor = 1
+        try:
+            nb_cores
+        except NameError:
+            nb_cores = multiprocessing.cpu_count()
+        try:
+            seg_values
+        except NameError:
+            seg_values = 'default'
+
 
 
 # Function to resize in all 3 dimensions
@@ -290,9 +330,16 @@ else:
                 epidermis_ab_value, epidermis_ad_value, bs_value]
     print("  Defined pattern values: ", str(vals_str))
 
+if 'stomata_stack_suffix' in locals():
+    print('***LOADING BOUNDING BOX CROPPED STOMATA STACK***')
+    stomata_stack = img_as_bool(io.imread(save_path + sample_name + 'STOMATA_STACK_BBOX.tif'))
+
 print('***CREATE BINARY STACKS***')
 airspace_stack = Threshold(composite_stack, ias_value)
-stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
+if 'stomata_stack' in locals():
+    stomata_airspace_stack = airspace_stack + stomata_stack
+else:
+    stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
 
 # Purify the airspace stack, i.e. get the largest connected component
 print('***FINDING THE LARGEST AIRSPACE***')
@@ -314,8 +361,11 @@ print("  New shape: ", str(largest_airspace.shape))
 print("  New nbytes: ", str(largest_airspace.nbytes/1e9))
 
 mask = ~largest_airspace.astype(bool)
-stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
-stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
+if 'stomata_stack' in locals():
+    stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
+else:
+    stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
+    stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
 
 # Cropping the composite stack to the largest arispace bounding box
