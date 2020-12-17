@@ -122,14 +122,20 @@ for key, value in arg_dict.items():
             nb_cores
         except NameError:
             nb_cores = multiprocessing.cpu_count()
+        try:
+            seg_values
+        except NameError:
+            seg_values = 'default'
+
 
 # TESTING
-# path_to_sample = 'L18_Leaf1_1_/_RIGHT/L18_Leaf1_1_SEGMENTED_w_STOMATA-right.tif'
+# path_to_sample = 'S12_Leaf2_1_/S12_Leaf2_1_SEGMENTED_w_STOMATA.tif'
 # rescale_factor = 1
 # px_edge = 0.325
 # seg_values = 'default'
 # nb_cores = 7
 # base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/2019/_DONE/'
+# stomata_stack_suffix = 'STOMATA_STACK.tif'
 
  
 # Function to resize in all 3 dimensions
@@ -280,6 +286,8 @@ print('***STARTING STOMATAL REGIONS COMPUTATION FOR***')
 print('            ' + sample_name)
 print('')
 
+print('   Stomata Stack provided:',"stomata_stack_suffix" in locals())
+
 print("***LOADING AND RESIZING STACK***")
 composite_stack_large = io.imread(filepath + filename)
 
@@ -329,6 +337,9 @@ if stomata_value not in unique_vals:
 if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
     composite_stack = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
+    if 'stomata_stack_suffix' in locals():
+        print('***LOADING BOUNDING BOX CROPPED STOMATA STACK***')
+        stomata_stack = img_as_bool(io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif'))
 else:
     # If stomata are label, carry on with resizing the image stack
     if rescale_factor == 1:
@@ -374,13 +385,14 @@ else:
         print('***LOADING INDEPENDENT STOMATA STACK***')
         stomata_stack = img_as_bool(io.imread(filepath + sample_name + stomata_stack_suffix))
         stomata_stack = stomata_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
-        print("imported stomata stack dtype", np.dtype(stomata_stack))
+        print("***SAVING BOUNDING BOX STOMATA STACK TO HARD DRIVE***")
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif', stomata_stack)
 
 # Create the binary stacks needed for the analysis
 print('')
 print('***CREATE BINARY STACKS***')
 airspace_stack = Threshold(composite_stack, ias_value)
-print("airspace stack dtype", np.dtype(airspace_stack))
+print("airspace stack dtype", airspace_stack.dtype)
 if 'stomata_stack' in locals():
     stomata_airspace_stack = airspace_stack + stomata_stack
 else:
