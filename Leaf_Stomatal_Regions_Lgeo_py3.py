@@ -215,10 +215,15 @@ elif len(sample_path_split) == 2:
     filename = sample_path_split[-1]
     filepath = base_folder_name + sample_name + '/'
 elif len(sample_path_split) == 3:
-    sample_name = sample_path_split[-3]
-    base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
-    filepath = base_folder_name
-    filename = sample_path_split[-1]
+    if sample_path_split[0] == '.':
+        sample_name = sample_path_split[-2]
+        filename = sample_path_split[-1]
+        filepath = base_folder_name + sample_name + '/'
+    else:
+        sample_name = sample_path_split[-3]
+        base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
+        filepath = base_folder_name
+        filename = sample_path_split[-1]
 
 print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
@@ -416,14 +421,14 @@ for regions in tqdm(np.arange(len(props_of_unique_stoma))):
     stoma_mask = invert(unique_stoma == props_of_unique_stoma[regions].label)
     stoma_tmp_ma = np.ma.masked_array(stoma_mask, stomata_airspace_mask)
     if np.all(stoma_tmp_ma):
-        print("stoma",regions,"skipped because unconnected to airspace")
+        # print("stoma",regions,"skipped because unconnected to airspace")
         continue
     t0 = time.time()
     L_geo_stom = skfmm.distance(stoma_tmp_ma, narrow=max_L_geo)
     L_geo_stom = np.float32(L_geo_stom)
     stomata_regions[np.round(L_geo_stom,0) == L_geo_round] = props_of_unique_stoma[regions].label
     t1 = time.time() - t0
-    print('  processing time: '+str(np.round(t1))+' s')
+    # print('  processing time: '+str(np.round(t1))+' s')
     del L_geo_stom
     del stoma_tmp_ma
     del stoma_mask
