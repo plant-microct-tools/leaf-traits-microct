@@ -55,7 +55,7 @@ import sys
 import os
 import numpy as np
 from pandas import DataFrame
-from scipy.ndimage.morphology import distance_transform_edt, binary_erosion
+from scipy.ndimage.morphology import distance_transform_edt, binary_erosion, binary_fill_holes
 import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
