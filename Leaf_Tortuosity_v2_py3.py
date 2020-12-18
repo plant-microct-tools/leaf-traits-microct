@@ -66,7 +66,7 @@ import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
 from skimage.util import invert
-from skimage.measure import label, regionprops, marching_cubes_lewiner, mesh_surface_area
+from skimage.measure import label
 from skimage.transform import resize
 import time
 from tqdm import tqdm
@@ -260,11 +260,17 @@ elif len(sample_path_split) == 2:
     filepath = base_folder_name + sample_name + '/'
     save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 elif len(sample_path_split) == 3:
-    sample_name = sample_path_split[-3]
-    base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
-    filepath = base_folder_name
-    filename = sample_path_split[-1]
-    save_path = filepath + 'STOMATA_and_TORTUOSITY/'
+    if sample_path_split[0] == '.':
+        sample_name = sample_path_split[-2]
+        filename = sample_path_split[-1]
+        filepath = base_folder_name + sample_name + '/'
+        save_path = filepath + 'STOMATA_and_TORTUOSITY/'
+    else:
+        sample_name = sample_path_split[-3]
+        base_folder_name = base_path + '/' + sample_name + '/' + sample_path_split[-2] + '/'
+        filepath = base_folder_name
+        filename = sample_path_split[-1]
+        save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 
 print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
