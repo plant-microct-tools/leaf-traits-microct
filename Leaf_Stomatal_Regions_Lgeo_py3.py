@@ -55,7 +55,7 @@ import sys
 import os
 import numpy as np
 from pandas import DataFrame
-from scipy.ndimage.morphology import distance_transform_edt, binary_erosion, binary_fill_holes
+from scipy.ndimage.morphology import distance_transform_edt, binary_erosion, binary_fill_holes, binary_dilation
 import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
@@ -113,6 +113,11 @@ for key, value in arg_dict.items():
             nb_cores = int(value)
         if key == 'base_path':
             base_path = str(value)
+        if key == 'fix_stomata':
+            if value == 'True':
+                fix_stomata = True
+            else:
+                fix_stomata = False
         # set up default values for some optional parameters
         try:
             rescale_factor
@@ -126,6 +131,10 @@ for key, value in arg_dict.items():
             seg_values
         except NameError:
             seg_values = 'default'
+        try:
+            fix_stomata
+        except NameError:
+            fix_stomata = False
 
 
 # TESTING
@@ -266,8 +275,6 @@ elif len(sample_path_split) == 3:
         filepath = base_folder_name
         filename = sample_path_split[-1]
 
-print('Base folder path: ', base_folder_name)
-print('Filepath: ', filepath)
 
 # Create folder to store results
 if not os.path.exists(filepath + 'STOMATA_and_TORTUOSITY/'):
@@ -285,7 +292,9 @@ print('************************************************')
 print('***STARTING STOMATAL REGIONS COMPUTATION FOR***')
 print('            ' + sample_name)
 print('')
-
+print('   Base folder path: ', base_folder_name)
+print('   Filepath: ', filepath)
+print('   Try to fix stomata labels: ', fix_stomata)
 print('   Stomata Stack provided:',"stomata_stack_suffix" in locals())
 
 print("***LOADING AND RESIZING STACK***")
@@ -341,7 +350,7 @@ if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTE
         print('***LOADING BOUNDING BOX CROPPED STOMATA STACK***')
         stomata_stack = img_as_bool(io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif'))
 else:
-    # If stomata are label, carry on with resizing the image stack
+    # If stomata are labeled, carry on with resizing the image stack
     if rescale_factor == 1:
         composite_stack = np.copy(composite_stack_large)
     else:
@@ -392,11 +401,21 @@ else:
 print('')
 print('***CREATE BINARY STACKS***')
 airspace_stack = Threshold(composite_stack, ias_value)
-print("airspace stack dtype", airspace_stack.dtype)
 if 'stomata_stack' in locals():
     stomata_airspace_stack = airspace_stack + stomata_stack
+    if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_AIRSPACE_STACK_BBOX.tif'):
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_AIRSPACE_STACK_BBOX.tif', stomata_airspace_stack)
 else:
-    stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
+    if fix_stomata:
+        print('***FILLING HOLES WITHIN LABELED STOMATA***')
+        stomata_stack = Threshold(composite_stack, stomata_value)
+        stomata_stack = binary_fill_holes(stomata_stack)
+        stomata_stack = binary_dilation(stomata_stack)
+        print("***SAVING FILLED HOLES STOMATA STACK TO HARD DRIVE***")
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_FILLED_HOLES_BBOX.tif', stomata_stack)
+        stomata_airspace_stack = airspace_stack + stomata_stack
+    else:
+        stomata_airspace_stack = Threshold(composite_stack, [stomata_value, ias_value])
 
 # Purify the airspace stack, i.e. get the largest connected component
 print('***FINDING THE LARGEST AIRSPACE***')
@@ -437,7 +456,7 @@ if np.sum(stomata_stack) == 0:
     print('ERROR: at least one stomata is disconnected from the airspace!')
     assert False
 
-if os.path.isfile(filepath + sample_name + 'L_geo_BBOX_CROPPED.tif'):
+if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_geo_BBOX_CROPPED.tif'):
     print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
     L_geo = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'L_geo_BBOX_CROPPED.tif')
     stomata_airspace_mask = ~largest_airspace_w_stomata.astype(bool)
