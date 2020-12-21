@@ -335,7 +335,12 @@ print(unique_vals)
 # This if..else statement needs to be cleaned up
 if seg_values == 'default':
     mesophyll_value = 0
-    stomata_value = 85 if np.any(unique_vals == 85) else 128
+    if np.any(unique_vals == 85):
+        stomata_value = 85
+    elif np.any(unique_vals == 128):
+        stomata_value = 128
+    elif np.any(unique_vals == 152):
+        stomata_value = 152
     bg_value = 177
     vein_value = 147
     ias_value = 255
