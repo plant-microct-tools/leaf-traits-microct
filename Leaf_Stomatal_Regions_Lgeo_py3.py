@@ -115,6 +115,11 @@ for key, value in arg_dict.items():
             base_path = str(value)
         if key == 'rescale_factor':
             rescale_factor = int(value)
+        if key == 'stomata_cropping':
+            if value == 'True':
+                stomata_cropping = True
+            else:
+                stomata_cropping = False
         if key == 'fix_stomata':
             if value == 'True':
                 fix_stomata = True
@@ -137,6 +142,10 @@ for key, value in arg_dict.items():
             fix_stomata
         except NameError:
             fix_stomata = False
+        try:
+            stomata_cropping
+        except NameError:
+            stomata_cropping = True
 
 
 # TESTING
@@ -406,10 +415,15 @@ else:
     print("  Small stack shape: ", str(composite_stack.shape))
     print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
     print("   Bounding area:")
-    print("     slices:", zmin, zmax)
-    print("          y:", cminAD, cmax)
-    print("          x:", rmin, rmax)
-    composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
+    if stomata_cropping:
+        print("     slices:", zmin, zmax)
+        print("          y:", cminAD, cmax)
+        print("          x:", rmin, rmax)
+        composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
+    else:
+        print('    (only epidermis cropped - no stomata cropping)')
+        print("          y:", cminAD, cmaxAB)
+        composite_stack = composite_stack[:, cminAD:cmaxAB, :]
     print("  New shape: ", str(composite_stack.shape))
     print("  New nbytes: ", str(composite_stack.nbytes/1e9))
 
@@ -419,7 +433,10 @@ else:
     if 'stomata_stack_suffix' in locals():
         print('***LOADING INDEPENDENT STOMATA STACK***')
         stomata_stack = img_as_bool(io.imread(filepath + sample_name + stomata_stack_suffix))
-        stomata_stack = stomata_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
+        if stomata_cropping:
+            stomata_stack = stomata_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
+        else:
+            stomata_stack = stomata_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
         print("***SAVING BOUNDING BOX STOMATA STACK TO HARD DRIVE***")
         io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif', stomata_stack)
 
