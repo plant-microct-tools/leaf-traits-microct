@@ -113,6 +113,8 @@ for key, value in arg_dict.items():
             nb_cores = int(value)
         if key == 'base_path':
             base_path = str(value)
+        if key == 'rescale_factor':
+            rescale_factor = int(value)
         if key == 'fix_stomata':
             if value == 'True':
                 fix_stomata = True
@@ -122,7 +124,7 @@ for key, value in arg_dict.items():
         try:
             rescale_factor
         except NameError:
-            rescale_factor = 1
+            rescale_factor = 0
         try:
             nb_cores
         except NameError:
@@ -138,12 +140,12 @@ for key, value in arg_dict.items():
 
 
 # TESTING
-# path_to_sample = 'S12_Leaf2_1_/S12_Leaf2_1_SEGMENTED_w_STOMATA.tif'
-# rescale_factor = 1
-# px_edge = 0.325
+# path_to_sample = './C_D_5_Strip1_'
+# rescale_factor = 2
+# px_edge = 0.1625
 # seg_values = 'default'
 # nb_cores = 7
-# base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/2019/_DONE/'
+# base_path = '/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/'
 # stomata_stack_suffix = 'STOMATA_STACK.tif'
 
  
@@ -156,13 +158,15 @@ def StackResize(stack, rf=rescale_factor):
     for idx in np.arange(stack_rs.shape[0]):
         stack_rs[idx] = resize(stack[idx],
                                [stack.shape[1]/rf, stack.shape[2]/rf],
-                               order=0, preserve_range=True)
+                               order=0, preserve_range=True, 
+                               anti_aliasing=False)
     resized_shape_2 = np.array(stack_rs.shape)/np.array([rf, 1, 1])
     stack_rs2 = np.empty(shape = resized_shape_2.astype(np.int64))
     for idx in np.arange(stack_rs2.shape[1]):
         stack_rs2[:, idx, :] = resize(stack_rs[:, idx, :],
                                       [stack_rs.shape[0]/rf, stack_rs.shape[2]],
-                                      order=0, preserve_range=True)
+                                      order=0, preserve_range=True, 
+                                      anti_aliasing=False)
     return stack_rs2
 
 # Function to threshold images (i.e. binarize them to boolean)
@@ -252,7 +256,7 @@ def bbox2_3D(img, value):
     return rmin, rmax, cmin, cmax, zmin, zmax
 
 # Set directory of functions in order to import MLmicroCTfunctions
-# path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
+path_to_script = '/'.join(full_script_path.split('/')[:-1]) + '/'
 base_folder_name = base_path
 sample_path_split = path_to_sample.split('/')
 
@@ -261,9 +265,17 @@ if len(sample_path_split) == 1:
     filename = sample_name + 'SEGMENTED.tif'
     filepath = base_folder_name + sample_name + '/'
 elif len(sample_path_split) == 2:
-    sample_name = sample_path_split[-2]
-    filename = sample_path_split[-1]
-    filepath = base_folder_name + sample_name + '/'
+    if sample_path_split[0] == '.':
+        sample_name = sample_path_split[-1]
+        if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED_w_STOMATA.tif'):
+            filename = sample_name + 'SEGMENTED_w_STOMATA.tif'
+        else:
+            filename = sample_name + 'SEGMENTED.tif'
+        filepath = base_folder_name + sample_name + '/'
+    else:
+        sample_name = sample_path_split[-2]
+        filename = sample_path_split[-1]
+        filepath = base_folder_name + sample_name + '/'
 elif len(sample_path_split) == 3:
     if sample_path_split[0] == '.':
         sample_name = sample_path_split[-2]
@@ -300,8 +312,23 @@ print('   Stomata Stack provided:',"stomata_stack_suffix" in locals())
 print("***LOADING AND RESIZING STACK***")
 composite_stack_large = io.imread(filepath + filename)
 
+if rescale_factor == 0:
+    print('***AUTOMATIC RESCALING BASED ON FILE SIZE***')
+    if composite_stack_large.nbytes >= 2e9:
+        print("***FILE IS LARGER THAT 2 GB - DOWNSCALING BY 2 IN ALL DIMMENSIONS***")
+        rescale_factor = 2
+    else:
+        print('***FILE IS SMALLER THAN 2 GB - NO RESCALING***')
+        rescale_factor = 1
+
+if rescale_factor > 1:
+    composite_stack = np.asarray(StackResize(
+        composite_stack_large, rescale_factor), dtype = 'uint8')
+else:
+     composite_stack = np.copy(composite_stack_large)   
+
 print("***IDENTIFYING THE UNIQUE COLOR VALUES***")
-unique_vals = np.unique(composite_stack_large)
+unique_vals = np.unique(composite_stack)
 print(unique_vals)
 
 # Define color values
@@ -346,17 +373,11 @@ if stomata_value not in unique_vals:
 if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
     composite_stack = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif')
+    del composite_stack_large
     if 'stomata_stack_suffix' in locals():
         print('***LOADING BOUNDING BOX CROPPED STOMATA STACK***')
         stomata_stack = img_as_bool(io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif'))
 else:
-    # If stomata are labeled, carry on with resizing the image stack
-    if rescale_factor == 1:
-        composite_stack = np.copy(composite_stack_large)
-    else:
-        composite_stack = np.asarray(StackResize(
-            composite_stack_large, rescale_factor), dtype='uint8')
-
     print("  Large stack shape: ", str(composite_stack_large.shape))
     print("  Small stack shape: ", str(composite_stack.shape))
     print("  Unique pattern values :", str(unique_vals))  # to get all the unique values
@@ -419,6 +440,7 @@ else:
 
 # Purify the airspace stack, i.e. get the largest connected component
 print('***FINDING THE LARGEST AIRSPACE***')
+# NOTE: Run 2nd line first and then define largest_Airsapce as True when within the one w stomata
 largest_airspace = getLargestAirspace(airspace_stack)
 largest_airspace_w_stomata = getLargestAirspace(stomata_airspace_stack)
 
