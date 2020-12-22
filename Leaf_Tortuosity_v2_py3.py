@@ -97,6 +97,7 @@ filenames = []  # list of arg files
 req_not_def = 0  # permission variable for required definitions when using command line option
 
 # define important variables using command line
+# define important variables using command line
 for key, value in arg_dict.items():
     if key == 'argfiles':
         for z in value.split(','):
@@ -119,11 +120,23 @@ for key, value in arg_dict.items():
             nb_cores = int(value)
         if key == 'base_path':
             base_path = str(value)
+        if key == 'rescale_factor':
+            rescale_factor = int(value)
+        if key == 'stomata_cropping':
+            if value == 'True':
+                stomata_cropping = True
+            else:
+                stomata_cropping = False
+        if key == 'fix_stomata':
+            if value == 'True':
+                fix_stomata = True
+            else:
+                fix_stomata = False
         # set up default values for some optional parameters
         try:
             rescale_factor
         except NameError:
-            rescale_factor = 1
+            rescale_factor = 0
         try:
             nb_cores
         except NameError:
@@ -132,6 +145,14 @@ for key, value in arg_dict.items():
             seg_values
         except NameError:
             seg_values = 'default'
+        try:
+            fix_stomata
+        except NameError:
+            fix_stomata = False
+        try:
+            stomata_cropping
+        except NameError:
+            stomata_cropping = True
 
 
 
@@ -255,10 +276,19 @@ if len(sample_path_split) == 1:
     filepath = base_folder_name + sample_name + '/'
     save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 elif len(sample_path_split) == 2:
-    sample_name = sample_path_split[-2]
-    filename = sample_path_split[-1]
-    filepath = base_folder_name + sample_name + '/'
-    save_path = filepath + 'STOMATA_and_TORTUOSITY/'
+    if sample_path_split[0] == '.':
+        sample_name = sample_path_split[-1]
+        if os.path.isfile(base_folder_name + sample_name + '/' + sample_name + 'SEGMENTED_w_STOMATA.tif'):
+            filename = sample_name + 'SEGMENTED_w_STOMATA.tif'
+        else:
+            filename = sample_name + 'SEGMENTED.tif'
+        filepath = base_folder_name + sample_name + '/'
+        save_path = filepath + 'STOMATA_and_TORTUOSITY/'
+    else:
+        sample_name = sample_path_split[-2]
+        filename = sample_path_split[-1]
+        filepath = base_folder_name + sample_name + '/'
+        save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 elif len(sample_path_split) == 3:
     if sample_path_split[0] == '.':
         sample_name = sample_path_split[-2]
@@ -307,7 +337,12 @@ print(unique_vals)
 # TO DO This if..else statement needs to be cleaned up
 if seg_values == 'default':
     mesophyll_value = 0
-    stomata_value = 85 if np.any(unique_vals == 85) else 128
+    if np.any(unique_vals == 85):
+        stomata_value = 85
+    elif np.any(unique_vals == 128):
+        stomata_value = 128
+    elif np.any(unique_vals == 152):
+        stomata_value = 152
     bg_value = 177
     vein_value = 147
     ias_value = 255
