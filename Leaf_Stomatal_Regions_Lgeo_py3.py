@@ -323,7 +323,7 @@ composite_stack_large = io.imread(filepath + filename)
 
 if rescale_factor == 0:
     print('***AUTOMATIC RESCALING BASED ON FILE SIZE***')
-    if composite_stack_large.nbytes >= 2e9:
+    if composite_stack_large.nbytes >= 2.2e9:
         print("***FILE IS LARGER THAT 2 GB - DOWNSCALING BY 2 IN ALL DIMMENSIONS***")
         rescale_factor = 2
     else:
