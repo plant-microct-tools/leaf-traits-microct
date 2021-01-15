@@ -430,6 +430,9 @@ if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
         epidermis_edge_bottom = Threshold(
             invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down, 0)
         epidermis_edge_bottom = epidermis_ab_stack
+        del epidermis_ab_stack
+        del epidermis_ab_stack_shifted_down
+
     else:
         mesophyll_stack = np.asarray(
             Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), np.bool)
@@ -441,8 +444,13 @@ if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
 
     epidermis_edge_purified = getLargestAirspace(epidermis_edge_bottom)
 
+    del epidermis_edge_bottom
+    gc.collect()
+
     print('***COMPUTING L_EPI MAP***')
     epidermis_mask = invert(epidermis_edge_purified)
+    del epidermis_edge_purified
+    gc.collect()
     t0 = time.time()
     L_epi = np.ma.masked_array(distance_transform_edt(epidermis_mask), mask, dtype="float32")
     t1 = time.time() - t0
@@ -451,9 +459,6 @@ if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
     io.imsave(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif', L_epi)
 
     del L_epi
-    del epidermis_edge_purified
-    del epidermis_ab_stack
-    del epidermis_ab_stack_shifted_down
     del epidermis_mask
     gc.collect()
 
@@ -547,43 +552,8 @@ if os.path.isfile(save_path + sample_name + 'Python_Path_lenghtening_BBOX_CROPPE
     print('***LOADING PRECOMPUTED PATH LENGTHENING MAP***')
     Path_lenghtening = io.imread(save_path + sample_name + 'Python_Path_lenghtening_BBOX_CROPPED.tif')
 else:
-    # Compute L_epi
-    if os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
-        print('***LOADING PRECOMPUTED EPIDERMIS DISTANCE MAP***')
-        L_epi = io.imread(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif')
-    if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
-        print('***MAP THE ABAXIAL EPIDERMIS***')
-        # To get the _abaxial_ epidermis layer as a single line
-        if epidermis_ab_value != epidermis_ad_value:
-            epidermis_ab_stack = np.asarray(
-                                        Threshold(composite_stack, epidermis_ab_value),
-                                        np.bool)
-            epidermis_ab_stack_shifted_down = np.roll(epidermis_ab_stack, 3, axis=1)
-            epidermis_edge_bottom = Threshold(
-                       invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down, 0)
-            epidermis_edge_bottom = epidermis_ab_stack
-        else:
-            mesophyll_stack = np.asarray(
-                Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), np.bool)
-            mesophyll_stack_shifted_up = np.roll(mesophyll_stack, -3, axis=1)
-        #    mesophyll_stack_shifted_down = np.roll(mesophyll_stack, 3, axis=1)
-            epidermis_edge_bottom = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_up, 0)
-        #    epidermis_edge_top = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_down , 0)
-        #    amphistomatous_epidermis = Threshold(epidermis_edge_bottom + epidermis_edge_top, 1)
-        
-        epidermis_edge_purified = getLargestAirspace(epidermis_edge_bottom)
-        
-        print('***COMPUTING L_EPI MAP***')
-        epidermis_mask = invert(epidermis_edge_purified)
-        t0 = time.time()
-        L_epi = np.ma.masked_array(distance_transform_edt(epidermis_mask), mask, dtype="float32")
-        t1 = time.time() - t0
-        print('  L_epi processing time: '+str(np.round(t1, 1))+' s')
-        print('***SAVING EPIDERMIS DISTANCE MAP TO HARD DRIVE***')
-        io.imsave(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif', L_epi)
-
-    # Compute path lenthening.
-    # Uncomment the end to remove data close to the epidermis where lateral diffusivity values
+    print('***LOADING PRECOMPUTED EPIDERMIS DISTANCE MAP***')
+    L_epi = io.imread(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif')
     print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
     L_euc = io.imread(save_path + sample_name + 'L_Euc_BBOX_CROPPED.tif')
     print('***COMPUTING PATH LENGTHENING MAP***')
