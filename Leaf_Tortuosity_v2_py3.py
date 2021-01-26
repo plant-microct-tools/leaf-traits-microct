@@ -304,6 +304,9 @@ elif len(sample_path_split) == 3:
 
 print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
+# TESTING
+# print('Save path: ', save_path)
+# print(os.path.isfile(save_path + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'))
 
 px_edge_rescaled = px_edge * rescale_factor
 
