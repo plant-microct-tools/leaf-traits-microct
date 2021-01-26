@@ -589,12 +589,13 @@ if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOM
         str(np.sum(full_stomata_regions_mask)))
     print('  Total number of airspace pixels: ' + str(np.sum(airspace_stack)))
 
-    if np.sum(full_stomata_regions_mask) < 10000:
+    if np.sum(full_stomata_regions_mask) < 5000:
         print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
         # If there are no single stomata regions, we still compute the values at the airspace edge.
-        edge_and_full_stomata_mask = mesophyll_edge
+        no_unique_stomata = True
     else:
         print('***EXTRACTING DATA FROM SINGLE STOMA REGIONS***')
+        no_unique_stomata = False
         SA_single_region = np.empty(len(regions_full_in_center))
         Pore_volume_single_region = np.copy(SA_single_region)
         for regions in tqdm(np.arange(len(regions_full_in_center))):
@@ -647,23 +648,26 @@ else:
         mesophyll_edge[tuple(p[i])] = 0 if bad_neighbours[i] else 1
     io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif', img_as_ubyte(mesophyll_edge))
 
-if 'full_stomata_regions_mask' not in locals():
-    stomata_regions = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATAL_REGIONS_BBOX_CROPPPED.tif')
-    regions_all = np.unique(stomata_regions)
-    regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
-                                                  np.unique(stomata_regions[-1, :, :]),
-                                                  np.unique(stomata_regions[:, 0, :]),
-                                                  np.unique(stomata_regions[:, -1, :]),
-                                                  np.unique(stomata_regions[:, :, 0]),
-                                                  np.unique(stomata_regions[:, :, -1])]))
-    regions_full_in_center = regions_all[regions_at_border.take(
-        np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
-    full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
-    for i in np.arange(len(regions_full_in_center)):
-        full_stomata_regions_mask[stomata_regions
-                                  == regions_full_in_center[i]] = True
+if no_unique_stomata:
+    edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
+else:
+    if 'full_stomata_regions_mask' not in locals():
+        stomata_regions = io.imread(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATAL_REGIONS_BBOX_CROPPPED.tif')
+        regions_all = np.unique(stomata_regions)
+        regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
+                                                      np.unique(stomata_regions[-1, :, :]),
+                                                      np.unique(stomata_regions[:, 0, :]),
+                                                      np.unique(stomata_regions[:, -1, :]),
+                                                      np.unique(stomata_regions[:, :, 0]),
+                                                      np.unique(stomata_regions[:, :, -1])]))
+        regions_full_in_center = regions_all[regions_at_border.take(
+            np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
+        full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
+        for i in np.arange(len(regions_full_in_center)):
+            full_stomata_regions_mask[stomata_regions
+                                      == regions_full_in_center[i]] = True
 
-edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
+    edge_and_full_stomata_mask = mesophyll_edge & full_stomata_regions_mask
 
 print('***SAVING THE STOMATAL REGIONS STACK***')
 io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'MESOPHYLL_EDGE_AND_STOM_REGIONS_BBOX_CROPPPED.tif',
