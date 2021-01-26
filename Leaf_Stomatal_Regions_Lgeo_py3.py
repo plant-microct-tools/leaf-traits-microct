@@ -589,10 +589,12 @@ if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOM
         str(np.sum(full_stomata_regions_mask)))
     print('  Total number of airspace pixels: ' + str(np.sum(airspace_stack)))
 
-    if np.sum(full_stomata_regions_mask) < 5000:
+    if np.sum(full_stomata_regions_mask) < 2000:
         print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
         # If there are no single stomata regions, we still compute the values at the airspace edge.
         no_unique_stomata = True
+        thefile = open(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
+        thefile.close()
     else:
         print('***EXTRACTING DATA FROM SINGLE STOMA REGIONS***')
         no_unique_stomata = False
@@ -617,9 +619,6 @@ if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOM
             print('***EXPORTING SINGLE STOMA DATA TO TXT FILE***')
             full_stoma_out = DataFrame(single_stoma_data)
             full_stoma_out.to_csv(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SINGLE-STOMA-RESULTS.txt', sep='\t', encoding='utf-8')
-        else:
-            thefile = open(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
-
 
 # Detect edges of airspace
 # Better to work on largest airspace as this is what is needed further down.
