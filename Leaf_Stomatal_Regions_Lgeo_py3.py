@@ -609,7 +609,7 @@ else:
         print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
         # If there are no single stomata regions, we still compute the values at the airspace edge.
         no_unique_stomata = True
-        thefile = open(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 't')
+        thefile = open(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGLE_STOMA_REGIONS.txt', 'w')
         thefile.close()
     else:
         print('***EXTRACTING DATA FROM SINGLE STOMA REGIONS***')
