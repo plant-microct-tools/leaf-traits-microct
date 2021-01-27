@@ -125,6 +125,11 @@ for key, value in arg_dict.items():
                 fix_stomata = True
             else:
                 fix_stomata = False
+        if key == 'cropping':
+            if value == 'True':
+                cropping = True
+            else:
+                cropping = False
         # set up default values for some optional parameters
         try:
             rescale_factor
@@ -146,6 +151,10 @@ for key, value in arg_dict.items():
             stomata_cropping
         except NameError:
             stomata_cropping = True
+        try:
+            cropping
+        except NameError:
+            cropping = True
 
 
 # TESTING
@@ -406,33 +415,34 @@ else:
     # Remove the large stack to free up memory
     del composite_stack_large
 
-    print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***')
-    print('***         OF STOMATA AND EPIDERMIS         ***')
-    rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
-    rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD = bbox2_3D(composite_stack, epidermis_ad_value)
-    rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB = bbox2_3D(composite_stack, epidermis_ab_value)
+    if cropping:
+        print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***')
+        print('***         OF STOMATA AND EPIDERMIS         ***')
+        rmin, rmax, cmin, cmax, zmin, zmax = bbox2_3D(composite_stack, stomata_value)
+        rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD = bbox2_3D(composite_stack, epidermis_ad_value)
+        rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB = bbox2_3D(composite_stack, epidermis_ab_value)
 
-    print("AD epidermis bbox:")
-    print(rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD)
-    print("AB epidermis bbox:")
-    print(rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB)
-    print("stomata bbox")
-    print(rmin, rmax, cmin, cmax, zmin, zmax)
+        print("AD epidermis bbox:")
+        print(rminAD, rmaxAD, cminAD, cmaxAD, zminAD, zmaxAD)
+        print("AB epidermis bbox:")
+        print(rminAB, rmaxAB, cminAB, cmaxAB, zminAB, zmaxAB)
+        print("stomata bbox")
+        print(rmin, rmax, cmin, cmax, zmin, zmax)
 
-    print("  Small stack shape: ", str(composite_stack.shape))
-    print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
-    print("   Bounding area:")
-    if stomata_cropping:
-        print("     slices:", zmin, zmax)
-        print("          y:", cminAD, cmax)
-        print("          x:", rmin, rmax)
-        composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
-    else:
-        print('    (only epidermis cropped - no stomata cropping)')
-        print("          y:", cminAD, cmaxAB)
-        composite_stack = composite_stack[:, cminAD:cmaxAB, :]
-    print("  New shape: ", str(composite_stack.shape))
-    print("  New nbytes: ", str(composite_stack.nbytes/1e9))
+        print("  Small stack shape: ", str(composite_stack.shape))
+        print("  Small stack nbytes: ", str(composite_stack.nbytes/1e9))
+        print("   Bounding area:")
+        if stomata_cropping:
+            print("     slices:", zmin, zmax)
+            print("          y:", cminAD, cmax)
+            print("          x:", rmin, rmax)
+            composite_stack = composite_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
+        else:
+            print('    (only epidermis cropped - no stomata cropping)')
+            print("          y:", cminAD, cmaxAB)
+            composite_stack = composite_stack[:, cminAD:cmaxAB, :]
+        print("  New shape: ", str(composite_stack.shape))
+        print("  New nbytes: ", str(composite_stack.nbytes/1e9))
 
     print("***SAVING BOUNDING BOX CROPPED SEGMENTED STACK TO HARD DRIVE***")
     io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif', composite_stack)
