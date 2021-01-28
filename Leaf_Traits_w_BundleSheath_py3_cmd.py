@@ -809,15 +809,18 @@ def main():
                 print('')
 
                 # Label all of the epidermis regions
+                print('labeling')
                 unique_epidermis_volumes = label(raw_pred_stack == epid_value, connectivity=1)
                 props_of_unique_epidermis = regionprops(unique_epidermis_volumes)
 
                 # io.imshow(unique_epidermis_volumes[100])
 
                 # Find the size and properties of the epidermis regions
+                print('finding regions')
                 epidermis_area = np.zeros(len(props_of_unique_epidermis))
                 epidermis_label = np.zeros(len(props_of_unique_epidermis))
                 epidermis_centroid = np.zeros([len(props_of_unique_epidermis), 3])
+                print('looping over regions')
                 for regions in np.arange(len(props_of_unique_epidermis)):
                     epidermis_area[regions] = props_of_unique_epidermis[regions].area
                     epidermis_label[regions] = props_of_unique_epidermis[regions].label
@@ -892,6 +895,10 @@ def main():
 
                 # Transform the array to 8-bit: no need for the extra precision as there are only 3 values
                 unique_epidermis_volumes = np.array(unique_epidermis_volumes, dtype='uint8')
+
+                print('>>>> SAVING EPIDERMIS STACK')
+                io.imsave(base_folder_name + sample_name + '/' + sample_name
+                          + 'TWO_EPIDERMIS.tif', unique_epidermis_volumes, imagej=imgj_bool)
 
                 # Find the fvalues of each epidermis: assumes adaxial epidermis is at the top of the image
                 adaxial_epidermis_value = unique_epidermis_volumes[100, :, 100][(
