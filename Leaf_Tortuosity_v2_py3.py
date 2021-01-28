@@ -302,6 +302,12 @@ elif len(sample_path_split) == 3:
         filename = sample_path_split[-1]
         save_path = filepath + 'STOMATA_and_TORTUOSITY/'
 
+print('')
+print('**************************************************************')
+print('***STARTING TORTUOSITY AND PATH LENGTHENING COMPUTATION FOR***')
+print('   ' + sample_name)
+print('')
+
 print('Base folder path: ', base_folder_name)
 print('Filepath: ', filepath)
 # TESTING
@@ -316,13 +322,9 @@ if os.path.isfile(save_path + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt'):
 
 # Check if the stomatal regions have been already identified
 if not os.path.isfile(save_path + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif'):
-    raise ValueError('The stomatal regions have not been identified!\nPlease run Leaf_Stomatal_Regions_py3.py first.')
+    raise ValueError('The stomatal regions have not been identified!\nPlease run Leaf_Stomatal_Regions_py3.py first.\n')
 else:
     # Read composite stack including slabelling of stomata
-    print('************************************************')
-    print('***STARTING TORTUOSITY AND PATH LENGTHENING COMPUTATION FOR***')
-    print('   ' + sample_name)
-    print('')
     # HERE WE ASSUME THAT THIS FILE HAS BEEN RESCALED IF NEEDED.
     # CURRENTLY WORKS ON NOT RESCALED STACKS (i.e. rescale=1)
     print('***LOADING BOUNDING BOX CROPPED SEGMENTED STACK***')
