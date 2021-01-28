@@ -334,9 +334,20 @@ if os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'NO_SINGL
 print("***LOADING AND RESIZING STACK***")
 composite_stack_large = io.imread(filepath + filename)
 
+if "stomata_stack_suffix" in locals():
+    print('***LOADING INDEPENDENT STOMATA STACK FIRST***')
+    stomata_stack = img_as_bool(io.imread(filepath + sample_name + stomata_stack_suffix))
+    stomata_value = 128
+    composite_stack_large[stomata_stack] = stomata_value
+    print('***SAVING SEGMENTED STACK WITH LABELED STOMATA FROM STOMATA STACK***')
+    io.imsave(filepath + sample_name + 'SEGMENTED_w_STOMATA.tif', composite_stack_large)
+    print('\n*** PLEASE RUN THIS CODE AGAIN ON FILE ', sample_name + 'SEGMENTED_w_STOMATA.tif ***\n')
+    sys.exit(0)
+
 if rescale_factor == 0:
     print('***AUTOMATIC RESCALING BASED ON FILE SIZE***')
     if composite_stack_large.nbytes >= 2.2e9:
+
         print("***FILE IS LARGER THAT 2 GB - DOWNSCALING BY 2 IN ALL DIMMENSIONS***")
         rescale_factor = 2
     else:
@@ -366,6 +377,8 @@ if seg_values == 'default':
         stomata_value = 128
     elif np.any(unique_vals == 152):
         stomata_value = 152
+    elif 'stomata_stack_suffix' in locals():
+        stomata_value = -1
     bg_value = 177
     vein_value = 147
     ias_value = 255
@@ -415,6 +428,13 @@ else:
     # Remove the large stack to free up memory
     del composite_stack_large
 
+    if "stomata_stack_suffix" in locals():
+        print('***LOADING INDEPENDENT STOMATA STACK***')
+        stomata_stack = img_as_bool(io.imread(filepath + sample_name + stomata_stack_suffix))
+        stomata_value = 128
+        composite_stack[stomata_stack] = stomata_value
+        io.imsave(filepath + sample_name + 'SEGMENTED_w_STOMATA.tif', composite_stack)
+
     if cropping:
         print('***CROPPING THE IMAGE AROUND THE BOUNDING BOX***')
         print('***         OF STOMATA AND EPIDERMIS         ***')
@@ -448,14 +468,12 @@ else:
     io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'SEGMENTED_w_STOMATA_BBOX.tif', composite_stack)
 
     if 'stomata_stack_suffix' in locals():
-        print('***LOADING INDEPENDENT STOMATA STACK***')
-        stomata_stack = img_as_bool(io.imread(filepath + sample_name + stomata_stack_suffix))
         if stomata_cropping:
             stomata_stack = stomata_stack[zmin:zmax, cminAD:cmax, rmin:rmax]
         else:
             stomata_stack = stomata_stack[zmin:zmax, cminAD:cmaxAB, rmin:rmax]
         print("***SAVING BOUNDING BOX STOMATA STACK TO HARD DRIVE***")
-        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif', stomata_stack)
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_BBOX.tif', img_as_ubyte(stomata_stack))
 
 # Create the binary stacks needed for the analysis
 print('')
@@ -464,7 +482,7 @@ airspace_stack = Threshold(composite_stack, ias_value)
 if 'stomata_stack' in locals():
     stomata_airspace_stack = airspace_stack + stomata_stack
     if not os.path.isfile(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_AIRSPACE_STACK_BBOX.tif'):
-        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_AIRSPACE_STACK_BBOX.tif', stomata_airspace_stack)
+        io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_AIRSPACE_STACK_BBOX.tif', img_as_ubyte(stomata_airspace_stack))
 else:
     if fix_stomata:
         print('***FILLING HOLES WITHIN LABELED STOMATA***')
