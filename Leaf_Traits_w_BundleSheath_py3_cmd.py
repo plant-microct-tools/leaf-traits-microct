@@ -751,11 +751,18 @@ def main():
             if len(sample_path_split) == 1:
                 folder_name = '/MLresults/'
                 raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
-            else:
-                sample_name = sample_path_split[-3]
-                folder_name = sample_path_split[-2] + '/'
-                raw_ML_prediction_name = sample_path_split[-1]
+            elif len(sample_path_split) == 3:
+                if sample_path_split[0] == '.':
+                    sample_name = sample_path_split[-2]
+                    folder_name = sample_path_split[-2] + '/'
+                    raw_ML_prediction_name = sample_path_split[-1]
+                    filepath = base_folder_name + sample_name + '/'
+                else:
+                    sample_name = sample_path_split[-3]
+                    folder_name = sample_path_split[-2] + '/'
+                    raw_ML_prediction_name = sample_path_split[-1]
             filepath = base_folder_name + sample_name + '/'
+
             if reuse_raw_binary == 'True':
                 binary_filename = sample_name + binary_postfix
             # raw_ML_prediction_name = sample_name + 'fullstack_prediction.tif'
