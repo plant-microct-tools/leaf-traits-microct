@@ -529,6 +529,10 @@ stom_mask = invert(stomata_stack)
 # Cropping the composite stack to the largest arispace bounding box
 composite_stack = composite_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 
+# To save stomata stack
+print('*** SAVING STOMATA STACK CROPPED AT THE LARGEST AIRSPACE ***')
+io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_LARGEST_AIRSPACE.tif', stomata_stack)
+
 # Check if stomata stack does include values
 # Will throw an error if at least one stomata is disconnected from the airspace
 if np.sum(stomata_stack) == 0:
