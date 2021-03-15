@@ -66,6 +66,7 @@ import time
 from tqdm import tqdm
 import joblib
 import multiprocessing
+import gc
 
 __author__ = "Guillaume Théroux-Rancourt"
 __copyright__ = ""
@@ -258,9 +259,11 @@ if stomata_value not in unique_vals:
     raise ValueError(sample_name + ': STOMATA HAVE NOT BEEN LABELLED!')
 
 # If stomata are label, carry on with resizing the image stack
-composite_stack = np.asarray(StackResize(
-    composite_stack_large, rescale_factor), dtype='uint8')
-
+if rescale_factor == 1:
+    composite_stack = np.copy(composite_stack_large)
+else:
+    composite_stack = np.asarray(StackResize(
+        composite_stack_large, rescale_factor), dtype='uint8')
 
 print("  Large stack shape: ", str(composite_stack_large.shape))
 print("  Small stack shape: ", str(composite_stack.shape))
@@ -318,14 +321,21 @@ else:
     io.imsave(filepath + sample_name + 'MESOPHYLL_EDGE.tif', img_as_ubyte(mesophyll_edge))
 
 # ## Get the Euclidian distance from all stomata
-print('***COMPUTING EUCLIDIAN DISTANCE MAP***')
-t0 = time.time()
-L_euc = np.ma.masked_array(distance_transform_edt(stom_mask), mask)
-t1 = time.time() - t0
-print('  L_euc processing time: '+str(np.round(t1))+' s')
+if os.path.isfile(filepath + sample_name + '-L_Euc.tif'):
+    print('***LOADING PRECOMPUTED EUCLIDIAN DISTANCE MAP***')
+    L_euc = io.imread(filepath + sample_name + '-L_Euc.tif')
+else:
+    print('***COMPUTING EUCLIDIAN DISTANCE MAP***')
+    t0 = time.time()
+    L_euc = np.ma.masked_array(distance_transform_edt(stom_mask), mask, dtype="float32")
+    t1 = time.time() - t0
+    print('  L_euc processing time: '+str(np.round(t1))+' s')
+    print('***SAVING EUCLIDIAN DISTANCE MAP TO HARD DRIVE***')
+    io.imsave(filepath + sample_name + '-L_Euc.tif', L_euc)
 
-L_euc_average_ax0 = np.mean(L_euc, axis=0)
-L_euc_average_ax2 = np.mean(L_euc, axis=2)
+# TESTING
+# L_euc_average_ax0 = np.mean(L_euc, axis=0)
+# L_euc_average_ax2 = np.mean(L_euc, axis=2)
 
 # ## Get the geodesic distance map
 #
@@ -347,27 +357,41 @@ stomata_airspace_mask = ~largest_airspace_w_stomata.astype(bool)
 largest_airspace_masked_array = np.ma.masked_array(
     stom_mask, stomata_airspace_mask)
 
-print('***COMPUTING GEODESIC DISTANCE MAP***')
-t0 = time.time()
-L_geo = skfmm.distance(largest_airspace_masked_array)
-t1 = time.time() - t0
-print('  L_geo processing time: '+str(np.round(t1))+' s')
+if os.path.isfile(filepath + sample_name + '-Python_tortuosity.tif'):
+    print('***LOADING PRECOMPUTED TORTUOSITY FACTOR***')
+    Tortuosity_Factor = io.imread(filepath + sample_name + '-Python_tortuosity.tif')
+else:
+    if os.path.isfile(filepath + sample_name + '-L_geo.tif'):
+        print('***LOADING PRECOMPUTED GEODESIC DISTANCE MAP***')
+        L_geo = io.imread(filepath + sample_name + '-L_geo.tif')
+    else:
+        print('***COMPUTING GEODESIC DISTANCE MAP***')
+        t0 = time.time()
+        L_geo = skfmm.distance(largest_airspace_masked_array)
+        t1 = time.time() - t0
+        print('  L_geo processing time: '+str(np.round(t1))+' s')
+        L_geo = np.float32(L_geo)
+        print('***SAVING GEODESIC DISTANCE MAP TO HARD DRIVE***')
+        io.imsave(filepath + sample_name + '-L_geo.tif', L_geo)
+    print('***COMPUTING TORTUOSITY FACTOR, TAU***')
+    Tortuosity_Factor = np.square(L_geo / L_euc)
+    Tortuosity_Factor[Tortuosity_Factor < 1] = 1
+    Tortuosity_factor_average_ax0 = np.mean(Tortuosity_Factor, axis=0)
+    Tortuosity_factor_average_ax2 = np.mean(Tortuosity_Factor, axis=2)
 
-L_geo_average = np.mean(L_geo, axis=0)
+    print('***SAVING TORTUOSITY MAP TO HARD DRIVE***')
+    io.imsave(filepath + sample_name + '-Python_tortuosity.tif',
+              np.asarray(Tortuosity_Factor, dtype="float32"))
+    io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax0.tif',
+              np.asarray(Tortuosity_factor_average_ax0, dtype="float32"))
+    io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax2.tif',
+              np.asarray(Tortuosity_factor_average_ax2, dtype="float32"))
 
-print('***COMPUTING TORTUOSITY FACTOR, TAU***')
-Tortuosity_Factor = np.square(L_geo / L_euc)
-Tortuosity_Factor[Tortuosity_Factor < 1] = 1
-Tortuosity_factor_average_ax0 = np.mean(Tortuosity_Factor, axis=0)
-Tortuosity_factor_average_ax2 = np.mean(Tortuosity_Factor, axis=2)
-
-print('  Saving tortuosity as TIFF files')
-io.imsave(filepath + sample_name + '-Python_tortuosity.tif',
-          np.asarray(Tortuosity_Factor, dtype="float32"))
-io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax0.tif',
-          np.asarray(Tortuosity_factor_average_ax0, dtype="float32"))
-io.imsave(filepath + sample_name + '-Python_tortuosity_MEAN-ax2.tif',
-          np.asarray(Tortuosity_factor_average_ax2, dtype="float32"))
+    # Remove L_geo to free up memory
+    del L_geo
+    del Tortuosity_factor_average_ax0
+    del Tortuosity_factor_average_ax2
+    gc.collect()
 
 # ## Compute lateral diffusivity
 print('***MAP THE ABAXIAL EPIDERMIS***')
@@ -391,38 +415,46 @@ else:
 
 epidermis_edge_purified = getLargestAirspace(epidermis_edge_bottom)
 
+if os.path.isfile(filepath + sample_name + '-Python_Path_lenghtening.tif'):
+    print('***LOADING PRECOMPUTED PATH LENGTHENING MAP***')
+    Path_lenghtening = io.imread(filepath + sample_name + '-Python_Path_lenghtening.tif')
+else:
+    # Compute L_epi
+    if os.path.isfile(filepath + sample_name + 'L_epi.tif'):
+        print('***LOADING PRECOMPUTED EPIDERMIS DISTANCE MAP***')
+        L_epi = io.imread(filepath + sample_name + 'L_epi.tif')
+    else:
+        print('***COMPUTING L_EPI MAP***')
+        epidermis_mask = invert(epidermis_edge_purified)
+        t0 = time.time()
+        L_epi = np.ma.masked_array(distance_transform_edt(epidermis_mask), mask, dtype="float32")
+        t1 = time.time() - t0
+        print('  L_epi processing time: '+str(np.round(t1, 1))+' s')
+        print('***SAVING EPIDERMIS DISTANCE MAP TO HARD DRIVE***')
+        io.imsave(filepath + sample_name + 'L_epi.tif', L_epi)
 
-# Compute L_epi
-print('***COMPUTING L_EPI MAP***')
-epidermis_mask = invert(epidermis_edge_purified)
+    # Compute path lenthening.
+    # Uncomment the end to remove data close to the epidermis where lateral diffusivity values
+    print('***COMPUTING PATH LENGTH MAP***')
+    Path_lenghtening = (L_euc / L_epi)  # * (L_epi>10)
 
-t0 = time.time()
-L_epi = np.ma.masked_array(distance_transform_edt(epidermis_mask), mask)
-t1 = time.time() - t0
+    # Remove L_euc and L_epi
+    del L_epi
+    gc.collect()
 
-print('  L_epi processing time: '+str(np.round(t1, 1))+' s')
-
-L_epi_average_ax0 = np.median(L_epi, axis=0)
-L_epi_average_ax2 = np.median(L_epi, axis=2)
-
-# Compute path lenthening.
-# Uncomment the end to remove data close to the epidermis where lateral diffusivity values
-print('***COMPUTING PATH LENGTH MAP***')
-Path_lenghtening = (L_euc / L_epi)  # * (L_epi>10)
-
-
-Path_lenghtening_average_ax0 = np.mean(Path_lenghtening, axis=0)
-Path_lenghtening_average_ax2 = np.mean(Path_lenghtening, axis=2)
+    print('  Saving path length maps as TIFF files')
+    io.imsave(filepath + sample_name + '-Python_Path_lenghtening.tif',
+              np.asarray(Path_lenghtening, dtype="float32"))
+    io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax0.tif',
+              np.asarray(Path_lenghtening_average_ax0, dtype="float32"))
+    io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax2.tif',
+              np.asarray(Path_lenghtening_average_ax2, dtype="float32"))
 
 
-print('  Saving path length maps as TIFF files')
-io.imsave(filepath + sample_name + '-Python_Path_lenghtening.tif',
-          np.asarray(Path_lenghtening, dtype="float32"))
-io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax0.tif',
-          np.asarray(Path_lenghtening_average_ax0, dtype="float32"))
-io.imsave(filepath + sample_name + '-Python_Path_lenghtening_MEAN_ax2.tif',
-          np.asarray(Path_lenghtening_average_ax2, dtype="float32"))
-
+#########################################
+##########################################
+## THIS CODE BELOW COULD BE MOVED ABOVE TO COMPUTE IT BEFORE EVERYTHING ELSE
+## MIGHT SAVE SOME RAM
 
 print('***FINDING THE UNIQUE STOMATA REGIONS***')
 print('  this')
@@ -443,6 +475,9 @@ for regions in tqdm(np.arange(len(props_of_unique_stoma))):
         invert(unique_stoma == props_of_unique_stoma[regions].label)), mask)
     stomata_regions[L_euc_stom == L_euc] = props_of_unique_stoma[regions].label
     del L_euc_stom
+
+del L_euc
+gc.collect()
 
 regions_all = np.unique(stomata_regions)
 
