@@ -230,7 +230,9 @@ Assuming all your image folder for an experiments are located in the same folder
 
 ***
 
-## Post-processing and leaf traits analysis: `Leaf_Traits_w_BundleSheath_py3_cmd.py`
+## Post-processing and leaf traits analysis
+
+### Default program: `Leaf_Traits_w_BundleSheath_py3_cmd.py`
 
 With this program, the full stack segmentation predicted with the random-forest machine learning program above is first cleaned up to remove some segmentation errors before saving the post-processed/cleaned up file (saved with `SEGMENTED.tif` as suffix), and then traits are analyzed. The program can be used for both or only for traits analysis when the post-processed file has been saved. Being produced with this function are:
 
@@ -387,6 +389,58 @@ Assuming all your image folder for an experiments are located in the same folder
 A jupyter notebook with examples of the the post-processing and leaf trait analysis code will come soon.
 
 ***
+
+### Flexible program: `Leaf_Traits_Flexible_Traits_py3_cmd.py`
+
+This program uses a flexible approach to extracting data out of the segmented stack. Up to 10 different tissues can be analysed, with no specific order and the default approach presented above (approach which suited our pipeline at the time).
+
+The program is similar to the default version, but works only on single file mode at the moment. Most of the arguments provided are the same. The most important change is that one can define each tissue or class to be analyzed, all detailled below.
+
+__Note__: If using this option, some arguments are _required_ to be defined and others are _optional_. See below for details. Also, arguments can be defined in any order. 
+
+
+```
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_Flexible_Traits_py3_cmd.py sample_name=XYZ px_size=1 units=X bg_value=1 rescale_factor=1 reuse_binary=True/False binary_suffix=X trim_slices=X trim_column_L=X trim_column_R=X tissue_values=1,2,3,4,5,6 path_to_image_folder='/this/is/a/long/path/'
+```
+
+Real example:
+
+```
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_Flexible_Traits_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um bg_value=204 rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/' tissue1=epidermis,96,True,False,2,27 tissue2=palisade,22,True,True,2,8
+```
+
+**Required arguments (option 1):**
+
+`python`: This just calls python 3.
+
+`/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the trait analysis program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
+
+`sample_name`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. The base file name is the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
+
+`pixel_size `: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
+
+`units`: What units the pixels are set to. For tracking purposes and only used in the result file.
+
+`bg_value`: The value of the background color.
+
+`rescale_factor`: Default is 1 (no rescaling). In the case you have downscaled the original image during segmentation, this is to upscale the _x_ and _y_ axis by this factor.
+
+`reuse_binary`: If you have downscaled the image during the automated segmentation and that your thresholded stack, i.e. the binary image, gave an accurate representation of the mesophyll cells and the airspace, this original sized binary image can be reuse to create the post-processed stack. Use True to reuse the original binary in its original size, or False to not use original binary and instead use the airspace and mesophyll cell predictions. _Note that if you reuse the original binary stack, i.e. set this to `True`, then you will need to provide a `binary_suffix`. See optional arguments below._
+
+`path_to_image_folder `: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+`tissue1`, `tissue2`, and up to `tissue10`: Must define at least one tissue class, and up to ten. These are unique tissue classes. Defines (in specific order) the tissue type, corresponding pixel value, whether or not the tissue is split into multiple non-contiguous volumes, whether or not to compute surface area of tissue class, integer step size for measuring SA (default is 2, and we recommend using this value), and the volume threshold which is the minimum volume for unique volumes that will be considered when measuring. For example using `tissue1=epidermis,128,True,False,2,27` defines the name of 'tissue' as 'epidermis', the pixel value of 'tissue1' as '128', the 'True' specifies 'tissue1' is split into multiple volumes, the 'False' tells the software not to calculate a surface area for 'tissue1', the '2' tells the software to use a integer step size of '2' for computing SA, and the '27' tells the software to ignore unique volumes in this tissue class if they are less than 27 pixels^3.
+
+**Optional arguments (option 1):**
+
+`binary_suffix`: _Required argument if `reuse_binary` is set to `True`. These are the suffix put after `sample name` as explained above.
+
+`trim_slices`: If not defined, no trimming is done. Most often, the automated segmentation performs poorly on the edges of the image stack. This can be useful when there are flase classifications and the top and bottom epidermises are connected, for example. With this variable, you can trim, or not, at the beginning and the end of the stack. If not defined, no trimming is done.
+
+`trim_column_L` and `trim_column_R`: If not defined, no trimming is done. With these variables, you can trim, or not, on the left and right side of the stack.
+
+
+
 
 ## Leaf tortuosity and airspace diffusive traits analysis: `Leaf_Tortuosity_py3.py`
 A python version of the method used by [Earles et al. (2018)](#references) has been developped and can be used from the command line. It is now stable and has been used to analysis more than 30 segmented scans in an automated command line function. There are still some glitches with certain stacks and I will troubleshoot that in the following days. Please contact me if you use this function in order to improve it. If you run into an error, please create an issue and copy the error message into it. An interactive version, probably as notebook, will be produced from this code.
