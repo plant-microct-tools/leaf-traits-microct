@@ -152,6 +152,8 @@ Once you launch the program from the command line, as above, the program will ei
 
 `nb_estimators`: Default is 50. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
 
+`crop_image`: Default is `False`. If you want to crop an image along width and height, find the region to crop in ImageJ by drawing a rectangle around the smallest area containing the whole leaf. Then get the values for that rectangle using either a measurement (using `Set Measurement` to select the bounding area) or by recording a macro and using the inputs generated. In both case, you will get four values, which should be used. This should then ressemble something like: `crop_image=0,500,1200,800`. The first and second values are the top left corner of the rectangle, the two other are the total width and height, in pixels. A video will be posted to explain how to get this. 
+
 
 ***Option 2: Passing arguments using `.txt` file(s)***
 
