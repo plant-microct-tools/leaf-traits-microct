@@ -62,6 +62,8 @@ def main():
                 nb_estimators = int(value)
             if key == 'path_to_image_folder':
                 base_folder_name = str(value)
+            if key == 'crop_image':
+                crop_image = str(value)
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
@@ -69,6 +71,8 @@ def main():
             except NameError: threshold_rescale_factor = 1
             try: nb_estimators
             except NameError: nb_estimators = 50
+            try: crop_image
+            except NameError: crop_image = False
 
     if len(filenames)>0:
         j = 0
@@ -229,6 +233,18 @@ def main():
             label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, labelled_stack=True)
             if len(label_stack.shape) == 4:
                 label_stack = label_stack[:,:,:,0]
+
+            # Crop the images if needed
+            if isinstance(crop_image, str):
+                print('***CROPPING THE IMAGES TO A USER DEFINED BOUNDING BOX***')
+                cmin, rmin, cmax, rmax = [int(x) for x in crop_image.split(',')]
+                cmax = cmin+cmax
+                rmax = rmin+rmax
+                gridrec_stack = gridrec_stack[:, rmin:rmax, cmin:cmax]
+                phaserec_stack = phaserec_stack[:, rmin:rmax, cmin:cmax]
+                label_stack = label_stack[:, rmin:rmax, cmin:cmax]
+                gc.collect()
+
             # Load the stacks and downsize a copy of the binary to speed up the thickness processing
             if os.path.isfile(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif') == False:
                 print('***CREATE THE THRESHOLDED IMAGE***')
