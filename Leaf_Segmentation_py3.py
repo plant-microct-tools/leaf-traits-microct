@@ -296,14 +296,23 @@ def main():
                 print('***SAVING TRAINED MODEL***')
                 joblib.dump(rf_transverse, folder_name+sample_name+'RF_model.joblib',compress='zlib')
 
+            print('')
+            print('time now after training:', str(time.time()))
+            print('')
+
             print('***STARTING FULL STACK PREDICTION***')
             RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
+
+            print('')
+            print('time now after full stack:', str(time.time()))
+            print('')
+
             joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',compress='zlib')
             io.imsave(folder_name+sample_name+"fullstack_prediction.tif", RFPredictCTStack_out)
             end_time = time.time()
             print('Time is now', str(end_time))
             print('Done in', str(end_time - begin_time))
-            print('Time after loading the images', str(end_time - time_after_loading_images))
+            print('Time since loading the images', str(end_time - time_after_loading_images))
         #
         else:
             print('\nNot all required arguments are defined. Check command line input and try again.\n')
