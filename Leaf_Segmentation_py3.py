@@ -198,7 +198,7 @@ def main():
 
             # check for definition of nb_training_slices and if not present, then define by default
             try: nb_training_slices
-            except NameError: nb_training_slices = len(imgj_slices) - 1
+            except NameError: nb_training_slices = len(imgj_slices)
             # check for definition of path_to_image_folder and if not present, then define by default
             try: base_folder_name
             except NameError: base_folder_name = '/'.join(path.split('/')[:-1]) + '/image_folder/'
