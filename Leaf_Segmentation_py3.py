@@ -14,6 +14,7 @@ import sys
 import os
 import gc
 import joblib
+import time
 # from sklearn.externals import joblib
 
 
@@ -185,6 +186,8 @@ def main():
             j += 1
     else:
         # check for definitions of all required parameters before proceeding
+        begin_time = time.time()
+        print('Time is now:', str(begin_time))
         try: sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, raw_slices
         except NameError: req_not_def = 1
         if req_not_def==0:
@@ -267,6 +270,9 @@ def main():
             label_test_slices_subset = labelled_slices_seq[test_slices]
     #
             print("")
+            time_after_loading_images = time.time()
+            print('time_after_loading_images:', str(begin_time))
+
             displayImages_displayDims(gridrec_stack, phaserec_stack, label_stack, localthick_stack, gridphase_train_slices_subset,
                               gridphase_test_slices_subset, label_train_slices_subset, label_test_slices_subset)
             print("")
@@ -294,7 +300,10 @@ def main():
             RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
             joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',compress='zlib')
             io.imsave(folder_name+sample_name+"fullstack_prediction.tif", RFPredictCTStack_out)
-            print('Done!')
+            end_time = time.time()
+            print('Time is now', str(end_time))
+            print('Done in', str(end_time - begin_time))
+            print('Time after loading the images', str(end_time - time_after_loading_images))
         #
         else:
             print('\nNot all required arguments are defined. Check command line input and try again.\n')
