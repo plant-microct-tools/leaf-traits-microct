@@ -10,12 +10,11 @@ We also provide further tools to process segmented images, to extract leaf anato
 
 [logo]: https://github.com/mattjenkins3/3DLeafCT/blob/add_changes/imgs_readme/leaf1.png "translucent epidermis with veins" -->
 
-## Preprint now online!
+## Citing this tool
 
 I you use this tool, and if you want to know more about the performance of this tool, please see and cite our preprint.
 
-> __Théroux-Rancourt G, Jenkins MR, Brodersen CR, McElrone AJ, Forrestel EJ, Earles JM (2019)__ [Digitally Deconstructing Leaves in 3D Using X-ray Microcomputed Tomography and Machine Learning](https://www.biorxiv.org/content/10.1101/814954v1). bioRxiv 814954; doi: [10.1101/814954](https://doi.org/10.1101/814954)
-
+> __Théroux-Rancourt G, Jenkins MR, Brodersen CR, McElrone AJ, Forrestel EJ, Earles JM (2019)__ [Digitally Deconstructing Leaves in 3D Using X-ray Microcomputed Tomography and Machine Learning](https://bsapubs.onlinelibrary.wiley.com/doi/full/10.1002/aps3.11380) *Applications in Plant Sciences* 8(7), e11380.
 ## Table of contents
 - [Package requirements](#requirements)
 - [Preparing for automated segmentation](#preparation-of-leaf-microCT-images-for-automated-segmentation)
@@ -150,7 +149,7 @@ Once you launch the program from the command line, as above, the program will ei
 
 `rescale_factor`: Default is 1 (no rescaling). Depending on the amount of RAM available, you might need to adjust this value. For stacks of smaller size, ~250 Mb, no rescaling should be necessary. Files larger than 1 Gb should be rescaled by 2. This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
 
-`threshold_rescale_factor`: Default is 1 (no rescaling). This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
+`threshold_rescale_factor`: Default is same value as `rescale_factor`. This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
 
 `nb_estimators`: Default is 50. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
 
