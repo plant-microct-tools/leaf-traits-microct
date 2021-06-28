@@ -92,36 +92,36 @@ def define_params(list_of_lines): # moved to 'Leaf_Segmentation_Functions_py3.py
     base_folder_name = list_of_lines[10] # i.e. image folder
 
     return sample_name, postfix_phase, Th_phase, postfix_grid, Th_grid, nb_training_slices, raw_slices, rescale_factor, threshold_rescale_factor, nb_estimators, base_folder_name
-
-def Trim_Individual_Stack(large_stack, small_stack):
-
-    dims = np.array(large_stack.shape, dtype='float') / \
-                    np.array(small_stack.shape, dtype='float')
-    slice_diff = large_stack.shape[0] - small_stack.shape[0]
-    if slice_diff != 0:
-        print('*** trimming slices ***')
-        large_stack = np.delete(large_stack, np.arange(
-                        large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
-    if np.all(dims <= 2):
-        print("*** no rows/columns trimming necessary ***")
-        return large_stack
-    else:
-        print("*** trimming rows and/or columns ***")
-        if dims[1] > 2:
-            if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
-                large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
-            else:
-                if (large_stack.shape[1]-2)/2 == small_stack.shape[1]:
-                    large_stack = np.delete(large_stack, np.arange(
-                        large_stack.shape[1]-2, large_stack.shape[1]), axis=1)
-        if dims[2] > 2:
-            if (large_stack.shape[2]-1)/2 == small_stack.shape[2]:
-                large_stack = np.delete(large_stack, large_stack.shape[2]-1, axis=2)
-            else:
-                if (large_stack.shape[2]-2)/2 == small_stack.shape[2]:
-                    large_stack = np.delete(large_stack, np.arange(
-                        large_stack.shape[2]-2, large_stack.shape[2]), axis=2)
-        return large_stack
+#
+# def Trim_Individual_Stack(large_stack, small_stack):
+#
+#     dims = np.array(large_stack.shape, dtype='float') / \
+#                     np.array(small_stack.shape, dtype='float')
+#     slice_diff = large_stack.shape[0] - small_stack.shape[0]
+#     if slice_diff != 0:
+#         print('*** trimming slices ***')
+#         large_stack = np.delete(large_stack, np.arange(
+#                         large_stack.shape[0]-slice_diff, large_stack.shape[0]), axis=0)
+#     if np.all(dims <= 2):
+#         print("*** no rows/columns trimming necessary ***")
+#         return large_stack
+#     else:
+#         print("*** trimming rows and/or columns ***")
+#         if dims[1] > 2:
+#             if (large_stack.shape[1]-1)/2 == small_stack.shape[1]:
+#                 large_stack = np.delete(large_stack, large_stack.shape[1]-1, axis=1)
+#             else:
+#                 if (large_stack.shape[1]-2)/2 == small_stack.shape[1]:
+#                     large_stack = np.delete(large_stack, np.arange(
+#                         large_stack.shape[1]-2, large_stack.shape[1]), axis=1)
+#         if dims[2] > 2:
+#             if (large_stack.shape[2]-1)/2 == small_stack.shape[2]:
+#                 large_stack = np.delete(large_stack, large_stack.shape[2]-1, axis=2)
+#             else:
+#                 if (large_stack.shape[2]-2)/2 == small_stack.shape[2]:
+#                     large_stack = np.delete(large_stack, np.arange(
+#                         large_stack.shape[2]-2, large_stack.shape[2]), axis=2)
+#         return large_stack
 
 def smooth_epidermis(img, epidermis, background, spongy, palisade, ias, vein):
     # FIX: clean this up, perhaps break into multiple functions

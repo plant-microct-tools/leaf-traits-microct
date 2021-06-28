@@ -1,5 +1,7 @@
 # Tools to process and analyze plant leaf microCT scans
 
+_This is a fork made for my own edits to the code intended for my own research. For the stable release please visit the main repository._
+
 X-ray micro-computed tomography (microCT) is rapidly becoming a popular technique for measuring the 3D geometry of plant organs, such as roots, stems, leaves, flowers, and fruits. Due to the large size of these datasets (> 20 Gb per 3D image), along with the often irregular and complex geometries of many plant organs, image segmentation represents a substantial bottleneck in the scientific pipeline. Here, we are developing a Python module that utilizes machine learning to dramatically improve the efficiency of microCT image segmentation with minimal user input. By segmentation we mean the identification of specific tissues within the leaves as single values within an image file.
 
 We also provide further tools to process segmented images, to extract leaf anatomical traits commonly measured, such as in [Théroux-Rancourt et al. (2017)](#references), or to compute airspace tortuosity and related airspace diffusion traits from [Earles et al. (2018)](#references).
@@ -8,12 +10,11 @@ We also provide further tools to process segmented images, to extract leaf anato
 
 [logo]: https://github.com/mattjenkins3/3DLeafCT/blob/add_changes/imgs_readme/leaf1.png "translucent epidermis with veins" -->
 
-## Preprint now online!
+## Citing this tool
 
 I you use this tool, and if you want to know more about the performance of this tool, please see and cite our preprint.
 
-> __Théroux-Rancourt G, Jenkins MR, Brodersen CR, McElrone AJ, Forrestel EJ, Earles JM (2019)__ [Digitally Deconstructing Leaves in 3D Using X-ray Microcomputed Tomography and Machine Learning](https://www.biorxiv.org/content/10.1101/814954v1). bioRxiv 814954; doi: [10.1101/814954](https://doi.org/10.1101/814954)
-
+> __Théroux-Rancourt G, Jenkins MR, Brodersen CR, McElrone AJ, Forrestel EJ, Earles JM (2019)__ [Digitally Deconstructing Leaves in 3D Using X-ray Microcomputed Tomography and Machine Learning](https://bsapubs.onlinelibrary.wiley.com/doi/full/10.1002/aps3.11380) *Applications in Plant Sciences* 8(7), e11380.
 ## Table of contents
 - [Package requirements](#requirements)
 - [Preparing for automated segmentation](#preparation-of-leaf-microCT-images-for-automated-segmentation)
@@ -148,7 +149,7 @@ Once you launch the program from the command line, as above, the program will ei
 
 `rescale_factor`: Default is 1 (no rescaling). Depending on the amount of RAM available, you might need to adjust this value. For stacks of smaller size, ~250 Mb, no rescaling should be necessary. Files larger than 1 Gb should be rescaled by 2. This is a downsizing integer that can be used to resize the stack in order to make the computation faster or to have a file size manageable by the program. It will resize only the _x_ and _y_ axes and so keeps more resolution in the _z_ axis. These files are used during the whole segmentation process. Note that the resulting files will be anisotropic, i.e. one voxel has different dimension in _x_, _y_, and _z_.
 
-`threshold_rescale_factor`: Default is 1 (no rescaling). This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
+`threshold_rescale_factor`: Default is same value as `rescale_factor`. This one resizes _z_, i.e. depth or the slice number, after having resized using the `rescale_factor`. This is used in the computation of the local thickness (computing the largest size within the cells -- used in the random forest segmentation). This is particularly slow process and benefits from a smaller file, and it matters less if there is a loss of resolution in this step. Note that this image is now isotropic, i.e. voxels have same dimensions in all axes.
 
 `nb_estimators`: Default is 50. The number of estimators, or trees, used in the random forest classification model. Usually between 10 and 100. Increasing the value will increase the model size (i.e. more RAM needed) and may not provide better classification.
 
@@ -257,29 +258,81 @@ With this program, the full stack segmentation predicted with the random-forest 
 		- Number of slices trimmed at the left of the stack in cross sectionnal view: `_X_trimmed_left`
 		- Number of slices trimmed at the right of the stack in cross sectionnal view: `_X_trimmed_right`
 		- Pixel size: `PixelSize`
+		- Units for pixel size: `Units`
 
 
 ***
 
-As with the segmentation function, the program is currently setup to run non-interactively from the command line using `.txt` file(s):
+As with the segmentation function, the program is currently setup to run non-interactively from the command line. As with the segmentation code above, two options are offered.
+
+***Option 1: Passing arguments using the command line***
+
+Note: If using this option, some arguments are _required_ to be defined and others are _optional_. See below for details. Also, arguments can be defined in any order. 
+
 
 ```
-python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_file_name.txt
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=XYZ px_size=1 units=X rescale_factor=1 reuse_binary=True/False binary_suffix=X trim_slices=X trim_column_L=X trim_column_R=X tissue_values=1,2,3,4,5,6 path_to_image_folder='/this/is/a/long/path/'
+```
+
+Real example:
+
+```
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py sample_name=Jmic3101_S1_ px_size=0.65 units=um rescale_factor=1 reuse_binary=False trim_slices=10 trim_column_L=100 trim_column_R=100 tissue_values=51,204,0,255,102,153 path_to_image_folder='/run/media/guillaume/microCT_GTR_8tb/'
+```
+
+**Required arguments (option 1):**
+
+`python`: This just calls python 3.
+
+`/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the trait analysis program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
+
+`sample_name`: This the filename and the name of the folder. Right now, it is setup so that the folder and the base file name are exactly the same. The base file name is the first part of your naming convention, like `Carundinacea2004_0447_` which is the name of the folder and also exactly the same as in `Carundinacea2004_0447_GRID-8bit.tif`, the gridrec file name.
+
+`pixel_size `: The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
+
+`units`: What units the pixels are set to. For tracking purposes and only used in the result file.
+
+`rescale_factor`: Default is 1 (no rescaling). In the case you have downscaled the original image during segmentation, this is to upscale the _x_ and _y_ axis by this factor.
+
+`reuse_binary`: If you have downscaled the image during the automated segmentation and that your thresholded stack, i.e. the binary image, gave an accurate representation of the mesophyll cells and the airspace, this original sized binary image can be reuse to create the post-processed stack. Use True to reuse the original binary in its original size, or False to not use original binary and instead use the airspace and mesophyll cell predictions. _Note that if you reuse the original binary stack, i.e. set this to `True`, then you will need to provide a `binary_suffix`. See optional arguments below._
+
+`tissue_values`: A string of values correspond to the pixel value, found in ImageJ, for the following tissues in this exact order: epidermis (51), background (204), mesophyll cells (0), airspace (255), veins (102), and bundle sheaths (153). If bundle sheaths are absent, insert `-1` instead. In the command line, this would look like: `'51,204,0,255,102,153'`.
+
+`path_to_image_folder `: Assuming all your image folder for an experiments are located in the same folder, this is the path to this folder (don't forget the `/` at the end).
+
+**Optional arguments (option 1):**
+
+`binary_suffix`: _Required argument if `reuse_binary` is set to `True`. These are the suffix put after `sample name` as explained above.
+
+`trim_slices`: If not defined, no trimming is done. Most often, the automated segmentation performs poorly on the edges of the image stack. This can be useful when there are flase classifications and the top and bottom epidermises are connected, for example. With this variable, you can trim, or not, at the beginning and the end of the stack. If not defined, no trimming is done.
+
+`trim_column_L` and `trim_column_R`: If not defined, no trimming is done. With these variables, you can trim, or not, on the left and right side of the stack.
+
+***
+
+***Option 2: Passing arguments using `.txt` file(s)***
+
+From the terminal window, the program is called like this:
+
+```
+python /path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_file_name.txt path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/
 ```
 
 Real example, in which two scans are analyzed back-to-back without interruption (using two argument files):
 
 ```
-python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py arg_analysis1.txt,arg_analysis2.txt
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py argfiles=arg_analysis1.txt,arg_analysis2.txt path_to_argfile_folder=~/_github/leaf-traits-microct/image_folder/sample_name/argfile_folder/
 ```
 
 `python`: This just calls python 3.
 
 `/path/to/this/repo/leaf-traits-microct/Leaf_Traits_w_BundleSheath_py3_cmd.py`: This should be the complete path to where the trait analysis program is. If you have cloned the repository from github, replace `/path/to/this/repo/` with the path to the `leaf-traits-microct/` repository.
 
-`arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/example_argfile_folder/arg_file_example_TRAITS.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
+`argfiles=arg_file_name.txt`: These are "argument files" built using the architecture described below. An [example argument file for analysis](https://github.com/plant-microct-tools/leaf-traits-microct/blob/dev/example_argfile_folder/arg_file_example_TRAITS.txt) is downloaded as part of this repository. Multiple argument files are called by separating them by commas `,` (no spaces). These files are built using a text editor or IDE and then saved as `.txt` files in the `argfile_folder/` folder (also downloaded as part of this repository).
 
-Once you launch the program from the command line, as above, the program will either begin working on scans or throw the error: `Some of the information you entered is incorrect. Try again.` If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan (if it is not already).
+`path_to_argfile_folder=/path/to/this/repo/leaf-traits-microct/argfile_folder/`: This is the complete path to where the argfile for a segmentation can be found. When using _Option 2_ we highly recommend keeping the argument file for a scan in that scan's corresponding base folder, however you can keep them anywhere as long as the `path_to_argfile_folder` is entered correctly.
+
+Once you launch the program from the command line, as above, the program will either begin working on scans or throw an error. If this error is encountered, then the `/path/to/this/repo/leaf-traits-microct/argfile_folder/` or the name of an `arg_file_name.txt` (possibly multiple files) was entered incorrectly. Check this information for accuracy and try again. When information used to launch the program from the command line is entered correctly, the program will execute independently. It will print out some messages saying what is being done and some progress bars for the more lengthy computations. It can take several hours to segment each whole stack. The program will deposit all results into a folder called `MLresults/` that will be in the image folder corresponding to each scan (if it is not already).
 
 #### On building argument files for trait analysis:
 
@@ -296,6 +349,10 @@ These are the suffix put after `sample name` as explained above.
 `# pixel size (any unit desired)`  
 `0.1625`:  
 The length of a pixel. Can be any unit. Allows for the computation of the size related traits.
+
+`# units for pixel size`  
+`um`:  
+What units the pixels are set to. For tracking purposes and only used in the result file.
 
 `# rescale factor (default is 1)`  
 `1`:  

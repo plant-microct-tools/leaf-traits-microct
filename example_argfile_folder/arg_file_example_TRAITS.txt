@@ -4,6 +4,8 @@ Carundinacea2004_0447_
 BINARY-8bit.tif
 # pixel size (any unit desired)
 0.1625
+# units for pixel size
+um
 # rescale factor (default is 1)
 1
 # reuse binary (use True --> use original size, or False --> do not use original size)

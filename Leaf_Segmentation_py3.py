@@ -13,8 +13,7 @@ from Leaf_Segmentation_Functions_py3 import *  # Custom ML microCT functions
 import sys
 import os
 import gc
-from sklearn.externals import joblib
-
+import joblib
 
 def main():
     # Extract data from command line input
@@ -65,7 +64,7 @@ def main():
             try: rescale_factor
             except NameError: rescale_factor = 1
             try: threshold_rescale_factor
-            except NameError: threshold_rescale_factor = 1
+            except NameError: threshold_rescale_factor = rescale_factor
             try: nb_estimators
             except NameError: nb_estimators = 50
 
