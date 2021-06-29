@@ -60,6 +60,8 @@ def main():
                 nb_estimators = int(value)
             if key == 'path_to_image_folder':
                 base_folder_name = str(value)
+            if key == 'model_training_only':
+                model_training_only = str(value)
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
@@ -67,6 +69,8 @@ def main():
             except NameError: threshold_rescale_factor = rescale_factor
             try: nb_estimators
             except NameError: nb_estimators = 50
+            try: model_training_only
+            except NameError: model_training_only = 'False'
 
     if len(filenames)>0:
         j = 0
@@ -183,6 +187,8 @@ def main():
         except NameError: req_not_def = 1
         if req_not_def==0:
             print('\nSingle scan mode...\n')
+            if model_training_only == 'True':
+                print('Model training mode\n')
 
             # Get the slice numbers into a vector of integer
             imgj_slices = [int(x) for x in raw_slices.split(',')]
@@ -262,15 +268,41 @@ def main():
                 print(("    Training slices (" + str(len(train_slices))+ " slices):" + str(gridphase_train_slices_subset)))
                 print(("    Test slices (" + str(len(test_slices))+ " slices):" + str(gridphase_test_slices_subset)))
 
-                rf_transverse = train_model(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
-                                    gridphase_train_slices_subset, gridphase_test_slices_subset,
-                                    label_train_slices_subset, label_test_slices_subset, nb_estimators)
+                if model_training_only == 'True':
+                    print('')
+                    print('>>> Only training the model. Keeping only the training slices out of each stack.')
+                    gridrec_stack_sub = gridrec_stack[gridphase_train_slices_subset]
+                    phaserec_stack_sub = phaserec_stack[gridphase_train_slices_subset]
+                    localthick_stack_sub = localthick_stack[gridphase_train_slices_subset]
+                    del gridrec_stack
+                    del phaserec_stack
+                    del localthick_stack
+                    gc.collect()
+                    print(label_train_slices_subset)
+                    print(labelled_slices_seq)
+                    rf_transverse = train_model(gridrec_stack_sub, phaserec_stack_sub, label_stack, localthick_stack_sub,
+                                        label_train_slices_subset, label_test_slices_subset,
+                                        label_train_slices_subset, label_test_slices_subset, nb_estimators)
+                else:
+                    rf_transverse = train_model(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
+                                        gridphase_train_slices_subset, gridphase_test_slices_subset,
+                                        label_train_slices_subset, label_test_slices_subset, nb_estimators)
 
                 print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
                     oob=rf_transverse.oob_score_ * 100)))
                 gc.collect()
                 print('***SAVING TRAINED MODEL***')
                 joblib.dump(rf_transverse, folder_name+sample_name+'RF_model.joblib',compress='zlib')
+
+                if model_training_only == 'True':
+                    print('')
+                    print('>>>> Model training completed!')
+                    print('>>>> Please run again this segmentation without the model_training_only argument')
+                    sys.exit()
+                    # Loading back the original stacks
+                    # gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor)
+                    # phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor)
+                    # localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
 
             print('***STARTING FULL STACK PREDICTION***')
             RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
