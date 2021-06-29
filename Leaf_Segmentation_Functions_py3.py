@@ -1062,3 +1062,8 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
                       + "x-smaller.tif", img_as_ubyte(stack_rs))
             if keep_in_memory == True:
                 return img_as_ubyte(stack_rs)
+
+# https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))

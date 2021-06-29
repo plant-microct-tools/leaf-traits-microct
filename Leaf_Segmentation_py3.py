@@ -9,6 +9,8 @@ Created on Wed Nov 06 09:03:25 2019
 # Last edited by MJ
 
 # Import libraries
+import numpy as np
+
 from Leaf_Segmentation_Functions_py3 import *  # Custom ML microCT functions
 import sys
 import os
@@ -62,6 +64,8 @@ def main():
                 base_folder_name = str(value)
             if key == 'model_training_only':
                 model_training_only = str(value)
+            if key == 'split_segmentation':
+                split_segmentation = int(value)
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
@@ -71,6 +75,8 @@ def main():
             except NameError: nb_estimators = 50
             try: model_training_only
             except NameError: model_training_only = 'False'
+            try: split_segmentation
+            except NameError: split_segmentation = 1
 
     if len(filenames)>0:
         j = 0
@@ -305,10 +311,37 @@ def main():
                     # localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
 
             print('***STARTING FULL STACK PREDICTION***')
-            RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
-            joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',compress='zlib')
-            io.imsave(folder_name+sample_name+"fullstack_prediction.tif", RFPredictCTStack_out)
-            print('Done!')
+            if split_segmentation == 1:
+                RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
+                joblib.dump(RFPredictCTStack_out, folder_name+sample_name+'RFPredictCTStack_out.joblib',compress='zlib')
+                io.imsave(folder_name+sample_name+"fullstack_prediction.tif", RFPredictCTStack_out)
+                print('Done!')
+            else:
+                substack_range = list(split(range(gridrec_stack.shape[0]),split_segmentation))
+                print(substack_range)
+                for i in range(split_segmentation):
+                    gridrec_stack_sub = gridrec_stack[substack_range[i]]
+                    phaserec_stack_sub = phaserec_stack[substack_range[i]]
+                    localthick_stack_sub = localthick_stack[substack_range[i]]
+                    # del gridrec_stack
+                    # del phaserec_stack
+                    # del localthick_stack
+                    gc.collect()
+                    RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack_sub, phaserec_stack_sub, localthick_stack_sub, "transverse")
+                    io.imsave(folder_name + sample_name + "fullstack_prediction" + str(i) + ".tif", RFPredictCTStack_out)
+                    del RFPredictCTStack_out
+                    del gridrec_stack_sub
+                    del phaserec_stack_sub
+                    del localthick_stack_sub
+                    gc.collect()
+                # Load back the fullstack predictions
+                RFPredictCTStack_out = io.imread(folder_name + sample_name + "fullstack_prediction" + str(ii) + ".tif")
+                for ii in range(1, split_segmentation):
+                    np.append(RFPredictCTStack_out, io.imread(folder_name + sample_name + "fullstack_prediction" + str(ii) + ".tif"), axis=0)
+                io.imsave(folder_name + sample_name + "fullstack_prediction.tif", RFPredictCTStack_out)
+
+
+
         #
         else:
             print('\nNot all required arguments are defined. Check command line input and try again.\n')
