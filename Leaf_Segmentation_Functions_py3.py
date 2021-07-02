@@ -866,13 +866,16 @@ def match_array_dim(stack1, stack2):
 
 
 def local_thickness(im):
-    # Calculate local thickness; from Porespy library
+    # Calculate local thickness; inspired from Porespy library
     if im.ndim == 2:
         from skimage.morphology import square
+    print('>>> Create distance transform map')
     dt = spim.distance_transform_edt(im)
-    sizes = sp.unique(sp.around(dt, decimals=0))
+    print('>>> Finding unique values')
+    sizes = np.unique(np.around(dt, decimals=0))
     # Below absolutely needs float64 to work!
-    im_new = sp.zeros_like(im)
+    print('>>> Creating empty array')
+    im_new = np.zeros_like(im)
     for r in tqdm(sizes, ncols=80):
         im_temp = dt >= r
         im_temp = spim.distance_transform_edt(~im_temp) <= r
@@ -885,11 +888,11 @@ def local_thickness(im):
     return im_new
 
 
-def localthick_up_save(folder_name, sample_name, keep_in_memory=False):
+def localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_memory=False):
     # run local thickness, upsample and save as a .tif stack in images folder
     print("***GENERATING LOCAL THICKNESS STACK***")
     #load thresholded binary downsampled images for local thickness
-    GridPhase_invert_ds = io.imread(folder_name+sample_name+'GridPhase_invert_ds.tif')
+    # GridPhase_invert_ds = io.imread(folder_name+sample_name+'GridPhase_invert_ds.tif')
     #run local thickness
     local_thick = local_thickness(GridPhase_invert_ds)
     #local_thick_upscale = transform.rescale(local_thick, 4, mode='reflect')
