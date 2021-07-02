@@ -279,10 +279,16 @@ def main():
                     # Load back all local thickness chunks
                     local_thick_all = io.imread(
                         folder_name + sample_name + "local_thick" + str(0) + ".tif")
+                    local_thick_all = local_thick_all[0:-3]
                     for ii in range(1, split_segmentation):
-                        np.append(local_thick_all,
-                                  io.imread(folder_name + sample_name + "local_thick" + str(ii) + ".tif"),
-                                  axis=0)
+                        while ii < split_segmentation:
+                            np.append(local_thick_all,
+                                      io.imread(folder_name + sample_name + "local_thick" + str(ii) + ".tif")[2:-3],
+                                      axis=0)
+                        else:
+                            np.append(local_thick_all,
+                                      io.imread(folder_name + sample_name + "local_thick" + str(ii) + ".tif")[2:],
+                                      axis=0)
                     io.imsave(folder_name + sample_name + "local_thick.tif", local_thick_all)
                     del local_thick_all
                     localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
