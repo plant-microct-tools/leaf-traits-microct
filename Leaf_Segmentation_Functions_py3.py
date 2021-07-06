@@ -866,13 +866,16 @@ def match_array_dim(stack1, stack2):
 
 
 def local_thickness(im):
-    # Calculate local thickness; from Porespy library
+    # Calculate local thickness; inspired from Porespy library
     if im.ndim == 2:
         from skimage.morphology import square
+    print('>>> Create distance transform map')
     dt = spim.distance_transform_edt(im)
-    sizes = sp.unique(sp.around(dt, decimals=0))
+    print('>>> Finding unique values')
+    sizes = np.unique(np.around(dt, decimals=0))
     # Below absolutely needs float64 to work!
-    im_new = sp.zeros_like(im)
+    print('>>> Creating empty array')
+    im_new = np.zeros_like(im)
     for r in tqdm(sizes, ncols=80):
         im_temp = dt >= r
         im_temp = spim.distance_transform_edt(~im_temp) <= r
@@ -885,11 +888,11 @@ def local_thickness(im):
     return im_new
 
 
-def localthick_up_save(folder_name, sample_name, keep_in_memory=False):
+def localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_memory=False):
     # run local thickness, upsample and save as a .tif stack in images folder
     print("***GENERATING LOCAL THICKNESS STACK***")
     #load thresholded binary downsampled images for local thickness
-    GridPhase_invert_ds = io.imread(folder_name+sample_name+'GridPhase_invert_ds.tif')
+    # GridPhase_invert_ds = io.imread(folder_name+sample_name+'GridPhase_invert_ds.tif')
     #run local thickness
     local_thick = local_thickness(GridPhase_invert_ds)
     #local_thick_upscale = transform.rescale(local_thick, 4, mode='reflect')
@@ -905,19 +908,24 @@ def localthick_up_save(folder_name, sample_name, keep_in_memory=False):
 # Let'S see if this save some memory
 
 
-def localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor):
+def localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor):
     localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
-    if threshold_rescale_factor > 1:
+    if rescale_factor == 1 & threshold_rescale_factor == 1:
+        return img_as_ubyte(localthick_small)
+    elif rescale_factor == 1 & threshold_rescale_factor > 1:
+        localthick_stack = transform.resize(localthick_small, [
+                                            localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1]*threshold_rescale_factor, localthick_small.shape[2]*threshold_rescale_factor],
+                                            order=0, anti_aliasing=False)
+        return localthick_stack
+    else:
         localthick_stack = transform.resize(localthick_small, [
                                             localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
                                             order=0, anti_aliasing=False)
-    else:
-        localthick_stack = localthick_small
-    return img_as_ubyte(localthick_stack)
+        return img_as_ubyte(localthick_stack)
 
 
 # GTR: Added a saving switch so to not write it to disk if needed.
-def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, folder_name, sample_name, rescale_factor):
+def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, folder_name, sample_name, rescale_factor, threshold_rescale_factor):
     # Threshold grid and phase images and add the IAS together, invert, downsample and save as .tif stack
     print("***THRESHOLDING IMAGES***")
     tmp = np.zeros(grid_img.shape, dtype=np.bool)
@@ -927,9 +935,15 @@ def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, fold
     #invert
     # tmp_invert = invert(tmp)
     #downsize
-    if rescale_factor == 1:
+    if rescale_factor == 1 & threshold_rescale_factor == 1:
         print("***SAVING IMAGE STACK***")
         io.imsave(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif', img_as_ubyte(tmp))
+    elif rescale_factor == 1 & threshold_rescale_factor > 1:
+        tmp_invert_ds = transform.resize(
+            tmp, [tmp.shape[0]/threshold_rescale_factor, tmp.shape[1]/threshold_rescale_factor, tmp.shape[2]/threshold_rescale_factor], order=0, anti_aliasing=False)
+        print("***SAVING IMAGE STACK***")
+        io.imsave(folder_name+'/'+sample_name
+                  + 'GridPhase_invert_ds.tif', img_as_ubyte(tmp_invert_ds))
     else:
         tmp_invert_ds = transform.resize(
             tmp, [tmp.shape[0]/rescale_factor, tmp.shape[1], tmp.shape[2]], order=0, anti_aliasing=False)
@@ -1027,7 +1041,7 @@ def displayPixelvalues(stack):
 # This loads the original image, trims the edges so that it can be divided by the rescale_factor,
 # then resizes each slice in the x and y axis (so keep the same number of slices).
 # In python notation, this ends up as [z, x/2, y/2]
-def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
+def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor, threshold_rescale_factor,
                                keep_in_memory=True, labelled_stack=False):
     if os.path.isfile(filepath + stack_name + "_" + str(rescale_factor) + "x-smaller.tif"):
         print(("***LOADING " + str(rescale_factor) + "x RESIZED " + stack_name + "***"))
@@ -1040,7 +1054,15 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor,
         if len(stack.shape) == 4:
             stack = stack[:,:,:,0]
         # If there is no rescaling, skip the trimming.
-        if rescale_factor == 1:
+        if rescale_factor == 1 & threshold_rescale_factor == 1:
+            if keep_in_memory == True:
+                return img_as_ubyte(stack)
+        elif rescale_factor == 1 & threshold_rescale_factor > 1:
+            stack, to_trim = Trim_Individual_Stack(stack, threshold_rescale_factor, labelled_stack)
+            print(to_trim)
+            if np.any(to_trim):
+                print(("***SAVING TRIMMED STACK " + stack_name + "***"))
+                io.imsave(filepath + stack_name, img_as_ubyte(stack), imagej=True)
             if keep_in_memory == True:
                 return img_as_ubyte(stack)
         else:

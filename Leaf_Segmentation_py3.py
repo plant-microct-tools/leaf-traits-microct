@@ -130,9 +130,9 @@ def main():
     #
             # Load the images
             print('***LOADING IMAGES***')
-            gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor)
-            phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor)
-            label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, labelled_stack=True)
+            gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor, threshold_rescale_factor)
+            phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor, threshold_rescale_factor)
+            label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, threshold_rescale_factor, labelled_stack=True)
             if len(label_stack.shape) == 4:
                 label_stack = label_stack[:,:,:,0]
             # Load the stacks and downsize a copy of the binary to speed up the thickness processing
@@ -195,6 +195,8 @@ def main():
             print('\nSingle scan mode...\n')
             if model_training_only == 'True':
                 print('Model training mode\n')
+            if split_segmentation > 1:
+                print(f'Splitting segmentation into {split_segmentation} chunks\n')
 
             # Get the slice numbers into a vector of integer
             imgj_slices = [int(x) for x in raw_slices.split(',')]
@@ -221,10 +223,10 @@ def main():
             # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
             # of the same length, shuffle that sequence, and shuffle the slices in the same
             # order. This creates a bit of randomness in the training-testing slices.
-            labelled_slices = np.array(imgj_slices) - 1
-            labelled_slices_seq = np.arange(labelled_slices.shape[0])
+            labelled_slices_ordered = np.array(imgj_slices) - 1
+            labelled_slices_seq = np.arange(labelled_slices_ordered.shape[0])
             np.random.shuffle(labelled_slices_seq)
-            labelled_slices = labelled_slices[labelled_slices_seq]
+            labelled_slices = labelled_slices_ordered[labelled_slices_seq]
             # Set the training slices to be at least one more slices than the test slices.
             # The last part will add 1 to even length labelled slices number, and 0 to even.
             # This meanes than odd length will have one training slice more, and even will have two more.
@@ -234,21 +236,21 @@ def main():
     #
             # Load the images
             print('***LOADING IMAGES***')
-            gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor)
-            phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor)
-            label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, labelled_stack=True)
+            gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor, threshold_rescale_factor)
+            phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor, threshold_rescale_factor)
+            label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, threshold_rescale_factor, labelled_stack=True)
             if len(label_stack.shape) == 4:
                 label_stack = label_stack[:,:,:,0]
             # Load the stacks and downsize a copy of the binary to speed up the thickness processing
             if os.path.isfile(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif') == False:
                 print('***CREATE THE THRESHOLDED IMAGE***')
                 Threshold_GridPhase_invert_down(gridrec_stack, phaserec_stack, Th_grid, Th_phase, folder_name,
-                sample_name, threshold_rescale_factor)
+                sample_name, rescale_factor, threshold_rescale_factor)
 
             # Generate the local thickness
             if os.path.isfile(folder_name+sample_name+'local_thick.tif'):
                 print('***LOADING LOCAL THICKNESS***')
-                localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
+                localthick_stack = localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor)
             else:
                 print('***GENERATE LOCAL THICKNESS***')
                 localthick_up_save(folder_name, sample_name, keep_in_memory=False)
@@ -277,15 +279,21 @@ def main():
                 if model_training_only == 'True':
                     print('')
                     print('>>> Only training the model. Keeping only the training slices out of each stack.')
-                    gridrec_stack_sub = gridrec_stack[gridphase_train_slices_subset]
-                    phaserec_stack_sub = phaserec_stack[gridphase_train_slices_subset]
-                    localthick_stack_sub = localthick_stack[gridphase_train_slices_subset]
+                    gridrec_stack_sub = gridrec_stack[sorted(gridphase_train_slices_subset)]
+                    phaserec_stack_sub = phaserec_stack[sorted(gridphase_train_slices_subset)]
+                    localthick_stack_sub = localthick_stack[sorted(gridphase_train_slices_subset)]
+                    # Saving files for debugging and to make nice figures
+                    io.imsave(folder_name + sample_name + "gridrec_stack_sub.tif", gridrec_stack_sub)
+                    io.imsave(folder_name + sample_name + "phaserec_stack_sub.tif", phaserec_stack_sub)
+                    io.imsave(folder_name + sample_name + "localthick_stack_sub.tif", localthick_stack_sub)
                     del gridrec_stack
                     del phaserec_stack
                     del localthick_stack
                     gc.collect()
                     print(label_train_slices_subset)
                     print(labelled_slices_seq)
+                    print(labelled_slices)
+                    print(gridphase_train_slices_subset)
                     rf_transverse = train_model(gridrec_stack_sub, phaserec_stack_sub, label_stack, localthick_stack_sub,
                                         label_train_slices_subset, label_test_slices_subset,
                                         label_train_slices_subset, label_test_slices_subset, nb_estimators)
@@ -320,6 +328,7 @@ def main():
                 substack_range = list(split(range(gridrec_stack.shape[0]),split_segmentation))
                 print(substack_range)
                 for i in range(split_segmentation):
+                    print(f'>>>   Segmenting chunk {i}')
                     gridrec_stack_sub = gridrec_stack[substack_range[i]]
                     phaserec_stack_sub = phaserec_stack[substack_range[i]]
                     localthick_stack_sub = localthick_stack[substack_range[i]]
