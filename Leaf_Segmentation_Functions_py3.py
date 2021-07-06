@@ -913,10 +913,20 @@ def localthick_load_and_resize(folder_name, sample_name, rescale_factor, thresho
     if (rescale_factor == 1) & (threshold_rescale_factor == 1):
         return img_as_ubyte(localthick_small)
     elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
-        localthick_stack = transform.resize(localthick_small, [
-                                            localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1]*threshold_rescale_factor, localthick_small.shape[2]*threshold_rescale_factor],
-                                            order=0, anti_aliasing=False)
-        return localthick_stack
+        resized_shape = np.array(localthick_small.shape) * np.array([threshold_rescale_factor, threshold_rescale_factor, threshold_rescale_factor])
+        stack_rs = np.empty(shape=resized_shape.astype(np.int64))
+        # Iterating over each slice is faster than doing it in one call with transform.resize
+        for idx in np.arange(localthick_small.shape[0]):
+            stack_rs[idx] = transform.resize(
+                localthick_small[idx], [localthick_small.shape[1] * threshold_rescale_factor, localthick_small.shape[2] * threshold_rescale_factor],
+                order=0, anti_aliasing=False)
+        for idx in np.arange(localthick_small.shape[1]):
+            stack_rs[:,idx,:] = transform.resize(
+                localthick_small[:,idx,:], [localthick_small.shape[0] * threshold_rescale_factor, localthick_small.shape[2] * threshold_rescale_factor],
+                order=0, anti_aliasing=False)
+        print(("***SAVING RESIZED STACK***"))
+        io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(stack_rs))
+        return stack_rs
     else:
         localthick_stack = transform.resize(localthick_small, [
                                             localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],

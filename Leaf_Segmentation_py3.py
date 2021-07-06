@@ -262,7 +262,8 @@ def main():
                 GridPhase_invert_ds = io.imread(folder_name + sample_name + 'GridPhase_invert_ds.tif')
                 localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_memory=False)
                 del GridPhase_invert_ds
-                localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
+                if (rescale_factor == 1) & (threshold_rescale_factor > 1):
+                    localthick_stack = localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor)
 
                 # COMMENTED OUT BELOW
                 # SPLITTING OF LOCAL THICKNESS INTO CHUNCKS
