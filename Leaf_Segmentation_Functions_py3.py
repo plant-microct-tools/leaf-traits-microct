@@ -910,9 +910,9 @@ def localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_me
 
 def localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor):
     localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
-    if rescale_factor == 1 & threshold_rescale_factor == 1:
+    if (rescale_factor == 1) & (threshold_rescale_factor == 1):
         return img_as_ubyte(localthick_small)
-    elif rescale_factor == 1 & threshold_rescale_factor > 1:
+    elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
         localthick_stack = transform.resize(localthick_small, [
                                             localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1]*threshold_rescale_factor, localthick_small.shape[2]*threshold_rescale_factor],
                                             order=0, anti_aliasing=False)
@@ -935,10 +935,10 @@ def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, fold
     #invert
     # tmp_invert = invert(tmp)
     #downsize
-    if rescale_factor == 1 & threshold_rescale_factor == 1:
+    if (rescale_factor == 1) & (threshold_rescale_factor == 1):
         print("***SAVING IMAGE STACK***")
         io.imsave(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif', img_as_ubyte(tmp))
-    elif rescale_factor == 1 & threshold_rescale_factor > 1:
+    elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
         tmp_invert_ds = transform.resize(
             tmp, [tmp.shape[0]/threshold_rescale_factor, tmp.shape[1]/threshold_rescale_factor, tmp.shape[2]/threshold_rescale_factor], order=0, anti_aliasing=False)
         print("***SAVING IMAGE STACK***")
@@ -1054,10 +1054,10 @@ def Load_Resize_and_Save_Stack(filepath, stack_name, rescale_factor, threshold_r
         if len(stack.shape) == 4:
             stack = stack[:,:,:,0]
         # If there is no rescaling, skip the trimming.
-        if rescale_factor == 1 & threshold_rescale_factor == 1:
+        if (rescale_factor == 1) & (threshold_rescale_factor == 1):
             if keep_in_memory == True:
                 return img_as_ubyte(stack)
-        elif rescale_factor == 1 & threshold_rescale_factor > 1:
+        elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
             stack, to_trim = Trim_Individual_Stack(stack, threshold_rescale_factor, labelled_stack)
             print(to_trim)
             if np.any(to_trim):

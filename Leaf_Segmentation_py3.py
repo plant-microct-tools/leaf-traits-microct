@@ -199,6 +199,11 @@ def main():
             if split_segmentation > 1:
                 print(f'Splitting segmentation into {split_segmentation} chunks\n')
 
+            # TESTING
+            print('rescale_factor' + str(rescale_factor))
+            print('threshold_rescale_factor' + str(threshold_rescale_factor))
+            print((rescale_factor == 1) & (threshold_rescale_factor != 1))
+
             # Get the slice numbers into a vector of integer
             imgj_slices = [int(x) for x in raw_slices.split(',')]
 
@@ -254,6 +259,10 @@ def main():
                 localthick_stack = localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor)
             else:
                 print('***GENERATE LOCAL THICKNESS***')
+                GridPhase_invert_ds = io.imread(folder_name + sample_name + 'GridPhase_invert_ds.tif')
+                localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_memory=False)
+                del GridPhase_invert_ds
+                localthick_stack = localthick_load_and_resize(folder_name, sample_name, threshold_rescale_factor)
 
                 # COMMENTED OUT BELOW
                 # SPLITTING OF LOCAL THICKNESS INTO CHUNCKS
