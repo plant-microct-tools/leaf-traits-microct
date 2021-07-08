@@ -909,39 +909,49 @@ def localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_me
 
 
 def localthick_load_and_resize(folder_name, sample_name, rescale_factor, threshold_rescale_factor):
-    localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
-    if (rescale_factor == 1) & (threshold_rescale_factor == 1):
-        return img_as_ubyte(localthick_small)
-    elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
-        resized_shape = np.array(localthick_small.shape) * np.array([threshold_rescale_factor, threshold_rescale_factor, threshold_rescale_factor])
-        stack_rs = np.empty(shape=resized_shape.astype(np.int64))
-        # Iterating over each slice is faster than doing it in one call with transform.resize
-        for idx in np.arange(localthick_small.shape[0]):
-            stack_rs[idx] = transform.resize(
-                localthick_small[idx], [localthick_small.shape[1] * threshold_rescale_factor, localthick_small.shape[2] * threshold_rescale_factor],
-                order=0, anti_aliasing=False)
-        for idx in np.arange(localthick_small.shape[1]):
-            stack_rs[:,idx,:] = transform.resize(
-                localthick_small[:,idx,:], [localthick_small.shape[0] * threshold_rescale_factor, localthick_small.shape[2] * threshold_rescale_factor],
-                order=0, anti_aliasing=False)
-        print(("***SAVING RESIZED STACK***"))
-        io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(stack_rs))
-        return stack_rs
+    if (rescale_factor == 1) & (threshold_rescale_factor > 1) & os.path.isfile(folder_name+sample_name+'local_thick_large.tif'):
+            print('***LOADING RESIZED LOCAL THICKNESS STACK***')
+            localthick_resized = io.imread(folder_name+sample_name+'local_thick_large.tif')
+            return localthick_resized
     else:
-        localthick_stack = transform.resize(localthick_small, [
-                                            localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
-                                            order=0, anti_aliasing=False)
-        return img_as_ubyte(localthick_stack)
+        localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
+        if (rescale_factor == 1) & (threshold_rescale_factor == 1):
+            return img_as_ubyte(localthick_small)
+        elif (rescale_factor == 1) & (threshold_rescale_factor > 1):
+            # First resize over the slices, i.e. add slices
+            localthick_stack = transform.resize(localthick_small, [
+                                                localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
+                                                order=0, anti_aliasing=False)
+            # Then iterate over each slice to enlarge the image
+            resized_shape = np.array(localthick_small.shape) * np.array([threshold_rescale_factor, threshold_rescale_factor, threshold_rescale_factor])
+            stack_rs = np.empty(shape=resized_shape.astype(np.int64))
+            # Iterating over each slice is faster than doing it in one call with transform.resize
+            for idx in np.arange(localthick_stack.shape[0]):
+                stack_rs[idx] = transform.resize(
+                    localthick_stack[idx], [localthick_stack.shape[1] * threshold_rescale_factor, localthick_stack.shape[2] * threshold_rescale_factor],
+                    order=0, anti_aliasing=False)
+            print(("***SAVING RESIZED STACK***"))
+            io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(stack_rs))
+            return stack_rs
+        else:
+            localthick_stack = transform.resize(localthick_small, [
+                                                localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
+                                                order=0, anti_aliasing=False)
+            return img_as_ubyte(localthick_stack)
 
 
 # GTR: Added a saving switch so to not write it to disk if needed.
-def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, folder_name, sample_name, rescale_factor, threshold_rescale_factor):
+def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, folder_name, sample_name, rescale_factor, threshold_rescale_factor, phase_only=False):
     # Threshold grid and phase images and add the IAS together, invert, downsample and save as .tif stack
     print("***THRESHOLDING IMAGES***")
-    tmp = np.zeros(grid_img.shape, dtype=np.bool)
-    tmp[grid_img < Th_grid] = 0
-    tmp[grid_img >= Th_grid] = 1
-    tmp[phase_img < Th_phase] = 0
+    if phase_only:
+        tmp = np.ones(grid_img.shape, dtype=np.bool)
+        tmp[phase_img < Th_phase] = 0
+    else:
+        tmp = np.zeros(grid_img.shape, dtype=np.bool)
+        tmp[grid_img < Th_grid] = 0
+        tmp[grid_img >= Th_grid] = 1
+        tmp[phase_img < Th_phase] = 0
     #invert
     # tmp_invert = invert(tmp)
     #downsize

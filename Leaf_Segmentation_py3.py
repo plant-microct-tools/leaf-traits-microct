@@ -67,6 +67,11 @@ def main():
                 model_training_only = str(value)
             if key == 'split_segmentation':
                 split_segmentation = int(value)
+            if key == 'phase_only':
+                if str(value) == 'True':
+                    phase_only = True
+                else:
+                    phase_only = False
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
@@ -78,6 +83,10 @@ def main():
             except NameError: model_training_only = 'False'
             try: split_segmentation
             except NameError: split_segmentation = 1
+            try: phase_only
+            except NameError: phase_only = False
+
+
 
     if len(filenames)>0:
         j = 0
@@ -200,9 +209,8 @@ def main():
                 print(f'Splitting segmentation into {split_segmentation} chunks\n')
 
             # TESTING
-            print('rescale_factor' + str(rescale_factor))
-            print('threshold_rescale_factor' + str(threshold_rescale_factor))
-            print((rescale_factor == 1) & (threshold_rescale_factor != 1))
+            print('rescale_factor ' + str(rescale_factor))
+            print('threshold_rescale_factor ' + str(threshold_rescale_factor))
 
             # Get the slice numbers into a vector of integer
             imgj_slices = [int(x) for x in raw_slices.split(',')]
@@ -251,7 +259,7 @@ def main():
             if os.path.isfile(folder_name+'/'+sample_name+'GridPhase_invert_ds.tif') == False:
                 print('***CREATE THE THRESHOLDED IMAGE***')
                 Threshold_GridPhase_invert_down(gridrec_stack, phaserec_stack, Th_grid, Th_phase, folder_name,
-                sample_name, rescale_factor, threshold_rescale_factor)
+                sample_name, rescale_factor, threshold_rescale_factor, phase_only)
 
             # Generate the local thickness
             if os.path.isfile(folder_name+sample_name+'local_thick.tif'):
@@ -391,9 +399,9 @@ def main():
                     # del phaserec_stack
                     # del localthick_stack
                     gc.collect()
-                    RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack_sub, phaserec_stack_sub, localthick_stack_sub, "transverse")
-                    io.imsave(folder_name + sample_name + "fullstack_prediction" + str(i) + ".tif", RFPredictCTStack_out)
-                    del RFPredictCTStack_out
+                    RFPredictCTStack_out_chunk = RFPredictCTStack(rf_transverse, gridrec_stack_sub, phaserec_stack_sub, localthick_stack_sub, "transverse")
+                    io.imsave(folder_name + sample_name + "fullstack_prediction" + str(i) + ".tif", RFPredictCTStack_out_chunk)
+                    del RFPredictCTStack_out_chunk
                     del gridrec_stack_sub
                     del phaserec_stack_sub
                     del localthick_stack_sub
@@ -401,7 +409,7 @@ def main():
                 # Load back the fullstack predictions
                 RFPredictCTStack_out = io.imread(folder_name + sample_name + "fullstack_prediction" + str(0) + ".tif")
                 for ii in range(1, split_segmentation):
-                    np.append(RFPredictCTStack_out, io.imread(folder_name + sample_name + "fullstack_prediction" + str(ii) + ".tif"), axis=0)
+                    RFPredictCTStack_out = np.append(RFPredictCTStack_out, io.imread(folder_name + sample_name + "fullstack_prediction" + str(ii) + ".tif"), axis=0)
                 io.imsave(folder_name + sample_name + "fullstack_prediction.tif", RFPredictCTStack_out)
         #
         else:
