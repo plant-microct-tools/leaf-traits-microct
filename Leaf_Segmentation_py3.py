@@ -16,7 +16,7 @@ import sys
 import os
 import gc
 import joblib
-import porespy as ps
+
 
 def main():
     # Extract data from command line input
@@ -85,8 +85,6 @@ def main():
             except NameError: split_segmentation = 1
             try: phase_only
             except NameError: phase_only = False
-
-
 
     if len(filenames)>0:
         j = 0

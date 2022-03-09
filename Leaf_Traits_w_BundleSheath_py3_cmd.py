@@ -730,7 +730,7 @@ def main():
         # TESTING
 
             # Define the different tissue values
-            epid_value, bg_value, mesophyll_value, ias_value, vein_value, bs_value = [int(x) for x in color_values.split(',')]
+            epid_value, bg_value, mesophyll_value, ias_value, vein_value, bs_value, stom_value = [int(x) for x in color_values.split(',')]
 
         # TESTING
                 # print(epid_value, bg_value, mesophyll_value)
@@ -808,6 +808,7 @@ def main():
                         raw_pred_stack = raw_pred_stack[trim_slices:-trim_slices, :, trim_column_L:-trim_column_R]
     #
     #
+
                 ###################
                 # EPIDERMIS
                 ###################
@@ -837,6 +838,7 @@ def main():
                 ordered_epidermis = np.argsort(epidermis_area)
                 print('The two largest values below should be in the same order of magnitude')
                 print((epidermis_area[ordered_epidermis[-4:]]))
+                print(epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]))
 
                 if epidermis_area[ordered_epidermis[-1]] > (10*epidermis_area[ordered_epidermis[-2]]):
                     print('ERROR: Both epidermis might be connected!')
@@ -903,9 +905,10 @@ def main():
                 # Transform the array to 8-bit: no need for the extra precision as there are only 3 values
                 unique_epidermis_volumes = np.array(unique_epidermis_volumes, dtype='uint8')
 
-                print('>>>> SAVING EPIDERMIS STACK')
-                io.imsave(base_folder_name + sample_name + '/' + sample_name
-                          + 'TWO_EPIDERMIS.tif', unique_epidermis_volumes, imagej=imgj_bool)
+                # TESTING ?
+                # print('>>>> SAVING EPIDERMIS STACK')
+                # io.imsave(base_folder_name + sample_name + '/' + sample_name
+                #           + 'TWO_EPIDERMIS.tif', unique_epidermis_volumes, imagej=imgj_bool)
 
                 # Find the fvalues of each epidermis: assumes adaxial epidermis is at the top of the image
                 adaxial_epidermis_value = unique_epidermis_volumes[100, :, 100][(
@@ -972,7 +975,45 @@ def main():
 
 
                 ###################
-                ## BUNDLE SHEATHS
+                ## STOMATA
+                ###################
+                # print('### STOMATA ###')
+                # if stom_value > 0:
+                #     # Get the stom volumes
+                #     unique_stom_volumes = label(raw_pred_stack == stom_value, connectivity=1)
+                #     props_of_unique_stom = regionprops(unique_stom_volumes)
+                #
+                #     # io.imshow(unique_bs_volumes[100])
+                #
+                #     stom_area = np.zeros(len(props_of_unique_stom))
+                #     stom_label = np.zeros(len(props_of_unique_stom))
+                #     stom_centroid = np.zeros([len(props_of_unique_stom), 3])
+                #     for regions in np.arange(len(props_of_unique_stom)):
+                #         stom_area[regions] = props_of_unique_stom[regions].area
+                #         stom_label[regions] = props_of_unique_stom[regions].label
+                #         stom_centroid[regions] = props_of_unique_stom[regions].centroid
+                #
+                #     # Find the largest bs
+                #     ordered_stom = np.argsort(stom_area)
+                #
+                #     del unique_stom_volumes
+                #
+                #     # Get the values again
+                #     bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
+                #     del props_of_unique_bs
+                #     gc.collect()
+                #
+                #     #Check if it's correct
+                #     #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
+                #     #          img_as_ubyte(largest_bs))
+                #     # io.imshow(largest_bs[100])
+                # else:
+                #     print('stomata not labelled -- skipped')
+
+
+
+                ###################
+                ## BONDLE SHEATHS
                 ###################
                 print('### BUNDLE SHEATHS ###')
                 if bs_value > 0:
@@ -1018,6 +1059,9 @@ def main():
                     # io.imshow(largest_bs[100])
                 else:
                     print('bundle sheath not labelled -- skipped')
+
+
+
 
                 ###################
                 ## AIRSPACE
@@ -1083,6 +1127,7 @@ def main():
                 vein_value_new = 147
                 ias_value_new = 255
                 bs_value_new = 102
+                stom_value_new = 55
                 mesophyll_value_new = 0
 
                 print('### CREATING THE POST-PROCESSED SEGMENTED STACK ###')
@@ -1097,6 +1142,10 @@ def main():
                     # Creates a boolean 2D array of the bundle sheath (from the largest veins id'ed earlier)
                     if bs_value > 0:
                         temp_bs = img_as_bool(transform.resize(largest_bs[idx],
+                                                               [new_shape[1], new_shape[2]],
+                                                               anti_aliasing=False, order=0))
+                    if stom_value > 0:
+                        temp_stom = img_as_bool(transform.resize(raw_pred_stack[idx] == stom_value,
                                                                [new_shape[1], new_shape[2]],
                                                                anti_aliasing=False, order=0))
                     # Creates a 2D array with the epidermis being assinged values 30 or 60
@@ -1124,6 +1173,8 @@ def main():
                     large_segmented_stack[idx][temp_veins] = vein_value_new
                     if bs_value > 0:
                         large_segmented_stack[idx][temp_bs] = bs_value_new
+                    if stom_value > 0:
+                        large_segmented_stack[idx][temp_stom] = stom_value_new
                     large_segmented_stack[idx][temp_epid != 0] = temp_epid[temp_epid != 0]
 
                 # io.imshow(large_segmented_stack[100])
@@ -1165,6 +1216,7 @@ def main():
             ias_value = 255
             vein_value = 147
             bs_value = 102
+            stom_value = 55
 
             # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
             # Find the values of each epidermis: assumes adaxial epidermis is at the top of the image
@@ -1195,8 +1247,9 @@ def main():
             epidermis_adaxial_volume = np.sum(large_segmented_stack == adaxial_epidermis_value) * vx_volume
             vein_volume = np.sum(large_segmented_stack == vein_value) * vx_volume
             bundle_sheath_volume = np.sum(large_segmented_stack == bs_value) * vx_volume
+            stomata_volume = np.sum(large_segmented_stack == stom_value) * vx_volume
             mesophyll_volume = cell_volume + air_volume
-            leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume
+            leaf_volume = mesophyll_volume + epidermis_abaxial_volume + epidermis_adaxial_volume + vein_volume + bundle_sheath_volume + stomata_volume
 
             #Measure the thickness of the leaf, the epidermis, and the mesophyll
             leaf_thickness = np.sum(np.array(large_segmented_stack
@@ -1250,6 +1303,11 @@ def main():
                 bs_volume
             except NameError:
                 bs_volume = 0
+
+            try:
+                stomata_volume
+            except NameError:
+                stomata_volume = 0
 
             print(('Sm: '+str(true_ias_SA/leaf_area)))
             print(('SAmes/Vmes: '+str(true_ias_SA/mesophyll_volume)))
@@ -1312,6 +1370,7 @@ def main():
                         'ABEpidermisVolume': epidermis_abaxial_volume,
                         'VeinVolume': vein_volume,
                         'BSVolume': bs_volume,
+                        'StomataVolume': stomata_volume,
                         'VeinBSVolume': vein_volume+bs_volume,
                         'CellVolume': cell_volume,
                         'IASVolume': air_volume,
@@ -1321,8 +1380,6 @@ def main():
                         '_SLICEStrimmed':trim_slices,
                         '_X_trimmed_left':trim_column_L*to_resize,
                         '_X_trimmed_right':trim_column_L*to_resize}
-                        #            'IASLargestConnectedVolume':largest_connected_ias_volume,
-                        #            'IASLargestConnectedSA':largest_connected_ias_SA
 
             results_out = DataFrame(data_out, index={sample_name})
             # Save the data to a CSV
