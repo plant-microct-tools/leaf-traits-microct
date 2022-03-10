@@ -914,6 +914,7 @@ def localthick_load_and_resize(folder_name, sample_name, rescale_factor, thresho
             localthick_resized = io.imread(folder_name+sample_name+'local_thick_large.tif')
             return localthick_resized
     else:
+        print('***LOADING AND RESIZING LOCAL THICKNESS STACK***')
         localthick_small = io.imread(folder_name+sample_name+'local_thick.tif')
         if (rescale_factor == 1) & (threshold_rescale_factor == 1):
             return img_as_ubyte(localthick_small)
@@ -934,6 +935,7 @@ def localthick_load_and_resize(folder_name, sample_name, rescale_factor, thresho
             io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(stack_rs))
             return stack_rs
         else:
+            print('***LOADING AND RESIZING LOCAL THICKNESS STACK***')
             localthick_stack = transform.resize(localthick_small, [
                                                 localthick_small.shape[0]*threshold_rescale_factor, localthick_small.shape[1], localthick_small.shape[2]],
                                                 order=0, anti_aliasing=False)
