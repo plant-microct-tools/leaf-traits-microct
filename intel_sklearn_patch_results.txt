@@ -1,0 +1,334 @@
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+Time is now: 1624496839.2903793
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624496839.2903793
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[ 952  868  105  485  328 1044 1599 1177  645  227 1300]
+    Test slices (0 slices):[]
+
+time before training: 1624496917.1200652
+
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:43<00:00,  3.94s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+
+time after training: 1624498687.9818377
+
+Our Out Of Box prediction of accuracy is: 98.48056675929311%
+***SAVING TRAINED MODEL***
+
+time now after training: 1624498725.6914644
+
+***STARTING FULL STACK PREDICTION***
+^C^C^C^C^C^C^Z
+[1]+  Stopped                 python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ # BEFORE W PATCH
+[1]+  Killed                  python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ # BELOW WITH CURRENT CODE (NO PATCH)
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+Time is now: 1624499055.3974073
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624499055.3974073
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[ 645  485 1300  227  328 1044 1599  952 1177  868  105]
+    Test slices (0 slices):[]
+
+time before training: 1624499131.0540981
+
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:43<00:00,  3.93s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+
+time after training: 1624500899.7182062
+
+Our Out Of Box prediction of accuracy is: 98.48554767797961%
+***SAVING TRAINED MODEL***
+
+time now after training: 1624500939.098733
+
+***STARTING FULL STACK PREDICTION***
+  0%|▏                                       | 8/1674 [01:11<4:07:59,  8.93s/it]^C
+Traceback (most recent call last):
+  File "/home/guillaume/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py", line 329, in <module>
+    main()
+  File "/home/guillaume/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py", line 312, in main
+    RFPredictCTStack_out = RFPredictCTStack(rf_transverse, gridrec_stack, phaserec_stack, localthick_stack, "transverse")
+  File "/home/guillaume/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_Functions_py3.py", line 508, in RFPredictCTStack
+    class_prediction_transverse = rf_transverse.predict(FL_reshape)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/site-packages/sklearn/ensemble/_forest.py", line 630, in predict
+    proba = self.predict_proba(X)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/site-packages/sklearn/ensemble/_forest.py", line 687, in predict_proba
+    for e in self.estimators_)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/site-packages/joblib/parallel.py", line 1054, in __call__
+    self.retrieve()
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/site-packages/joblib/parallel.py", line 933, in retrieve
+    self._output.extend(job.get(timeout=self.timeout))
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/multiprocessing/pool.py", line 651, in get
+    self.wait(timeout)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/multiprocessing/pool.py", line 648, in wait
+    self._event.wait(timeout)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/threading.py", line 552, in wait
+    signaled = self._cond.wait(timeout)
+  File "/home/guillaume/miniconda3/envs/microct/lib/python3.7/threading.py", line 296, in wait
+    waiter.acquire()
+KeyboardInterrupt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################33
+## RUN WITH CURRENT CODE
+
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+Time is now: 1624477560.223459
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624477560.223459
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[ 645  868  485  952 1044 1599 1177  227  328  105 1300]
+    Test slices (0 slices):[]
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:43<00:00,  3.94s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+Our Out Of Box prediction of accuracy is: 98.48377638871409%
+***SAVING TRAINED MODEL***
+***STARTING FULL STACK PREDICTION***
+100%|█████████████████████████████████████| 1674/1674 [3:25:26<00:00,  7.36s/it]
+Time is now 1624492126.122141
+Done in 14565.898681879044
+Time after loading the images 14488.597408771515
+
+
+
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ 
+python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+
+systemctl suspend
+
+Time is now: 1624621607.700364
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624621607.700364
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[ 328  227 1177 1300  952  645 1599  868 1044  105  485]
+    Test slices (0 slices):[]
+
+time before training: 1624621685.2234962
+
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:42<00:00,  3.90s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+
+time after training: 1624623435.8271227
+
+Our Out Of Box prediction of accuracy is: 98.48304390067196%
+***SAVING TRAINED MODEL***
+
+time now after training: 1624623476.0486927
+
+***STARTING FULL STACK PREDICTION***
+100%|█████████████████████████████████████| 1674/1674 [3:25:15<00:00,  7.36s/it]
+
+time now after full stack: 1624636097.1450422
+
+Time is now 1624636125.8705235
+Done in 14518.170159339905
+Time since loading the images 14440.647721529007
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ ^C
+
+
+
+
+
+
+########################################
+## RUN WITH PATCHED CODE
+
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+
+systemctl suspend
+
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+Time is now: 1624668660.8671727
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624668660.8671727
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[ 868  485  952 1300 1044  645  227 1177  105 1599  328]
+    Test slices (0 slices):[]
+
+time before training: 1624668738.516638
+
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:42<00:00,  3.89s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+
+time after training: 1624670479.9452367
+
+Our Out Of Box prediction of accuracy is: 98.48279085934831%
+***SAVING TRAINED MODEL***
+
+time now after training: 1624670520.181961
+
+***STARTING FULL STACK PREDICTION***
+100%|█████████████████████████████████████| 1674/1674 [3:25:04<00:00,  7.35s/it]
+
+time now after full stack: 1624683134.8827167
+
+Time is now 1624683163.5286438
+Done in 14502.661471128464
+Time since loading the images 14425.01266169548
+
+
+
+
+(microct) guillaume@solus /run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/C_D_5_Strip3_ $ python ~/Dropbox/_github/leaf-traits-microct/Leaf_Segmentation_py3.py sample_name=C_D_5_Strip3_ phase_filename=PAGANIN-8bit.tif threshold_phase=111 grid_filename=GRID-8bit.tif threshold_grid=110 slice_numbers_training_slices=106,228,329,486,646,869,953,1045,1178,1301,1600 path_to_image_folder=/run/media/guillaume/Elements/Vitis_Shade_Drought/_ML_DONE/ rescale_factor=2 threshold_rescale_factor=2
+
+systemctl suspend
+
+Intel(R) Extension for Scikit-learn* enabled (https://github.com/intel/scikit-learn-intelex)
+Time is now: 1624704677.5635884
+
+Single scan mode...
+
+***LOADING IMAGES***
+***LOADING 2x RESIZED C_D_5_Strip3_GRID-8bit.tif***
+***LOADING 2x RESIZED C_D_5_Strip3_PAGANIN-8bit.tif***
+***LOADING 2x RESIZED labelled-stack.tif***
+***LOADING LOCAL THICKNESS***
+
+time_after_loading_images: 1624704677.5635884
+***SHAPE OF THE DIFFERENT ARRAYS USED (FOR DEBUGGING)***
+Gridrec stack shape = (1674, 693, 985)
+Phaserec stack shape = (1674, 693, 985)
+Label stack shape = (11, 693, 985)
+Local thickness stack shape = (1674, 693, 985)
+
+***STARTING MODEL TRAINING***
+    Training slices (11 slices):[1044  227  485  868 1599  328 1300  105  645  952 1177]
+    Test slices (0 slices):[]
+
+time before training: 1624704754.2235754
+
+***GENERATING FEATURE LAYERS***
+100%|███████████████████████████████████████████| 11/11 [00:42<00:00,  3.90s/it]
+0it [00:00, ?it/s]
+***LOAD AND ENCODE LABEL IMAGE VECTORS***
+***TRAINING MODEL***
+(this step may take a few minutes...)
+
+time after training: 1624706495.1691082
+
+Our Out Of Box prediction of accuracy is: 98.48307053660076%
+***SAVING TRAINED MODEL***
+
+time now after training: 1624706534.1879063
+
+***STARTING FULL STACK PREDICTION***
+100%|█████████████████████████████████████| 1674/1674 [3:25:00<00:00,  7.35s/it]
+
+time now after full stack: 1624719140.4104176
+
+Time is now 1624719168.9231951
+Done in 14491.359606742859
+Time since loading the images 14414.700182437897
+
+
+
+
+
+
+

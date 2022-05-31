@@ -286,9 +286,17 @@ def main():
                 print(("    Training slices (" + str(len(train_slices))+ " slices):" + str(gridphase_train_slices_subset)))
                 print(("    Test slices (" + str(len(test_slices))+ " slices):" + str(gridphase_test_slices_subset)))
 
+                print('')
+                print('time before training:', str(time.time()))
+                print('')
+
                 rf_transverse = train_model(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
                                     gridphase_train_slices_subset, gridphase_test_slices_subset,
                                     label_train_slices_subset, label_test_slices_subset, nb_estimators)
+
+                print('')
+                print('time after training:', str(time.time()))
+                print('')
 
                 print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
                     oob=rf_transverse.oob_score_ * 100)))

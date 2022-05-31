@@ -24,11 +24,15 @@ import pickle
 from tqdm import tqdm
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
+from sklearnex import patch_sklearn
 import pandas as pd
 from scipy.ndimage.filters import maximum_filter, minimum_filter, percentile_filter
 # Suppress all warnings (not errors) by uncommenting next two lines of code
 import warnings
 warnings.filterwarnings("ignore")
+
+# Use Intel sklearn patch
+patch_sklearn()
 
 # Filter parameters; Label encoder setup
 disk_size = 5
