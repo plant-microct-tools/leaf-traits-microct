@@ -644,7 +644,7 @@ data_out = {'Tortuosity_MEAN': np.nanmean(Tortuosity_values_for_stats),
             'Path_lenghtening_SKEW': stats.skew(Path_lenghtening_values_for_stats),
             'Path_lenghtening_50percent_surface': Path_length_profile[pos_at_50_surface]}
 
-results_out = DataFrame(data_out, index={sample_name})
+results_out = DataFrame(data_out, index=np.array(sample_name, ndmin=1))
 # Save the data to a CSV
 results_out.to_csv(save_path + sample_name + 'GEOMETRIC-TORTUOSITY-RESULTS.txt',
                    sep='\t', encoding='utf-8')

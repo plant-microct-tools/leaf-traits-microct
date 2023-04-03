@@ -193,7 +193,7 @@ def StackResize(stack, rf=rescale_factor):
 
 
 def Threshold(input_img, Th_value):
-    tmp = np.zeros(input_img.shape, dtype=np.bool)
+    tmp = np.zeros(input_img.shape, dtype=np.bool_)
     if isinstance(Th_value, int):
         tmp[input_img == Th_value] = 1
     else:
@@ -209,7 +209,7 @@ def Threshold(input_img, Th_value):
 
 
 def Erosion3DimJ(input_img):
-    tmp = np.zeros(input_img.shape, dtype=np.bool)
+    tmp = np.zeros(input_img.shape, dtype=np.bool_)
     for i in range(input_img.shape[0]):
         tmp[i, :, :] = binary_erosion(input_img[i, :, :])
     return tmp
@@ -522,7 +522,7 @@ mask = ~largest_airspace.astype(bool)
 if 'stomata_stack' in locals():
     stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 else:
-    stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
+    stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool_)
     stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
 
