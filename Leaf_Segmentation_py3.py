@@ -262,72 +262,72 @@ def main():
                 GridPhase_invert_ds = io.imread(folder_name + sample_name + 'GridPhase_invert_ds.tif')
                 localthick_up_save(GridPhase_invert_ds, folder_name, sample_name, keep_in_memory=False)
                 del GridPhase_invert_ds
+
+            if os.path.isfile(folder_name+sample_name+'RF_model.joblib'):
+                print('***LOADING TRAINED MODEL***')
+                rf_transverse = joblib.load(folder_name+sample_name+'RF_model.joblib')
+                print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
+                oob=rf_transverse.oob_score_ * 100)))
             else:
-                if os.path.isfile(folder_name+sample_name+'RF_model.joblib'):
-                    print('***LOADING TRAINED MODEL***')
-                    rf_transverse = joblib.load(folder_name+sample_name+'RF_model.joblib')
-                    print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
-                    oob=rf_transverse.oob_score_ * 100)))
-                else:
-                    print('***STARTING MODEL TRAINING***')
-                    print('***LOADING IMAGES***')
-                    gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor,
-                                                               threshold_rescale_factor)
-                    phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor,
+                print('***STARTING MODEL TRAINING***')
+                print('***LOADING IMAGES***')
+                gridrec_stack = Load_Resize_and_Save_Stack(filepath, grid_name, rescale_factor,
+                                                            threshold_rescale_factor)
+                phaserec_stack = Load_Resize_and_Save_Stack(filepath, phase_name, rescale_factor,
+                                                            threshold_rescale_factor)
+                label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, threshold_rescale_factor,
+                                                            labelled_stack=True)
+                localthick_stack = localthick_load_and_resize(folder_name, sample_name, rescale_factor,
                                                                 threshold_rescale_factor)
-                    label_stack = Load_Resize_and_Save_Stack(filepath, label_name, rescale_factor, threshold_rescale_factor,
-                                                             labelled_stack=True)
-                    localthick_stack = localthick_load_and_resize(folder_name, sample_name, rescale_factor,
-                                                                  threshold_rescale_factor)
-                    if os.path.isfile(folder_name+sample_name+'local_thick_large.tif') == False:
-                        io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(localthick_stack))
+                if os.path.isfile(folder_name+sample_name+'local_thick_large.tif') == False:
+                    io.imsave(folder_name+sample_name+'local_thick_large.tif', img_as_ubyte(localthick_stack))
 
-                    gridphase_train_slices_subset = labelled_slices[train_slices]
-                    gridphase_test_slices_subset = labelled_slices[test_slices]
-                    label_train_slices_subset = labelled_slices_seq[train_slices]
-                    label_test_slices_subset = labelled_slices_seq[test_slices]
+                gridphase_train_slices_subset = labelled_slices[train_slices]
+                gridphase_test_slices_subset = labelled_slices[test_slices]
+                label_train_slices_subset = labelled_slices_seq[train_slices]
+                label_test_slices_subset = labelled_slices_seq[test_slices]
 
-                    # LEGACY CODE: Could be deleted since no test slices are used anymore (GTR: 2022-03-10)
-                    print(("    Training slices (" + str(len(train_slices))+ " slices):" + str(gridphase_train_slices_subset)))
-                    print(("    Test slices (" + str(len(test_slices))+ " slices):" + str(gridphase_test_slices_subset)))
+                # LEGACY CODE: Could be deleted since no test slices are used anymore (GTR: 2022-03-10)
+                print(("    Training slices (" + str(len(train_slices))+ " slices):" + str(gridphase_train_slices_subset)))
+                print(("    Test slices (" + str(len(test_slices))+ " slices):" + str(gridphase_test_slices_subset)))
 
-                    print("")
-                    displayImages_displayDims(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
-                                              gridphase_train_slices_subset, gridphase_test_slices_subset,
-                                              label_train_slices_subset, label_test_slices_subset)
-                    print("")
+                print("")
+                displayImages_displayDims(gridrec_stack, phaserec_stack, label_stack, localthick_stack,
+                                            gridphase_train_slices_subset, gridphase_test_slices_subset,
+                                            label_train_slices_subset, label_test_slices_subset)
+                print("")
 
-                    # Create subsets of stacks and delete the full stacks
-                    gridrec_stack_sub = gridrec_stack[sorted(gridphase_train_slices_subset)]
-                    phaserec_stack_sub = phaserec_stack[sorted(gridphase_train_slices_subset)]
-                    localthick_stack_sub = localthick_stack[sorted(gridphase_train_slices_subset)]
-                    # Saving files for debugging and to make nice figures
-                    io.imsave(folder_name + sample_name + "gridrec_stack_sub.tif", gridrec_stack_sub)
-                    io.imsave(folder_name + sample_name + "phaserec_stack_sub.tif", phaserec_stack_sub)
-                    io.imsave(folder_name + sample_name + "localthick_stack_sub.tif", localthick_stack_sub)
-                    del gridrec_stack
-                    del phaserec_stack
-                    del localthick_stack
-                    gc.collect()
-                    print(label_train_slices_subset)
-                    print(labelled_slices_seq)
-                    print(labelled_slices)
-                    print(gridphase_train_slices_subset)
-                    rf_transverse = train_model(gridrec_stack_sub, phaserec_stack_sub, label_stack, localthick_stack_sub,
-                                                label_train_slices_subset, label_test_slices_subset,
-                                                label_train_slices_subset, label_test_slices_subset, nb_estimators)
+                # Create subsets of stacks and delete the full stacks
+                gridrec_stack_sub = gridrec_stack[sorted(gridphase_train_slices_subset)]
+                phaserec_stack_sub = phaserec_stack[sorted(gridphase_train_slices_subset)]
+                localthick_stack_sub = localthick_stack[sorted(gridphase_train_slices_subset)]
+                # Saving files for debugging and to make nice figures
+                io.imsave(folder_name + sample_name + "gridrec_stack_sub.tif", gridrec_stack_sub)
+                io.imsave(folder_name + sample_name + "phaserec_stack_sub.tif", phaserec_stack_sub)
+                io.imsave(folder_name + sample_name + "localthick_stack_sub.tif", localthick_stack_sub)
+                del gridrec_stack
+                del phaserec_stack
+                del localthick_stack
+                gc.collect()
+                print(label_train_slices_subset)
+                print(labelled_slices_seq)
+                print(labelled_slices)
+                print(gridphase_train_slices_subset)
+                rf_transverse = train_model(gridrec_stack_sub, phaserec_stack_sub, label_stack, localthick_stack_sub,
+                                            label_train_slices_subset, label_test_slices_subset,
+                                            label_train_slices_subset, label_test_slices_subset, nb_estimators)
 
-                    print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
-                        oob=rf_transverse.oob_score_ * 100)))
-                    gc.collect()
-                    print('***SAVING TRAINED MODEL***')
-                    joblib.dump(rf_transverse, folder_name+sample_name+'RF_model.joblib',compress='zlib')
+                print(('Our Out Of Box prediction of accuracy is: {oob}%'.format(
+                    oob=rf_transverse.oob_score_ * 100)))
+                gc.collect()
+                print('***SAVING TRAINED MODEL***')
+                joblib.dump(rf_transverse, folder_name+sample_name+'RF_model.joblib',compress='zlib')
 
-                    if model_training_only == 'True':
-                        print('')
-                        print('>>>> Model training completed!')
-                        print('>>>> Please run again this segmentation without the model_training_only argument')
-                        sys.exit()
+                if model_training_only == 'True':
+                    print('')
+                    print('>>>> Model training completed!')
+                    print('>>>> Please run again this segmentation without the model_training_only argument')
+                    sys.exit()
 
             print('***STARTING FULL STACK PREDICTION***')
             print('***LOADING BACK IMAGES***')
