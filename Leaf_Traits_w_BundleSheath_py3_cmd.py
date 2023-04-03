@@ -85,6 +85,8 @@ def main():
             except NameError: trim_column_R = 0
             try: px_edge
             except NameError: px_edge = 1
+            try: binary_postfix
+            except NameError: binary_postfix = ''
 
 
     if len(filenames)>0:
