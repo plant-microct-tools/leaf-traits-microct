@@ -72,6 +72,7 @@ def main():
                     phase_only = True
                 else:
                     phase_only = False
+            
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
@@ -229,7 +230,7 @@ def main():
             folder_name = filepath + 'MLresults/'
             grid_name = sample_name + postfix_grid #'GRID-8bit.tif'
             phase_name = sample_name + postfix_phase #'PAGANIN-8bit.tif'
-            label_name = 'labelled-stack.tif'
+            label_name = sample_name + 'labelled-stack.tif'
 
             # Below takes the slices from imageJ notation, put them in python notation
             # (i.e. with 0 as the first element instead of 1 in ImageJ), create a sequence
