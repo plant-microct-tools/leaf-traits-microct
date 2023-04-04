@@ -13,7 +13,7 @@ import os
 from pandas import DataFrame
 from skimage import transform, img_as_bool, img_as_int, img_as_ubyte
 import skimage.io as io
-from skimage.measure import label, marching_cubes_lewiner, mesh_surface_area, regionprops, marching_cubes_classic
+from skimage.measure import label, marching_cubes, mesh_surface_area, regionprops
 # import zipfile
 import gc
 from Leaf_Segmentation_Functions_py3 import delete_dangling_epidermis, openAndReadFile, Trim_Individual_Stack, define_params_traits
@@ -1291,7 +1291,7 @@ def main():
             print('### Compute surface area of IAS ###')
             print('### This may take a while and freeze your computer ###')
 
-            ias_vert_faces = marching_cubes_lewiner(
+            ias_vert_faces = marching_cubes(
                 large_segmented_stack == ias_value, 0, allow_degenerate=False, step_size=2)
             ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
             true_ias_SA = ias_SA * (px_edge**2)
