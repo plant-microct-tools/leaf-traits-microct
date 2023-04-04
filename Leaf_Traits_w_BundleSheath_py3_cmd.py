@@ -1383,7 +1383,7 @@ def main():
                         '_X_trimmed_left':trim_column_L*to_resize,
                         '_X_trimmed_right':trim_column_L*to_resize}
 
-            results_out = DataFrame(data_out, index={sample_name})
+            results_out = DataFrame(data_out, index=np.array(sample_name, ndmin=1))
             # Save the data to a CSV
             print('### Saving results to text file ###')
             results_out.to_csv(base_folder_name + sample_name + '/' + sample_name
