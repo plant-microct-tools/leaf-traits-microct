@@ -327,7 +327,7 @@ def main():
                 # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
                 # the noise left by the segmentation method and kept only the largest veins.
                 # This should be adjusted depending on the species/images/maginification.
-                large_veins_ids = veins_label[veins_area > (100000/8)]
+                large_veins_ids = veins_label[veins_area > (10000/8)]
 
                 largest_veins = np.in1d(unique_vein_volumes, large_veins_ids).reshape(raw_pred_stack.shape)
 
@@ -502,7 +502,7 @@ def main():
                 # io.imshow(large_segmented_stack[100])
                 print("")
                 print('### Validate the values in the stack ###')
-                print((np.unique(large_segmented_stack[100])))
+                print((np.unique(large_segmented_stack)))
 
                 # Special tiff saving option for ImageJ compatibility when files larger than
                 # 2 Gb. It's like it doesn't recognize something if you don't turn this option
@@ -788,6 +788,7 @@ def main():
                 large_segmented_stack = io.imread(base_folder_name + sample_name + '/' + sample_name +'SEGMENTED.tif')
             else:
                 # Load the ML segmented stack
+                # TO CHANGE - Add check that color_values are all present in the unique values (GTR: 2023-04-05)
                 raw_pred_stack = io.imread(filepath + folder_name + raw_ML_prediction_name)
                 uniq100th = np.unique(raw_pred_stack[100])
 
@@ -959,7 +960,7 @@ def main():
                 # I found that for my images, a threshold of 100000 (1e5) pixel^3 removed
                 # the noise left by the segmentation method and kept only the largest veins.
                 # This should be adjusted depending on the species/images/maginification.
-                large_veins_ids = veins_label[veins_area > (100000/8)]
+                large_veins_ids = veins_label[veins_area > (10000/8)]
 
                 largest_veins = np.in1d(unique_vein_volumes, large_veins_ids).reshape(raw_pred_stack.shape)
 
@@ -984,9 +985,9 @@ def main():
                 #     # Get the stom volumes
                 #     unique_stom_volumes = label(raw_pred_stack == stom_value, connectivity=1)
                 #     props_of_unique_stom = regionprops(unique_stom_volumes)
-                #
+                
                 #     # io.imshow(unique_bs_volumes[100])
-                #
+                
                 #     stom_area = np.zeros(len(props_of_unique_stom))
                 #     stom_label = np.zeros(len(props_of_unique_stom))
                 #     stom_centroid = np.zeros([len(props_of_unique_stom), 3])
@@ -994,17 +995,17 @@ def main():
                 #         stom_area[regions] = props_of_unique_stom[regions].area
                 #         stom_label[regions] = props_of_unique_stom[regions].label
                 #         stom_centroid[regions] = props_of_unique_stom[regions].centroid
-                #
+                
                 #     # Find the largest bs
                 #     ordered_stom = np.argsort(stom_area)
-                #
+                
                 #     del unique_stom_volumes
-                #
-                #     # Get the values again
-                #     bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
-                #     del props_of_unique_bs
-                #     gc.collect()
-                #
+                
+                #     # # Get the values again
+                #     # bs_volume = np.sum(largest_bs) * (px_edge * (px_edge*2)**2)
+                #     # del props_of_unique_bs
+                #     # gc.collect()
+                
                 #     #Check if it's correct
                 #     #io.imsave(base_folder_name + sample_name + '/' + folder_name + 'test_bs.tif',
                 #     #          img_as_ubyte(largest_bs))
@@ -1015,7 +1016,7 @@ def main():
 
 
                 ###################
-                ## BONDLE SHEATHS
+                ## BUNDLE SHEATHS
                 ###################
                 print('### BUNDLE SHEATHS ###')
                 if bs_value > 0:
@@ -1182,7 +1183,7 @@ def main():
                 # io.imshow(large_segmented_stack[100])
                 print("")
                 print('### Validate the values in the stack ###')
-                print((np.unique(large_segmented_stack[100])))
+                print(np.unique(large_segmented_stack))
 
                 # Special tiff saving option for ImageJ compatibility when files larger than
                 # 2 Gb. It's like it doesn't recognize something if you don't turn this option
