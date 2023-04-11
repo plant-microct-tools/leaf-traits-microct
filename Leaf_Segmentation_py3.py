@@ -76,8 +76,8 @@ def main():
             # set up default values for some optional parameters
             try: rescale_factor
             except NameError: rescale_factor = 1
-            try: threshold_rescale_factor
-            except NameError: threshold_rescale_factor = rescale_factor
+            #try: threshold_rescale_factor
+            #except NameError: threshold_rescale_factor = rescale_factor
             try: nb_estimators
             except NameError: nb_estimators = 50
             try: model_training_only
@@ -86,6 +86,9 @@ def main():
             except NameError: split_segmentation = 1
             try: phase_only
             except NameError: phase_only = False
+
+    try: threshold_rescale_factor
+    except NameError: threshold_rescale_factor = rescale_factor   
 
     if len(filenames)>0:
         j = 0
