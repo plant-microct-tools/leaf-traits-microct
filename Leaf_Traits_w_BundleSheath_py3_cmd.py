@@ -609,7 +609,7 @@ def main():
             print('### Compute surface area of IAS ###')
             print('### This may take a while and freeze your computer ###')
 
-            ias_vert_faces = marching_cubes_lewiner(
+            ias_vert_faces = marching_cubes(
                 large_segmented_stack == ias_value, 0, allow_degenerate=False, step_size=2)
             ias_SA = mesh_surface_area(ias_vert_faces[0], ias_vert_faces[1])
             true_ias_SA = ias_SA * (px_edge**2)
