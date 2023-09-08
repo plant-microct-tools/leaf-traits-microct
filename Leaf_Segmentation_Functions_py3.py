@@ -952,10 +952,10 @@ def Threshold_GridPhase_invert_down(grid_img, phase_img, Th_grid, Th_phase, fold
     # Threshold grid and phase images and add the IAS together, invert, downsample and save as .tif stack
     print("***THRESHOLDING IMAGES***")
     if phase_only:
-        tmp = np.ones(grid_img.shape, dtype=np.bool)
+        tmp = np.ones(grid_img.shape, dtype=bool)
         tmp[phase_img < Th_phase] = 0
     else:
-        tmp = np.zeros(grid_img.shape, dtype=np.bool)
+        tmp = np.zeros(grid_img.shape, dtype=bool)
         tmp[grid_img < Th_grid] = 0
         tmp[grid_img >= Th_grid] = 1
         tmp[phase_img < Th_phase] = 0
