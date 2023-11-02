@@ -55,7 +55,7 @@ import sys
 import os
 import numpy as np
 from pandas import DataFrame
-from scipy.ndimage.morphology import distance_transform_edt, binary_erosion, binary_fill_holes, binary_dilation
+from scipy.ndimage import distance_transform_edt, binary_erosion, binary_fill_holes, binary_dilation
 import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
@@ -531,7 +531,7 @@ composite_stack = composite_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 
 # To save stomata stack
 print('*** SAVING STOMATA STACK CROPPED AT THE LARGEST AIRSPACE ***')
-io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_LARGEST_AIRSPACE.tif', stomata_stack)
+io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'STOMATA_STACK_LARGEST_AIRSPACE.tif', img_as_ubyte(stomata_stack))
 
 # Check if stomata stack does include values
 # Will throw an error if at least one stomata is disconnected from the airspace
@@ -604,18 +604,27 @@ else:
 
     regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
                                                   np.unique(stomata_regions[-1, :, :]),
-                                                  np.unique(stomata_regions[:, 0, :]),
-                                                  np.unique(stomata_regions[:, -1, :]),
+                                                #   np.unique(stomata_regions[:, 0, :]),
+                                                #   np.unique(stomata_regions[:, -1, :]),
                                                   np.unique(stomata_regions[:, :, 0]),
                                                   np.unique(stomata_regions[:, :, -1])]))
 
     regions_full_in_center = regions_all[regions_at_border.take(
         np.searchsorted(regions_at_border, regions_all), mode='clip') != regions_all]
+    
+    print('')
+    print('names of stomatal regions: ' + str(regions_all))
+    print('regions at border: ' + str(regions_at_border))
+    print('regions full in center: ' + str(regions_full_in_center))
 
     full_stomata_regions_mask = np.empty(stomata_stack.shape, dtype='bool')
     for i in np.arange(len(regions_full_in_center)):
         full_stomata_regions_mask[stomata_regions
                                   == regions_full_in_center[i]] = True
+    
+    # TESTING WHAT HAPPENS WITH full_stomata_regions_mask
+    io.imsave(filepath + 'STOMATA_and_TORTUOSITY/' + sample_name + 'full_stomata_regions_mask.tif',
+            img_as_ubyte(full_stomata_regions_mask))  
 
     # DisplayRndSlices(full_stomata_regions_mask, 4)
 
@@ -626,7 +635,7 @@ else:
     print('  Number of pixels in full stomatal regions: ' + \
         str(np.sum(full_stomata_regions_mask)))
     print('  Total number of airspace pixels: ' + str(np.sum(airspace_stack)))
-
+    
     if np.sum(full_stomata_regions_mask) < 2000:
         print('***NO SINGLE STOMA REGIONS - too small high magnification stack?***')
         # If there are no single stomata regions, we still compute the values at the airspace edge.
@@ -690,8 +699,8 @@ if 'full_stomata_regions_mask' not in locals():
     regions_all = np.unique(stomata_regions)
     regions_at_border = np.unique(np.concatenate([np.unique(stomata_regions[0, :, :]),
                                                   np.unique(stomata_regions[-1, :, :]),
-                                                  np.unique(stomata_regions[:, 0, :]),
-                                                  np.unique(stomata_regions[:, -1, :]),
+                                                  # np.unique(stomata_regions[:, 0, :]),
+                                                  # np.unique(stomata_regions[:, -1, :]),
                                                   np.unique(stomata_regions[:, :, 0]),
                                                   np.unique(stomata_regions[:, :, -1])]))
     regions_full_in_center = regions_all[regions_at_border.take(
