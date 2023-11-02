@@ -61,7 +61,7 @@ import os
 import numpy as np
 from pandas import DataFrame
 from scipy import stats
-from scipy.ndimage.morphology import distance_transform_edt, binary_erosion
+from scipy.ndimage import distance_transform_edt, binary_erosion
 import skfmm
 import skimage.io as io
 from skimage import img_as_ubyte, img_as_bool
@@ -180,7 +180,7 @@ def StackResize(stack, rf=rescale_factor):
 
 
 def Threshold(input_img, Th_value):
-    tmp = np.zeros(input_img.shape, dtype=np.bool)
+    tmp = np.zeros(input_img.shape, dtype=bool)
     if isinstance(Th_value, int):
         tmp[input_img == Th_value] = 1
     else:
@@ -410,7 +410,7 @@ mask = ~largest_airspace.astype(bool)
 if 'stomata_stack' in locals():
     stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 else:
-    stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), np.bool)
+    stomata_stack = np.asarray(Threshold(composite_stack, stomata_value), bool)
     stomata_stack = stomata_stack[zmin:zmax, cmin:cmax, rmin:rmax]
 stom_mask = invert(stomata_stack)
 
@@ -430,7 +430,7 @@ if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
     if epidermis_ab_value != epidermis_ad_value:
         epidermis_ab_stack = np.asarray(
             Threshold(composite_stack, epidermis_ab_value),
-            np.bool)
+            bool)
         epidermis_ab_stack_shifted_down = np.roll(epidermis_ab_stack, 3, axis=1)
         epidermis_edge_bottom = Threshold(
             invert(epidermis_ab_stack) + epidermis_ab_stack_shifted_down, 0)
@@ -440,7 +440,7 @@ if not os.path.isfile(save_path + sample_name + 'L_epi_BBOX_CROPPED.tif'):
 
     else:
         mesophyll_stack = np.asarray(
-            Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), np.bool)
+            Threshold(composite_stack, [mesophyll_value, vein_value, ias_value, stomata_value]), bool)
         mesophyll_stack_shifted_up = np.roll(mesophyll_stack, -3, axis=1)
         #    mesophyll_stack_shifted_down = np.roll(mesophyll_stack, 3, axis=1)
         epidermis_edge_bottom = Threshold(invert(mesophyll_stack) + mesophyll_stack_shifted_up, 0)
@@ -615,18 +615,18 @@ print('***COMPUTING SUMMARY VALUES FOR EXPOSED SURFACE AND POROSITY***')
 mesophyll_edge = io.imread(save_path + sample_name + 'MESOPHYLL_EDGE_BBOX_CROPPPED.tif')
 
 surface_cumsum = np.cumsum(np.sum(mesophyll_edge, axis=(0, 2)))
-surface_rel = surface_cumsum/np.float(surface_cumsum.max())
+surface_rel = surface_cumsum/float(surface_cumsum.max())
 surface_rel_ = surface_rel[surface_rel > 0]
 pos_at_50_surface = (surface_rel_ >= 0.5).argmax()
 surface_sum = np.sum(mesophyll_edge, axis=(0, 2))
-surface_rel = surface_sum/np.float(surface_sum.max())
+surface_rel = surface_sum/float(surface_sum.max())
 
 porosity_cumsum = np.cumsum(np.sum(airspace_stack, axis=(0, 2)))
-porosity_rel = porosity_cumsum/np.float(porosity_cumsum.max())
+porosity_rel = porosity_cumsum/float(porosity_cumsum.max())
 porosity_rel_ = porosity_rel[surface_rel > 0]
 pos_at_50_porosity = (porosity_rel_ >= 0.5).argmax()
 porosity_sum = np.sum(airspace_stack, axis=(0, 2))
-porosity_rel = porosity_sum/np.float(porosity_sum.max())
+porosity_rel = porosity_sum/float(porosity_sum.max())
 
 print('***SAVING RESULT FILES***')
 # Write the data into a data frame
